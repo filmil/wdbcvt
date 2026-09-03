@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+# The SERV sources come from the release archive named in MODULE.bazel;
+# only the bench is written here.
+vivado_library(
+    name = "lib",
+    srcs = [
+        "tb.v",
+        "@serv//:bench",
+        "@serv//:rtl",
+        "@serv//:servant",
+        "@serv//:servile",
+    ],
+    library_name = "serv",
+)
+
+# bazel build //hdl/serv:sim
+#
+# Runs the servant SoC on the hello_uart firmware under xsim and writes
+# the waveform database to bazel-bin/hdl/serv/sim.wdb, next to sim.vcd.
+# SERV has no timescale in its sources, so one is set for every module.
+vivado_simulation(
+    name = "sim",
+    data = ["@serv//:hello_uart"],
+    # A Verilog string parameter needs its quotes on the xelab command
+    # line. The runner passes the command through two shells, so each
+    # quote carries three backslashes.
+    generic_tops = {
+        "memfile": "\\\\\\\"$(location @serv//:hello_uart)\\\\\\\"",
+    },
+    library = ":lib",
+    top = "tb",
+    xelab_args = [
+        "-timescale",
+        "1ns/1ps",
+    ],
+)
