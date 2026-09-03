@@ -1,0 +1,44 @@
+{
+  "case": "t25_sv_two_same_",
+  "axis": "logic s = 1'b0 beside logic t = 1'b1",
+  "differs_from": "t25_sv_two_class",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "t",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "t",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "t",
+      "value": "0"
+    }
+  ]
+}

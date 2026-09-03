@@ -1,0 +1,27 @@
+{
+  "case": "t25_sv_bit_unsz_",
+  "axis": "bit s = 0, a two state scalar from an unsized literal",
+  "differs_from": "t25_sv_logic_int",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "bit",
+      "declared": "bit"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

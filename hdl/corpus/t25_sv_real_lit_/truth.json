@@ -1,0 +1,26 @@
+{
+  "case": "t25_sv_real_lit_",
+  "axis": "real s = 1.5",
+  "differs_from": "t11_v_real______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "real"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "1.5"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "2.5"
+    }
+  ]
+}

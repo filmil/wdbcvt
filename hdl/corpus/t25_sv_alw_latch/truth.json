@@ -1,0 +1,71 @@
+{
+  "case": "t25_sv_alw_latch",
+  "axis": "always_latch alone",
+  "differs_from": "t13_sv_alwaysff_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "en",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "q",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "en",
+      "value": "0"
+    },
+    {
+      "time_ns": 20,
+      "signal": "en",
+      "value": "1"
+    },
+    {
+      "time_ns": 30,
+      "signal": "en",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "d",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "d",
+      "value": "1"
+    },
+    {
+      "time_ns": 40,
+      "signal": "d",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "q",
+      "value": "X"
+    },
+    {
+      "time_ns": 20,
+      "signal": "q",
+      "value": "1"
+    }
+  ]
+}

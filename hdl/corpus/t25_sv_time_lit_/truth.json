@@ -1,0 +1,31 @@
+{
+  "case": "t25_sv_time_lit_",
+  "axis": "time s = 10ns",
+  "differs_from": "t11_v_time______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "time"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "10"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "50"
+    }
+  ]
+}

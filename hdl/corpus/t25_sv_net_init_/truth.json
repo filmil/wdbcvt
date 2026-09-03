@@ -1,0 +1,49 @@
+{
+  "case": "t25_sv_net_init_",
+  "axis": "wire w = s, a net declaration assignment",
+  "differs_from": "t25_sv_wire_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "w",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "case": "t25_sv_int_noini",
+  "axis": "int s without an initializer",
+  "differs_from": "t11_sv_int______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "int"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

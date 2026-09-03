@@ -1,0 +1,34 @@
+{
+  "case": "t25_sv_pkg_prm__",
+  "axis": "a package with a parameter only",
+  "differs_from": "t13_sv_pkg______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ],
+  "absent": [
+    {
+      "scope": "p",
+      "name": "W",
+      "type": "int"
+    }
+  ]
+}

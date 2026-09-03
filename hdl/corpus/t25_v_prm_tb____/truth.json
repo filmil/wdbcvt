@@ -1,0 +1,42 @@
+{
+  "case": "t25_v_prm_tb____",
+  "axis": "a parameter of the root module",
+  "differs_from": "t11_v_bit_edge__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000000101",
+      "scope": "tb"
+    }
+  ]
+}
