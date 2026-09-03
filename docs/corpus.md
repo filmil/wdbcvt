@@ -1400,6 +1400,23 @@ The record cases changed the reader: `Decode` now takes the bounds of
 a record's fields from the declaration's range list, and the field
 triples are a fallback.
 
+**Tier 43: unconstrained ports.**
+VHDL.
+Every port in the corpus had its bounds in the entity.
+A port declared `std_ulogic_vector` takes them from the actual at each
+instance, which asks where the bounds go and whether two instances
+with different actuals repeat the unit the way different generics do.
+The child reads `a(a'right)` into a signal so that the port is used.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t43_port_uncons_` | `t8_port_vec8` | `a : in std_ulogic_vector` bound to eight bits | the actual's bounds and size on the declaration |
+| `t43_port_unc_two` | `t43_port_uncons_` | a second instance bound to four bits | the unit and declarations repeated |
+| `t43_port_unc_sam` | `t43_port_unc_two` | the second instance bound to eight bits too | one unit, one set of declarations |
+| `t43_port_unc_asc` | `t43_port_uncons_` | the actual `(0 to 7)` | `(0 to 7)` |
+| `t43_port_unc_out` | `t43_port_uncons_` | `a : out std_ulogic_vector` | the same |
+| `t43_port_unc_rec` | `t43_port_uncons_` | a port of a record with an unconstrained field | `(7 downto 0)` on the port; the field unconstrained in the type |
+
 
 ## Record which comparison produced which finding
 
@@ -1438,7 +1455,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 700 cases through tier 42, and
+5. The reader now reproduces all 706 cases through tier 43, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

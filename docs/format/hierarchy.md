@@ -466,6 +466,31 @@ So the VHDL repetition of `t4_gen_diff_two` is a VHDL property, not a
 rule of the section.
 *Found by* `t21_v_param_diff` against `t21_v_param_same`.
 
+The repetition is not about generics as such: it follows every
+declaration that elaborates differently.
+An unconstrained port, `a : in std_ulogic_vector` in `t43_port_uncons`,
+is declared with the bounds and the size of its actual, `(7 downto 0)`
+and 8 bytes for an eight bit signal, `(0 to 7)` for an ascending one
+in `t43_port_unc_asc`, and the file is otherwise that of a constrained
+port.
+Two instances bound to an eight bit and a four bit signal,
+`t43_port_unc_two`, get two `child(sim)` units and two sets of
+declarations, `a` with `(7 downto 0)` and 8 bytes under one and
+`(3 downto 0)` and 4 bytes under the other, where two instances bound
+to two eight bit signals, `t43_port_unc_sam`, share one unit and one
+set: 7 units and 6 declarations against 5 and 4, with the same 7
+scopes and 6 objects.
+An unconstrained `out` port is the same, `t43_port_unc_out`, and so
+is a port of a record with an unconstrained field, `t43_port_unc_rec`,
+whose declaration carries the actual's `(7 downto 0)` and 16 bytes
+while the record type, from a package, keeps the field unconstrained.
+So a unit is one elaboration of an entity, and a reader that keys
+units by entity and architecture name has to allow several.
+*Found by* `t43_port_unc_two` against `t43_port_unc_sam`.
+*Confirmed by* `t43_port_uncons` against `t8_port_vec8`, and
+`t43_port_unc_asc`, `t43_port_unc_out` and `t43_port_unc_rec` against
+`truth.json`.
+
 The declaration of an array generic carries the range of the value it
 ends up with, not the range of its subtype.
 A generic declared as the unconstrained `std_ulogic_vector` with the
@@ -1622,10 +1647,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 700 of 700 cases, and the
+*Confirmed by* the region length check in 706 of 706 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 700 of 700 cases and
+and *confirmed by* the reader's range check in 706 of 706 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
