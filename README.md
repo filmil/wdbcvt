@@ -115,6 +115,19 @@ Bazel 9.2.0 or later is required, and `.bazelversion` pins it.
 Earlier versions crash on the `file://` URL that names the installer
 archive; see `AGENTS.md` for the detail.
 
+Budget for a cold install. Measured once, on this machine, with the
+archive on the same disk as the output base:
+
+| Phase | Reached at |
+| :--- | ---: |
+| Copy the archive, write it to the shared repository cache, unpack it | 112 min |
+| Batch install begins | 121 min |
+
+Peak disk during the fetch was about 290 GB, because the archive is
+moved three times: copied in, written to the repository cache, and
+unpacked. The archive is deleted once unpacking finishes, returning
+roughly 96 GB. This happens once per host, not once per workspace.
+
 A host that has never built this repository needs:
 
 * the installer archive at

@@ -31,11 +31,16 @@ vivado.install(
     # machine reuses this one installation, and `bazel clean --expunge`
     # leaves it alone, so the multi-hour install happens once per host.
     install_cache = "/data/cache/vivado-install",
-    # Deliberately no `sha256`. Setting it makes Bazel keep a second
-    # ~100 GB copy of the archive in the repository cache. The recorded
-    # checksum of the archive above is
-    # cd1021b04166e43c0d59cbbded7b1687dda5e9dad890b82492f872b2fe32a725;
-    # verify it with sha256sum when the mirror changes.
+    # No `sha256`, but not for the reason rules_vivado's README gives.
+    # That README says omitting it avoids a second ~100 GB copy in the
+    # repository cache. Measured on Bazel 9.2.0, that is not so: with no
+    # `sha256` set, Bazel hashed the archive itself and stored it at
+    # /data/cache/bazel/repo/content_addressable/sha256/cd1021b0.../file
+    # at exactly 102739568640 bytes, the archive's own size. The copy
+    # happens either way, so setting `sha256` would cost nothing and buy
+    # integrity checking. Set it when someone confirms the same on the
+    # Bazel version in .bazelversion:
+    # cd1021b04166e43c0d59cbbded7b1687dda5e9dad890b82492f872b2fe32a725
     #
     # Only Artix-7 is installed. Simulation needs no device family at all,
     # but xsim ships with the device libraries and one small family keeps
