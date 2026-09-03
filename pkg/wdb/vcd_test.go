@@ -274,10 +274,13 @@ func sameVCDValue(kind string, size int, got, want string) bool {
 // over the corpus; see docs/format/vcd.md.
 func (f *File) vcdOmitted(o Object) string {
 	dc := f.Decls[o.Decl]
+	// The top is the first child of the root scope; the packages are
+	// its other children, pp_csr and pp_constants in //hdl/potato:sim.
 	// A Verilog top with a parameter set on the command line is named
 	// with it, `tb(memfile="...")` in //hdl/serv:sim.
-	if p := plainPath(f.ObjectPath(o)); !strings.HasPrefix(p, "tb.") && !strings.HasPrefix(p, "tb(") {
-		return "outside the tb hierarchy that the script logs"
+	top := plainPath(f.Scopes[f.Scopes[0].FirstChild].Name)
+	if p := plainPath(f.ObjectPath(o)); !strings.HasPrefix(p, top+".") && !strings.HasPrefix(p, top+"(") {
+		return "outside the top hierarchy that the script logs"
 	}
 	ty := &f.Types[f.resolve(dc.Type)]
 	if f.verilog(dc.Type) {
@@ -320,8 +323,10 @@ var vcdDeviations = map[string]string{
 // only check. //hdl/counter:sim is a record port with per field
 // assignments, and its ctl record found the VHDL partial write.
 // //hdl/serv:sim is SERV, a RISC-V core of 281 scopes, and found the
-// bit offsets of Verilog ports bound to slices.
-var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv"}
+// bit offsets of Verilog ports bound to slices. //hdl/potato:sim is
+// Potato, a RISC-V core in VHDL, whose 32768 byte memories found the
+// second split of a wide value's last chunk.
+var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv", "hdl/potato"}
 
 // changesOnly drops the records that repeat the value before them.
 func changesOnly(ch []change) []change {

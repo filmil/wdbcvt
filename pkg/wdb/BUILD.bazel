@@ -31,6 +31,7 @@ go_test(
         "//hdl/corpus:all_truth",
         "//hdl/corpus:all_wdb",
         "//hdl/counter:sim",
+        "//hdl/potato:sim",
         "//hdl/serv:sim",
         "//hdl/uart:sim",
     ],
