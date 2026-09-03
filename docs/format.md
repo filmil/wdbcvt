@@ -12,7 +12,8 @@ Everything here is either a measurement or a statement marked as a
 guess.
 Nothing gets promoted from guess to fact without a reproduction.
 
-The layout itself is described in four documents, one per area:
+The layout itself is described in four documents, one per area, and a
+fifth covers the VCD written beside every database:
 
 | Document | Area |
 | :--- | :--- |
@@ -20,6 +21,7 @@ The layout itself is described in four documents, one per area:
 | [format/types.md](format/types.md) | the type table: enumerations, integers, reals, physical types, arrays and records, and the Verilog entries |
 | [format/hierarchy.md](format/hierarchy.md) | the debug section: scopes, units, declarations, source files, instance records and handles, in both languages |
 | [format/values.md](format/values.md) | arenas, pages, value records, encodings and alignment, and the Verilog word pairs |
+| [format/vcd.md](format/vcd.md) | what Vivado's VCD holds of the same run, how it spells values, and the cross-check of every case against it |
 
 All of it is from Vivado 2025.2 and is scoped to that version.
 See [provenance.md](provenance.md) for what guards the claims and
@@ -60,7 +62,8 @@ bazel run //cmd/wdbcvt -- -dump -in "$PWD/bazel-bin/hdl/corpus/<case>/sim.wdb"
 ```
 
 for the case the row names, and `//pkg/wdb:wdb_test` asserts every row
-against the `truth.json` of all 241 cases.
+against the `truth.json` of all 241 cases, and against the `sim.vcd`
+of every case for the objects a VCD can hold.
 The offsets are in the documents linked in the last column.
 
 | Finding | Found by | Confirmed by | Where |
@@ -195,6 +198,11 @@ The offsets are in the documents linked in the last column.
 | `log_wave -recursive /sig_pkg` logs a package signal; it records like a signal of `tb` in an arena of its own and the logged range count grows by one | `t13_pkg_log_all` against `t9_pkg_sig` | | values |
 | A Verilog variable whose arena spills into a second page has no `X` record at time 0 | `t13_v_tr430` against `t13_v_tr420`, 430 records against 421 | `t13_v_tr2000`; `t13_v_tr430_2`, where `d` in its own arena keeps its `X` | values |
 | A change due at the `std.env.stop` time is recorded, where one due at the `$finish` time is not | `t13_tr430` against `t13_v_tr430`, 431 records against 430 | `t11_v_always` | values |
+| A `std_logic` signal gets an enumeration entry named `STD_LOGIC` with the nine `STD_ULOGIC` literals | `t8_port_inout` against `t8_port_in` | `truth.json` names the subtype | types |
+| At every time the VCD lists a value, the last database value at that time spells it, for every VCD variable of every case; a VCD entry exists at exactly the times a database record does | `TestVCD`, `bazel test //pkg/wdb:wdb_test --test_filter=TestVCD` | 241 of 241; one real field of `t11_sv_struct_r` excepted, where the VCD is wrong | vcd |
+| Two VCD variables with one identifier code are two objects with one handle and one offset | `TestVCD` on `t12_v_port_wire` and `t13_sv_iface` | 241 of 241 | vcd |
+| The VCD leaves out every VHDL generic, constant and non bit type, every signal outside `tb`, and every Verilog unpacked array not named by a typedef, and nothing else | `TestVCD`, the `vcdOmitted` rule | 241 of 241 | vcd |
+| An unpacked struct is written to the VCD as 32 bit slots per field; the database holds the fields at their own widths | `TestVCD` on `t11_sv_ustruct` against the dump | `t11_sv_struct3`, `t11_sv_struct40` | vcd |
 
 Whole file properties, also measured:
 
@@ -348,6 +356,8 @@ claim rests on and rerun the comparison.
 | `t13_v_tr430` against `t13_v_tr420` | 430 toggles against 420, one page against two | the `X` record goes with the spill into a second page |
 | `t13_v_tr430_2` against `t13_v_tr430` | a second `reg` in its own arena | the `X` record of the arena that does not spill stays |
 | `t13_tr430` against `t13_v_tr430` | the same clock in VHDL | one page of 431 one byte records; the toggle at `std.env.stop` is recorded |
+| `t8_port_inout` against `t8_port_in` | `std_logic` in place of `std_ulogic` | the enumeration entry is named after the subtype |
+| every `sim.vcd` against its `sim.wdb`, through `go-vcd-parser` | nothing; the same run | the VCD spelling rules, the omission rule, the code sharing rule, and one wrong VCD value |
 
 Three findings were not found by a pair.
 The end time, the type count and the trailer word at `+0x30`, then
@@ -404,8 +414,12 @@ $end
 ```
 
 For a Verilog design the same VCD is fuller: `integer`, `real`,
-`time`, a struct and an enum each get a `$var`, and only memories and
-strings are absent, measured on tier 11.
+`time`, a parameter, a struct and an enum each get a `$var`, and only
+unpacked arrays declared without a typedef, and strings, are absent.
+VHDL generics and constants are absent too, and so is any signal outside
+`tb`.
+The full rule, held by `TestVCD` over every case, and the way the VCD
+spells each value, are in [format/vcd.md](format/vcd.md).
 
 Two consequences follow.
 

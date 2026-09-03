@@ -452,9 +452,11 @@ The long runs list their toggles as a `transition_runs` entry in
 `truth.json`, a start time, a step and a count, rather than two
 thousand transitions.
 
-Not written yet, in order: a VCD cross-check of every case through
-`go-vcd-parser`; a variable first written in the second page of its
-arena, to separate the two readings of the missing `X` record; a
+Every case is also held to its own `sim.vcd` by `TestVCD`; see
+[format/vcd.md](format/vcd.md).
+
+Not written yet, in order: a variable first written in the second page
+of its arena, to separate the two readings of the missing `X` record; a
 `log_wave` on a SystemVerilog package parameter; interface modports
 and an interface carrying a vector; and a `string` value.
 
@@ -511,7 +513,8 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 241 cases through tier 13.
+5. The reader now reproduces all 241 cases through tier 13, and
+   matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

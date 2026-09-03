@@ -793,3 +793,5 @@ above.
 So the pages are the only record of those values, and the VCD guard in
 [../provenance.md](../provenance.md) covers only the bit and vector
 rows of the table.
+For a Verilog design the VCD holds more, and `TestVCD` compares every
+value it holds with the pages; see [vcd.md](vcd.md).

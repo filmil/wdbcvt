@@ -1,0 +1,158 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+# The VCD beside the database, and the cross-check against it
+
+Every corpus case writes `sim.vcd` beside `sim.wdb`, from one run of
+one design, through `open_vcd` and `log_vcd [get_objects -r /*]` in
+the xsim script.
+The VCD is the first guard of [../provenance.md](../provenance.md): a
+public text format, written by the same simulator from the same run,
+and read here by `go-vcd-parser`, which this project did not write.
+
+`TestVCD` in `pkg/wdb/vcd_test.go` compares the two files of every
+case.
+Everything below is what that comparison measured on Vivado 2025.2.
+Reproduce all of it with:
+
+```sh
+bazel test //pkg/wdb:wdb_test --test_filter=TestVCD
+```
+
+The test is strict where the VCD says anything.
+Every `$var` must name an object of the database, and at every time the
+VCD lists a value, the last value the database holds at that time must
+spell the same.
+Where the VCD says nothing, the test demands a reason from the rule in
+`vcdOmitted`, and fails when the VCD carries an object the rule says it
+leaves out.
+Where the VCD spells a value wrongly, the test expects the mismatch from
+the list in `vcdDeviations`, and fails when the mismatch goes away.
+So the three tables below are held to the corpus, not to a reading of
+the files by eye.
+
+
+## What the VCD carries
+
+All 241 cases pass, and every object of the database is either in its
+VCD or covered by one line of this table.
+
+| Object | In the VCD |
+| :--- | :--- |
+| VHDL `bit`, `std_ulogic`, `std_logic` | yes, `wire 1` |
+| VHDL one dimensional arrays of those: `bit_vector`, `std_logic_vector`, `signed`, `unsigned` | yes, `wire N` |
+| VHDL `boolean`, `integer`, `real`, `time`, `character`, a user enumeration, a record, any other array | no |
+| VHDL generic or constant, of any type, including a generate index | no |
+| A signal outside `tb`, such as the package signal `sig_pkg.x` of `t13_pkg_log_all` | no; the script logs `/*` |
+| Verilog `reg`, `wire`, a vector, `integer`, `time`, `real`, `shortreal` | yes, as `reg`, `wire`, `integer`, `time` or `real` |
+| Verilog `parameter`, including a string parameter | yes, as `parameter`; an untyped one with size `0` |
+| SystemVerilog `bit`, `logic`, `byte`, `int`, `longint`, an enum, a typedef | yes |
+| SystemVerilog packed struct | yes, as `reg N` over the fields |
+| SystemVerilog unpacked struct | yes, as `reg N` over 32 bit slots, see below |
+| Verilog memory or any unpacked array declared without a typedef, of vectors, reals or structs | no |
+| A typedef of an unpacked array, `t13_sv_tdef_ua` | yes, flattened to `reg 8` |
+| SystemVerilog `string` | no, and the database has no record either |
+
+The VHDL rows repeat the tier 2 measurement in
+[../format.md](../format.md), now held by the test over every case.
+The Verilog rows are new; the tier 11 note that only memories and
+strings are absent was right but incomplete, since an unpacked array of
+anything is absent unless a typedef names it.
+
+
+## How a value is spelled
+
+The VCD writes four state values.
+The test turns a decoded database value into the same spelling before
+comparing, by the rules the comparison found necessary:
+
+* An `std_ulogic` `U`, `X`, `W` or `-` becomes `x`, `L` becomes `0`,
+  `H` becomes `1` and `Z` becomes `z`.
+  The VCD repeats a value it has already written when the simulation
+  changed the signal to another value with the same spelling:
+  `t1_nine_state` writes `x!` at 10 ns for `U` to `X`.
+* A vector is written with its leading zeros dropped, and a vector of
+  all `x` or all `z` as one character.
+  A reader extends to the declared size with `0`, or with the leftmost
+  `x` or `z`, as IEEE 1800 says.
+* A Verilog `integer`, `time`, `int`, `longint` or `byte` is written as
+  bits, two's complement for a negative value.
+  The decoder spells the same value in decimal; the test converts.
+* A SystemVerilog enum is written as the bits of its value at the width
+  of its base type: `DONE` of `t11_sv_enum` is `b10`, `C` of
+  `t11_sv_enum4` is `b1001`.
+* A `real` is written as `r1.5`; the test compares the numbers.
+* A packed struct is the bits of its fields, first field on the left,
+  which is the order the database holds them in.
+* A packed array with two packed dimensions, `t11_sv_arr2d`, is the
+  elements in index order, element 0 on the left, likewise.
+* An unpacked struct puts every field in a slot of whole 32 bit words,
+  so `{logic a; logic [3:0] b;}` is declared `reg 64` and `a = 1,
+  b = 1010` is written `b1` followed by 28 zeros and `1010`.
+  A 40 bit field takes a 64 bit slot: `t11_sv_struct40` is `reg 96`.
+  The database holds the fields at their own widths; see
+  [values.md](values.md).
+
+
+## When a value is written
+
+* `$dumpvars` at time 0 lists the last value each object holds at
+  time 0.
+  A Verilog variable that the database records as `X` and then `0` at
+  time 0 appears once, as `0`.
+* After that, one entry per object per time at which the simulation
+  changed it, holding the last value of that time.
+  Three writes to one variable in one time step, `t13_v_same_t`, are
+  one VCD entry and three database records.
+  Delta cycles that return a signal to its old value, `t7_delta`, are
+  one VCD entry carrying the old value and two database records.
+* The set of times at which an object has a VCD entry equals the set
+  of times at which it has a database record, in every case.
+  In particular the missing time 0 `X` record of a spilled Verilog
+  variable, `t13_v_tr430`, is invisible here, because the `0` record at
+  time 0 remains.
+
+
+## Names and codes
+
+A VCD scope path is the `$scope` names joined by dots, and the test
+compares it with the object path of the database after stripping
+backslashes and spaces from both.
+Then the two agree in every case: `\g(0)\` for a VHDL generate,
+`g[0].dut` as one scope name for a Verilog generate instance, `\g.r `
+for a `reg` in an `if` generate, `b` for a named block and `inc` as a
+`function` scope.
+
+Two VCD variables with one identifier code are one signal seen from two
+scopes.
+In every case they are objects with one handle and one offset in the
+database: the port and the net of `t12_v_port_wire`, the interface
+instance and its port of `t13_sv_iface`.
+The converse does not hold.
+A port slice, `tb.dut.a` of `t9_port_slice`, has its own VCD code but
+shares the handle of `tb.x` with an offset.
+
+
+## Where the VCD is wrong
+
+One object of the corpus has a VCD value that is not the value:
+
+| Case | Object | What the VCD writes |
+| :--- | :--- | :--- |
+| `t11_sv_struct_r` | `tb.s`, `{real r; logic a;}` | `reg 64`; the `r` slot at `r = 1.5` is `00zzzzzzzzzzz` and zeros, 32 bits that spell no value |
+
+The database holds `1.5` as a 64 bit float, and `truth.json` agrees.
+So for a real inside an unpacked struct there is no VCD guard at all,
+only the truth file.
+
+
+## Reading the VCD
+
+`go-vcd-parser` is pinned at v0.1.0.
+v0.2.0 needs Go 1.27.1 and the repository's Go toolchain is 1.26.2.
+
+v0.1.0 does not read three spellings xsim uses in `$scope` and `$var`
+lines: a VHDL extended identifier `\g(0)\`, a Verilog escaped
+identifier `\g.r `, and a generate instance `g[0].dut`.
+The test swaps each such name for `hiddenN` before parsing and puts it
+back when it builds the path, in `hideNames`.
+Values, times and codes are read by the parser unchanged.

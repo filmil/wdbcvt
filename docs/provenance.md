@@ -58,16 +58,24 @@ an array produce no `$var` and no value changes at all. Only
 `std_ulogic`, `bit` and the vector types survive. See
 [format.md](format.md).
 
-So this guard covers bit and vector signals, and nothing else. For the
-other types there is no independent reading of the same run, and guards
-3 and 5 have to carry the weight alone.
+So this guard covers bit and vector signals of a VHDL design, and
+nothing else of one. For the other types there is no independent
+reading of the same run, and guards 3 and 5 have to carry the weight
+alone. A Verilog design fares better: its VCD also carries `integer`,
+`time`, `real`, parameters, enums and structs, and leaves out only
+unpacked arrays and strings. `TestVCD` in `pkg/wdb/vcd_test.go` holds
+every case to its VCD, and [format/vcd.md](format/vcd.md) states what
+it measured, including the one place where the VCD itself is wrong.
 
 **2. `go-vcd-parser`, which this project did not write.**
-The answer key is read by `github.com/filmil/go-vcd-parser`, an existing
-implementation with its own test suite. A decoder claim is checked
-against what that parser reports, not against this project's own reading
-of the same file. A bug shared between a decoder and its checker is the
-failure this avoids.
+The answer key is read by `github.com/filmil/go-vcd-parser` v0.1.0, an
+existing implementation with its own test suite. A decoder claim is
+checked against what that parser reports, not against this project's
+own reading of the same file. A bug shared between a decoder and its
+checker is the failure this avoids. The one thing the test does to the
+VCD text before the parser sees it is to hide the escaped identifiers
+that v0.1.0 cannot read, and put them back afterwards; values, times
+and codes reach the test as the parser reports them.
 
 **3. Ground truth declared before the file is opened.**
 Each corpus case ships a `truth.json` stating the signals, widths,
@@ -104,11 +112,16 @@ reference implementation, vendored test only. See
 | vectors, `unsigned`, `signed` | yes | yes | yes | yes |
 | `boolean`, `integer`, `real`, `time`, `character` | no | yes | no | yes |
 | enumerations, records, arrays | no | yes | no | yes |
+| VHDL generics and constants | no | yes | no | yes |
+| Verilog `reg`, `wire`, vectors, `integer`, `time`, `real`, parameters | yes | yes | no | yes |
+| SystemVerilog enums, packed structs, unpacked structs | yes | yes | no | yes |
+| a `real` inside an unpacked struct | wrong in the VCD | yes | no | yes |
+| Verilog memories, unpacked arrays, strings | no | yes | no | yes |
 
-For the bottom two rows, a decoded value rests on `truth.json` and on
-the FST round trip. That is thinner than the top two rows, and a reader
-should treat claims about those types with correspondingly more caution
-until a second guard exists for them.
+For the rows without a VCD answer key, a decoded value rests on
+`truth.json` and on the FST round trip. That is thinner than the rows
+with one, and a reader should treat claims about those types with
+correspondingly more caution until a second guard exists for them.
 
 The obvious way to add one is to write FST and read it back with
 `libfst`, which can hold every type in the table. That is guard 5, and

@@ -77,6 +77,11 @@ types cost about 400.
 the class word being the only difference between `BIT` and a user
 enumeration's entry shape.
 
+An enumeration entry is named after the subtype the signal is declared
+with: a `std_logic` signal gets an entry named `STD_LOGIC` with the nine
+`STD_ULOGIC` literals, `t8_port_inout` against `t8_port_in`, and
+nothing else in the file names `STD_ULOGIC`.
+
 **Integer.**
 `INTEGER` is `-2147483648 to 2147483647` and `NATURAL` is
 `0 to 2147483647`.

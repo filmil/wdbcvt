@@ -20,6 +20,7 @@ not be used.
 | [format/types.md](format/types.md) | The type table. |
 | [format/hierarchy.md](format/hierarchy.md) | The debug section: scopes, units, declarations, files, instance records and handles. |
 | [format/values.md](format/values.md) | Arenas, pages, value records, encodings and alignment. |
+| [format/vcd.md](format/vcd.md) | What Vivado's VCD holds of the same run, how it spells values, and the cross-check of every case against it. |
 | [corpus.md](corpus.md) | The differential corpus, and the method: minimal pairs, the noise mask, and the ground truth files. |
 | [provenance.md](provenance.md) | How the knowledge was obtained, what guards it, and the limits of it. |
 | [fst-output.md](fst-output.md) | The FST output format, its licence position, and the route chosen for writing it. |
