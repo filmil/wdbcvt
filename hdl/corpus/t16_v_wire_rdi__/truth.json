@@ -1,7 +1,7 @@
 {
-  "case": "t11_v_wire______",
-  "axis": "object kind: a wire driven by a continuous assignment",
-  "differs_from": "t11_v_bit_edge__",
+  "case": "t16_v_wire_rdi__",
+  "axis": "the wire connected to an input port that nothing inside reads",
+  "differs_from": "t16_v_wire_rd1__",
   "end_time_ns": 100,
   "signals": [
     {
@@ -16,8 +16,17 @@
       "name": "w",
       "width": 1,
       "type": "logic",
-      "declared": "wire",
-      "records": 3
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 4,
+      "declared": "wire"
     }
   ],
   "transitions": [
@@ -32,6 +41,11 @@
       "value": "0"
     },
     {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
       "time_ns": 0,
       "signal": "w",
       "value": "X"
@@ -43,12 +57,22 @@
     },
     {
       "time_ns": 50,
-      "signal": "s",
+      "signal": "w",
       "value": "1"
     },
     {
+      "time_ns": 0,
+      "signal": "tb.dut.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.i",
+      "value": "0"
+    },
+    {
       "time_ns": 50,
-      "signal": "w",
+      "signal": "tb.dut.i",
       "value": "1"
     }
   ]

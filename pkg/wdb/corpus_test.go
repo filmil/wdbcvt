@@ -35,6 +35,10 @@ type truthSignal struct {
 	// logs, such as a package signal outside the logged hierarchy:
 	// t9_pkg_sig. Absent means logged.
 	Logged *bool `json:"logged"`
+	// Records is the number of records the object holds, repeats of
+	// one value included, for the cases that count the X records of a
+	// net at time 0: t16_v_wire_rd1. Absent means not counted.
+	Records int `json:"records"`
 }
 
 // truthRun is a long train of transitions written as a rule rather than
@@ -379,6 +383,15 @@ func TestCorpus(t *testing.T) {
 				}
 				if logged := s.Logged == nil || *s.Logged; o.Logged != logged {
 					t.Errorf("%s: logged %v, truth says %v", path, o.Logged, logged)
+				}
+				if s.Records > 0 {
+					ch, err := f.Changes(o)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if len(ch) != s.Records {
+						t.Errorf("%s: %d records, truth says %d", path, len(ch), s.Records)
+					}
 				}
 			}
 

@@ -9,7 +9,8 @@
       "name": "w0",
       "width": 1,
       "type": "logic",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb",
@@ -23,7 +24,8 @@
       "name": "y",
       "width": 1,
       "type": "logic",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb.dut",
@@ -31,7 +33,8 @@
       "width": 1,
       "type": "logic",
       "port": "in",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb.dut",
@@ -39,14 +42,16 @@
       "width": 1,
       "type": "logic",
       "port": "out",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb.dut",
       "name": "w1",
       "width": 1,
       "type": "logic",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb.dut",
@@ -61,7 +66,8 @@
       "width": 1,
       "type": "logic",
       "port": "in",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb.dut.u",
@@ -69,14 +75,16 @@
       "width": 1,
       "type": "logic",
       "port": "out",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 5
     },
     {
       "scope": "tb.dut.u",
       "name": "w2",
       "width": 1,
       "type": "logic",
-      "declared": "wire"
+      "declared": "wire",
+      "records": 4
     },
     {
       "scope": "tb.dut.u",
