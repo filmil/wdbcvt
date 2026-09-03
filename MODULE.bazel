@@ -72,3 +72,17 @@ http_archive(
     strip_prefix = "serv-1.4.0",
     urls = ["https://github.com/olofk/serv/archive/refs/tags/1.4.0.tar.gz"],
 )
+
+http_archive(
+    name = "potato",
+    build_file = "//third_party/potato:potato.BUILD",
+    # Under VHDL-2008, std_logic_vector is a subtype of std_ulogic_vector,
+    # so the to_std_logic_vector of pp_csr becomes a homograph of the one
+    # in std_logic_1164 and xvhdl rejects the call. The patch renames the
+    # function and its two calls, and changes nothing else.
+    patch_args = ["-p1"],
+    patches = ["//third_party/potato:0001-rename-cause-conversion.patch"],
+    sha256 = "91169a01e267cff211f88705e1677613c74036d9a30638f0eab8a387f5b01466",
+    strip_prefix = "potato-0.3",
+    urls = ["https://github.com/skordal/potato/archive/refs/tags/v0.3.tar.gz"],
+)

@@ -1,0 +1,47 @@
+diff -ru a/src/pp_csr.vhd b/src/pp_csr.vhd
+--- a/src/pp_csr.vhd	2026-09-03 22:01:22.041146320 +0200
++++ b/src/pp_csr.vhd	2026-09-03 22:01:22.048146320 +0200
+@@ -15,7 +15,7 @@
+ 	subtype csr_exception_cause is std_logic_vector(5 downto 0); -- Upper bit is the interrupt bit
+ 
+ 	--! Converts an exception cause to a std_logic_vector.
+-	function to_std_logic_vector(input : in csr_exception_cause) return std_logic_vector;
++	function cause_to_slv(input : in csr_exception_cause) return std_logic_vector;
+ 
+ 	--! Control/status register write mode:
+ 	type csr_write_mode is (
+@@ -99,11 +99,11 @@
+ 
+ package body pp_csr is
+ 
+-	function to_std_logic_vector(input : in csr_exception_cause)
++	function cause_to_slv(input : in csr_exception_cause)
+ 		return std_logic_vector is
+ 	begin
+ 		return (31 => input(5), 30 downto 5 => '0') & input(4 downto 0);
+-	end function to_std_logic_vector;
++	end function cause_to_slv;
+ 
+ 	function csr_make_mstatus(ie, ie1 : in std_logic) return std_logic_vector is
+ 		variable retval : std_logic_vector(31 downto 0);
+diff -ru a/src/pp_execute.vhd b/src/pp_execute.vhd
+--- a/src/pp_execute.vhd	2026-09-03 22:01:22.041146320 +0200
++++ b/src/pp_execute.vhd	2026-09-03 22:01:22.111146318 +0200
+@@ -425,7 +425,7 @@
+ 		mem_exception_context, wb_exception_context)
+ 	begin
+ 		if csr_addr = CSR_MCAUSE and mem_exception = '1' then
+-			csr_value_forwarded <= to_std_logic_vector(mem_exception_context.cause);
++			csr_value_forwarded <= cause_to_slv(mem_exception_context.cause);
+ 		elsif csr_addr = CSR_MSTATUS and mem_exception = '1' then
+ 			csr_value_forwarded <= csr_make_mstatus(mem_exception_context.ie, mem_exception_context.ie1);
+ 		elsif csr_addr = CSR_MBADADDR and mem_exception = '1' then
+@@ -433,7 +433,7 @@
+ 		elsif mem_csr_write /= CSR_WRITE_NONE and mem_csr_addr = csr_addr and csr_writeable then
+ 			csr_value_forwarded <= mem_csr_value;
+ 		elsif csr_addr = CSR_MCAUSE and wb_exception = '1' then
+-			csr_value_forwarded <= to_std_logic_vector(wb_exception_context.cause);
++			csr_value_forwarded <= cause_to_slv(wb_exception_context.cause);
+ 		elsif csr_addr = CSR_MSTATUS and wb_exception = '1' then
+ 			csr_value_forwarded <= csr_make_mstatus(wb_exception_context.ie, wb_exception_context.ie1);
+ 		elsif csr_addr = CSR_MBADADDR and wb_exception = '1' then

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+# The Potato sources and its processor bench come from the release
+# archive named in MODULE.bazel; only the instruction image is written
+# here.
+vivado_library(
+    name = "lib",
+    srcs = [
+        "@potato//:src",
+        "@potato//:tb_processor",
+    ],
+    library_name = "potato",
+)
+
+# bazel build //hdl/potato:sim
+#
+# Runs the Potato processor on imem.hex under xsim and writes the
+# waveform database to bazel-bin/hdl/potato/sim.wdb, next to sim.vcd.
+#
+# imem.hex is hand assembled, because the release builds its tests with
+# a RISC-V toolchain that the runner does not have. One word per line,
+# loaded from address 0x100. The first 64 words are nops up to the
+# reset address 0x200. The program stores 5 to the data memory, loads it
+# back, counts it down to zero, and writes 1 to the mtohost register,
+# which ends the bench.
+filegroup(
+    name = "imem",
+    srcs = ["imem.hex"],
+)
+
+vivado_simulation(
+    name = "sim",
+    data = [
+        ":imem",
+        "@potato//:empty_dmem",
+    ],
+    generic_tops = {
+        "DMEM_FILENAME": "$(location @potato//:empty_dmem)",
+        "IMEM_FILENAME": "$(location :imem)",
+    },
+    library = ":lib",
+    top = "tb_processor",
+)
