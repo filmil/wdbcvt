@@ -31,6 +31,11 @@ type truthSignal struct {
 	// inout, buffer or linkage. Empty for a signal declared in an
 	// architecture.
 	Port string `json:"port"`
+	// Range is the declared index range of a vector, spelled the way
+	// the decoder renders it, "7 downto 0" or "-4 to 3". The tier 11
+	// cases wrote it first; the test has checked it since tier 41,
+	// whose VHDL ranges reach below zero.
+	Range string `json:"range"`
 	// Logged is false for a signal the simulation declares but never
 	// logs, such as a package signal outside the logged hierarchy:
 	// t9_pkg_sig. Absent means logged.
@@ -435,6 +440,11 @@ func TestCorpus(t *testing.T) {
 					t.Errorf("%s is a generic, truth says signal", path)
 				}
 				checkType(t, f, path, s, f.Decls[o.Decl].Type)
+				if s.Range != "" {
+					if rs := f.Decls[o.Decl].Ranges; len(rs) != 1 || rs[0].String() != s.Range {
+						t.Errorf("%s: ranges %v, truth says (%s)", path, rs, s.Range)
+					}
+				}
 				// A port's mode is in the declaration: t8_port_in,
 				// t8_port_out, t8_port_inout and t8_port_buffer.
 				mode := "none"
