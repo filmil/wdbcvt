@@ -1,0 +1,50 @@
+{
+  "case": "t51_sv_task_inou",
+  "axis": "a static task with an inout argument",
+  "differs_from": "t51_sv_task_out_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb.inc",
+      "name": "v",
+      "width": 8,
+      "type": "",
+      "port": "inout",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "00000001"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.inc.v",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.inc.v",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.inc.v",
+      "value": "00000001"
+    }
+  ]
+}

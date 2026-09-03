@@ -1,0 +1,44 @@
+{
+  "case": "t51_sub_pkg_proc",
+  "axis": "a procedure of a package called from the process under -debug subprogram",
+  "differs_from": "t23_sub_sig_prm_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "pk.drive",
+      "name": "q",
+      "type": "std_ulogic",
+      "kind": "signal param",
+      "port": "out",
+      "storage": 6
+    },
+    {
+      "scope": "pk.drive",
+      "name": "v",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    }
+  ]
+}
