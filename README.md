@@ -25,7 +25,7 @@ far and how the work proceeds.
   converter as the format becomes known.
   The first output format is VCD, written through
   `github.com/filmil/go-vcd-parser`.
-  FST comes later, once there is something to write.
+  FST comes later; [docs/fst-output.md](docs/fst-output.md) records how.
 * `pkg/wdb/` holds the library the tool is built on.
 * `docs/wdb-format.md` records the findings.
 
