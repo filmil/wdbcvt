@@ -1,0 +1,98 @@
+{
+  "case": "t37_v_port_reg__",
+  "axis": "an input port bound to r[5:2] of an 8 bit reg",
+  "differs_from": "t37_v_port_slc__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 8,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.u",
+      "name": "a",
+      "width": 4,
+      "type": "",
+      "port": "in",
+      "records": 5,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "i",
+      "width": 4,
+      "type": "",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "r",
+      "value": "11111111"
+    },
+    {
+      "time_ns": 20,
+      "signal": "r",
+      "value": "00111100"
+    },
+    {
+      "time_ns": 30,
+      "signal": "r",
+      "value": "00000100"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "XXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "0000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.a",
+      "value": "1111"
+    },
+    {
+      "time_ns": 30,
+      "signal": "tb.u.a",
+      "value": "0001"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "XXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "0000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.i",
+      "value": "1111"
+    },
+    {
+      "time_ns": 30,
+      "signal": "tb.u.i",
+      "value": "0001"
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "case": "t37_v_port_pair1",
+  "axis": "an input port bound to v[39:34] of a 40 bit wire, in the second word pair",
+  "differs_from": "t37_v_port_slc__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 40,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 40,
+      "type": "",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "a",
+      "width": 6,
+      "type": "",
+      "port": "in",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "i",
+      "width": 6,
+      "type": "",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "0000000000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "r",
+      "value": "1111111100000000000000000000000000000000"
+    },
+    {
+      "time_ns": 20,
+      "signal": "r",
+      "value": "0101010000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 30,
+      "signal": "r",
+      "value": "0000001111111111111111111111111111111111"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0000000000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "1111111100000000000000000000000000000000"
+    },
+    {
+      "time_ns": 20,
+      "signal": "v",
+      "value": "0101010000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 30,
+      "signal": "v",
+      "value": "0000001111111111111111111111111111111111"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "XXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.a",
+      "value": "111111"
+    },
+    {
+      "time_ns": 20,
+      "signal": "tb.u.a",
+      "value": "010101"
+    },
+    {
+      "time_ns": 30,
+      "signal": "tb.u.a",
+      "value": "000000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "XXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.i",
+      "value": "111111"
+    },
+    {
+      "time_ns": 20,
+      "signal": "tb.u.i",
+      "value": "010101"
+    },
+    {
+      "time_ns": 30,
+      "signal": "tb.u.i",
+      "value": "000000"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "case": "t37_v_port_bit__",
+  "axis": "an input port bound to v[3] of an 8 bit wire",
+  "differs_from": "t37_v_port_slc__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 8,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "r",
+      "value": "00001000"
+    },
+    {
+      "time_ns": 20,
+      "signal": "r",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 30,
+      "signal": "r",
+      "value": "11110111"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "00001000"
+    },
+    {
+      "time_ns": 20,
+      "signal": "v",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 30,
+      "signal": "v",
+      "value": "11110111"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "tb.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "tb.u.i",
+      "value": "0"
+    }
+  ]
+}
