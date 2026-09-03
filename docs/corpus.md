@@ -348,9 +348,43 @@ boundaries the rule predicts, and every one fell where it should.
 The reader now enforces the rule's addresses on every wide value, so
 a file that chunks differently is refused rather than read.
 
-Not written yet, in order: the same ladder in Verilog and
-SystemVerilog, to find out whether the source language reaches the
-database at all; a `log_wave` that covers a package, to see a package
+Tier 11 is the ladder again in Verilog and SystemVerilog, to find out
+whether the source language reaches the database.
+It does, in the type table's origin word, in the unit and declaration
+kinds, in the scope names and in the shape of every value record.
+The `.v` cases are `t11_v_*` and the `.sv` cases `t11_sv_*`, and each
+holds one transition at 50 ns and a `$finish` at 100 ns unless the
+axis says otherwise.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t11_v_bit_edge` | `t1_bit_one_edge` in Verilog | origin `5`; unit kinds `0x00`, `0x07`; the implicit `Initial` scope; word pair records; the `X` record |
+| `t11_sv_logic`, `t11_sv_bit` | `logic` and `bit` in SystemVerilog | no implicit scope for a `.sv` initializer; `bit` is two state with variant `1` |
+| `t11_v_vec8`, `t11_v_vec8_asc`, `t11_v_signed8` | an 8 bit vector, ascending, signed | one shared unnamed vector entry; direction and signedness change nothing in the record |
+| `t11_v_vec33`, `t11_v_vec100`, `t11_v_vec64x` | 33 and 100 bits; a bit set to `x` | one pair per 32 bits; `X` is both words; a partial record |
+| `t11_v_integer`, `t11_v_time`, `t11_v_real` | the Verilog scalar types | named vector entries with bounds; origin `0xd`; a real is one pair |
+| `t11_sv_int`, `t11_sv_byte`, `t11_sv_longint` | the SystemVerilog integral types | `bit` based, 32, 8 and 64 bits |
+| `t11_v_two_w64` | two variables, 64 and 1 bits | the handle stride is `0xb8` plus the record size |
+| `t11_v_wire`, `t11_v_port` | a `wire` with `assign`; ports on a child | kind `0x03`; the `NetRegassign` scope; nets first; the output port shares the wire's handle |
+| `t11_v_hier1`, `t11_v_param`, `t11_v_gen_for` | a child module, a `parameter`, a generate loop | instance scopes; kind `0x01` parameter objects; `g[0].dut` with no generate scope |
+| `t11_v_always` | `always` blocks and a named block | `Always` scopes, unit kind `0x05`; the toggle at `$finish` is unrecorded |
+| `t11_v_mem4`, `t11_v_mem4_desc`, `t11_v_mem8` | memories of four and eight bytes, descending | layout `2`; contiguous bits, leftmost element at the top; one record per element write |
+| `t11_v_mem4w4`, `t11_v_mem4w5`, `t11_v_mem3w5` | element widths under a byte | no padding between elements |
+| `t11_v_mem2w9` to `t11_v_mem2w64`, six widths | element widths across the 32 bit boundary | elements straddle pairs |
+| `t11_sv_struct`, `t11_sv_ustruct`, `t11_sv_pstruct40` | a struct packed and unpacked; a 41 bit packed struct | layout `3` and `2`; the `0x07` alias; packed is a vector |
+| `t11_sv_struct3`, `t11_sv_struct40`, `t11_sv_struct_r` | three fields; a 40 bit field; a `real` field | one slot of pairs per field, last field lowest |
+| `t11_sv_arr2d` | `logic [1:0][3:0]` | an array of the vector entry; two declaration ranges |
+| `t11_sv_enum`, `t11_sv_enum4` | an enum over `int`; over `logic [3:0]` with values | kind `0x04`; the base type and bounds; the `XXXX` record |
+| `t11_sv_str` | a `string` | not in the database at all, beyond its implicit scope |
+
+The `truth.json` of a Verilog case names the declared keyword under
+`declared` and leaves `type` empty for an unnamed vector, memory or
+struct, because that is what the type table holds.
+Every `.v` case with an initializer lists the `X` record before its
+value, and the memory cases list one state per element write.
+
+Not written yet, in order: Verilog values wide enough to reach the
+chunk rule; a `log_wave` that covers a package, to see a package
 signal logged; and a VCD cross-check of every case through
 `go-vcd-parser`.
 
@@ -407,7 +441,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 141 cases through tier 10.
+5. The reader now reproduces all 197 cases through tier 11.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

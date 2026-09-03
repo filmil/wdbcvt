@@ -297,7 +297,9 @@ The value bytes of a record are the object's whole value after the
 change.
 There is no delta encoding.
 The length is the declaration's value size, word 4 of the declaration
-record, in every corpus case.
+record, in every VHDL case.
+Verilog values are stored differently, in word pairs and in partial
+records; see the Verilog section below.
 
 | Type | Encoding |
 | :--- | :--- |
@@ -436,6 +438,165 @@ The trailer's end time is the time of `std.env.stop`, not the last
 change.
 `t3_late` ends at 1010000 with its last record at 1000000, and
 `t6_tr1300` ends at 1310000 with its last record at 1300000.
+
+
+## Verilog values
+
+Tier 11 repeats the value ladder in Verilog and SystemVerilog, and the
+pages of a Verilog design differ from the VHDL pages in three ways: the
+declared size is in bits, a record holds word pairs rather than bytes,
+and a record may cover part of the value.
+Every claim reproduces with `wdbcvt -dump` on the case named.
+
+**Word pairs.**
+A Verilog value of `n` bits takes `8 * ceil(n / 32)` bytes of record:
+one pair `[u32 a][u32 b]` per 32 bits, pair 0 holding bits 31 to 0.
+Bit `i` of the value is `a[i] + 2 * b[i]`, which indexes the four
+literals of `logic`: `0`, `1`, `Z`, `X`.
+Bits above the width are 0 in both words.
+
+| Case | Value | Record |
+| :--- | :--- | :--- |
+| `t11_v_bit_edge` | `X` | `01 00 00 00 01 00 00 00` |
+| `t11_v_bit_edge` | `1` | `01 00 00 00 00 00 00 00` |
+| `t11_v_vec8` | `8'ha5` | `a5 00 00 00 00 00 00 00` |
+| `t11_v_vec100` | 100 bits of `X` | 24 bytes of `ff`, then `0f 00 00 00 0f 00 00 00` |
+| `t11_v_vec64x` | bit 40 set to `x` | `ef bf ad de 00 01 00 00` at handle plus 8 |
+
+`t11_v_vec64x` is the case that separated the two words: the `a` word
+kept bit 8 of the high half at 1 and the `b` word gained it, so `X` is
+`a` and `b` both set, and `Z` is `b` alone, the order of the literal
+list.
+The declaration's size, word 4, is the width in bits, and the second
+handle is the handle plus the record size in bytes; see
+[hierarchy.md](hierarchy.md).
+
+*Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, whose one bit
+takes 8 bytes of record where the VHDL bit takes 1.
+*Confirmed by* `t11_v_vec33` and `t11_v_vec100`, 16 and 32 bytes, and
+by every tier 11 record dividing by 8.
+
+**Partial records.**
+A record's key is the handle plus 8 times the index of the first pair
+it holds, and its length is 8 times the number of pairs it holds.
+A record that covers the whole value starts at the handle.
+An assignment to part of a variable writes only the pairs it touched:
+`s[40] = 1'bx` in `t11_v_vec64x` writes one pair at handle plus 8,
+and each `m[i] = 8'h00` in `t11_v_mem8` writes the one pair its
+element lives in.
+So a Verilog record is one change, of the pairs it holds, and the
+reader overlays each record on the value the earlier records built.
+No Verilog value in the corpus is wide enough to test the chunk rule
+above; the widest is `t11_v_vec100`, 32 bytes.
+
+*Found by* `t11_v_mem8`, whose `initial` block writes eight elements
+and produces nine records at time 0, eight of them 8 bytes long, four
+at the handle and four at the handle plus 8.
+*Confirmed by* `t11_v_vec64x`, and by `t11_v_mem2w40`, whose write of
+`m[0]` lands on pairs 1 and 2 and whose write of `m[1]` on pairs 0
+and 1.
+
+**Where the elements go.**
+A vector's leftmost bit is its most significant, whatever the declared
+direction: `reg [0:7]` in `t11_v_vec8_asc` records `8'ha5` exactly as
+`reg [7:0]` in `t11_v_vec8` does.
+A memory is contiguous bits with its leftmost element at the top, so
+`m[0]` of `reg [7:0] m [0:3]` is bits 31 to 24 and `m[3]` is bits 7 to
+0, and `m[0]` of `reg [7:0] m [3:0]` is bits 7 to 0.
+Elements are not padded: `reg [4:0] m [0:3]` is 20 bits in one pair,
+and `reg [39:0] m [0:1]` is 80 bits in three pairs with `m[1]`
+straddling pairs 0 and 1.
+A two dimensional packed array, `logic [1:0][3:0]`, is 8 bits with
+element `[1]` at the top.
+
+*Found by* `t11_v_mem4` against `t11_v_mem4_desc`, the same four
+writes under `[0:3]` and `[3:0]`, which moved the written byte from
+the top to the bottom.
+*Confirmed by* `t11_v_mem4w5`, `t11_v_mem3w5` and the `t11_v_mem2w*`
+sweep from 9 to 64 bits per element.
+
+**Integral types and real.**
+`integer`, `int`, `byte`, `longint` and `time` are vectors of their
+width and record as such; `t11_v_integer` stores 165 as
+`a5 00 00 00 00 00 00 00`, and the reader prints them in decimal,
+signed except for `time`.
+A `real` takes one pair holding the `float64`: `t11_v_real` stores 1.5
+as `0x3ff8000000000000` and its declared size is 32.
+A `bit` type is two state and its `b` words are 0 throughout.
+
+**Structs.**
+A packed struct is a vector with its first field at the top:
+`struct packed { logic a; logic [3:0] b; }` in `t11_sv_struct` records
+`'{a: 1, b: 4'b1010}` as `1a`, `a` in bit 4.
+`t11_sv_pstruct40` is 41 bits in two pairs, `a[39:0]` in bits 40 to 1
+and `b` in bit 0.
+An unpacked struct gives each field its own pairs, as many as the
+field's width needs, and puts the last field lowest: in
+`t11_sv_struct3`, `{a; b[3:0]; c[7:0]}` is 96 bits, with `c` in pair
+0, `b` in pair 1 and `a` in pair 2.
+A field wider than 32 bits takes the pairs a standalone value would:
+`t11_sv_struct40` stores `a[39:0]` in pairs 1 and 2, low word first,
+and `b` in pair 0.
+A `real` field takes one pair: `t11_sv_struct_r` has `a` in pair 0
+and the `float64` in pair 1.
+The declared size follows: 96 for `t11_sv_struct3` and
+`t11_sv_struct40`, 64 for `t11_sv_struct_r`, 41 for the packed
+`t11_sv_pstruct40`.
+
+*Found by* `t11_sv_ustruct` against `t11_sv_struct`, the same two
+fields unpacked, which grew from one pair to two and put `b` first.
+*Confirmed by* `t11_sv_struct3`, `t11_sv_struct40` and
+`t11_sv_struct_r`.
+
+**Enums.**
+A SystemVerilog enum records as its base type: `t11_sv_enum` stores
+`DONE` as `02 00 00 00` in an `int`, and `t11_sv_enum4` stores `C`,
+declared `4'd9`, as `09` in a 4 bit vector.
+The reader looks the value up in the kind `0x04` entry to print the
+name; see [types.md](types.md).
+
+**Records at time 0.**
+The first record of a Verilog variable holds its value before any
+process runs: all `X` for a four state type, 0 for `bit`, `int`,
+`byte`, `longint` and `real`.
+An initializer in a `.v` file runs as an implicit `initial` process,
+so a `reg s = 1'b0` records `X` and then `0` at time 0, and so does
+every `.v` case with an initializer.
+An `initial` block that writes at time 0 does the same:
+`t11_v_mem8` records all `X`, then one element at a time.
+A SystemVerilog `logic s = 1'b0` takes its initializer at declaration
+and records `0` once, and a `bit`, `int` or struct with an initializer
+records once too.
+`t11_sv_enum4`, whose initializer gets an implicit process, records
+`XXXX` and then `A`, while `t11_sv_enum` over `int` records `IDLE`
+once, because the implicit process writes the value it already holds.
+A `real` records `0` once for the same reason.
+
+*Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, three records
+where two were expected.
+*Confirmed by* `t11_sv_logic` against `t11_v_bit_edge`, two records
+and no implicit process; see [hierarchy.md](hierarchy.md).
+
+**Nets.**
+A `wire` records like a variable on its own handle: `t11_v_wire` has
+`X`, `0`, `1` for both the `reg` and the wire that follows it.
+A net shared by a wire and an output port holds one `X` record at
+time 0 per object on it, then the value, as a VHDL net does: `y` and
+`tb.dut.b` in `t11_v_port` share `0x768` and hold `X`, `X`, `1`, `0`.
+The input port `a`, on its own handle, also holds two `X` records
+before its `0`, though one object is on it.
+Why is open.
+
+**What is not recorded.**
+The `always #25 clk = ~clk` of `t11_v_always` is due at 100 ns, the
+`$finish` time, and that toggle is not in the pages; the last `clk`
+record is at 75 ns.
+A `string` variable has no records, because it has no object; see
+[hierarchy.md](hierarchy.md).
+Vivado's VCD for a Verilog design is fuller than for VHDL: `real`,
+`integer`, `time`, a struct and an enum all get a `$var`.
+A memory and a `string` do not, so the `t11_v_mem*` cases have no VCD
+guard and their `truth.json` is the only check.
 
 
 ## What VCD cannot hold

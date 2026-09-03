@@ -24,13 +24,18 @@ Every entry is `[uint32 length][uint32 tag] name NUL body`.
 The length covers the whole entry.
 The low byte of the tag is the kind; the high bytes have been `0xa0`
 in every entry.
+The first word of the body, called the origin below, says which
+language the type came from.
+It is `2` for a VHDL type and `0xa` for VHDL `TIME`, and was read as a
+constant `2` until tier 11 simulated Verilog; see the Verilog section
+below for the other values.
 The offset list at the end is the one cross reference the section
 offers, and the decoder checks that it names every entry.
 
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 141 of 141 cases decoding with the entry lengths chaining
+*Confirmed by* 197 of 197 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -38,18 +43,24 @@ exactly to the word at `36`.
 
 | Tag | Kind | Body |
 | :--- | :--- | :--- |
-| `0x03` | enumeration | `[u32 2][u32 2][u32 class][u32 n]` then `n` NUL terminated literals, then `[u32 1]` |
-| `0x05` | integer | `[u32 2][i32 low][i32 high][u32 1]` |
-| `0x06` | real | `[u32 2][u32 0][f64 low][f64 high][u32 1]` |
-| `0x0d` | physical | `[u32 0xa][u32 n]` then `n` times `name NUL [u64 scale]` |
-| `0x10` | array | `[u32 2][u16 1][u16 0xa0][u32 element][u32 dims][u32 index][u32 1 or 2]` then range triples, then `-99` |
-| `0x11` | record | `[u32 2][u16 1][u16 0xb][u32 n]` then `n` fields, then `-99` |
+| `0x03` | enumeration | `[u32 origin][u32 variant][u32 class][u32 n]` then `n` NUL terminated literals, then `[u32 1]` for VHDL or `[u32 0]` for Verilog |
+| `0x04` | named values | `[u32 origin][u32 base][u32 n][u32 8]` then `n` times `name NUL [u64 value]`, then `[u32 nranges]` and that many triples, no `-99` |
+| `0x05` | integer | `[u32 origin][i32 low][i32 high][u32 1]` |
+| `0x06` | real | `[u32 origin][u32 variant][f64 low][f64 high][u32 1]` for VHDL, `[u32 0]` for Verilog |
+| `0x07` | alias | `[u32 origin][u32 target][u32 0]` |
+| `0x0d` | physical | `[u32 origin][u32 n]` then `n` times `name NUL [u64 scale]` |
+| `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims][u32 index][u32 nranges]` then that many range triples, then `-99` |
+| `0x11` | record | `[u32 origin][u16 layout][u16 0xb][u32 n]` then `n` fields, then `-99` |
+
+Kinds `0x04` and `0x07` come from SystemVerilog only, and are described
+with the other Verilog entries below.
 
 A range triple is `[i32 left][i32 right][i32 dir]`, with `dir` `1` for
 `to` and `-1` for `downto`.
 The trailing `-99` is `0xffffff9d` and closes the triple list.
 
 **Enumeration.**
+The variant word is `2` for every VHDL enumeration.
 The class word is `2` for `BIT`, `3` for `STD_ULOGIC`, and `5` for
 `BOOLEAN`, `CHARACTER` and a user enumeration.
 `std_ulogic` is not a builtin to this format.
@@ -81,18 +92,27 @@ min=60000000000000 hr=3600000000000000`.
 So the database's time unit is the picosecond, and `fs` rounds to zero.
 There is no trailer word.
 
-*Found by* `t2_time`, the only case with a physical type.
+The origin word of `TIME` is `0xa`, which no other VHDL type has.
+
+*Found by* `t2_time`, the only VHDL case with a physical type.
 
 **Array.**
 `element` and `index` are indexes into this table.
-The constraint word is `1` for an unconstrained type such as
-`STD_ULOGIC_VECTOR`, whose one triple is `(0, 0, -2)`, and `2` for a
-constrained type, whose triples are the bounds.
+The word before the triples counts them.
+An unconstrained type such as `STD_ULOGIC_VECTOR` has one triple,
+`(0, 0, -2)`, and a constrained type has one triple of bounds per
+dimension.
+Through tier 10 the word read as `1` for unconstrained and `2` for
+constrained, because every constrained VHDL array in the corpus had two
+dimensions, and the tier 11 `time` entry with one constrained triple and
+a `1` in the word corrected that.
 A vector signal's own bounds are not here; they are in the declaration
 record in the debug section.
 `t2_array2d` declares `array (0 to 3) of std_ulogic_vector(7 downto 0)`
 and its entry holds `(0 to 3) (7 downto 0)`: two triples, one per
 dimension of the flattened shape.
+The `dims` word is `1` in every entry, including that one, so what it
+counts is open.
 
 **Record.**
 Each field is `name NUL [u32 type][u32 nranges]` then that many
@@ -138,6 +158,142 @@ became that scalar's range.
 exactly three triples in field order.
 `t8_rec_realv` put a `real` beside the vector and got the vector's
 bounds alone, so a `real` has no range to contribute and is skipped.
+
+## Verilog and SystemVerilog types
+
+Tier 11 of the corpus repeats the type ladder in Verilog and
+SystemVerilog.
+The source language reaches the table in three places: the origin
+word, the layout half word of an array or record, and two kinds, `0x04`
+and `0x07`, that no VHDL case produces.
+Every case below reproduces with `wdbcvt -dump`.
+
+**Origin.**
+The first word of an entry body:
+
+| Origin | Types | Found by |
+| ---: | :--- | :--- |
+| `0x2` | every VHDL type but `TIME` | tiers 1 to 10 |
+| `0xa` | VHDL `TIME` | `t2_time` |
+| `0x1` | a Verilog type without a name of its own: a vector, a memory, a struct, an enum, a typedef | `t11_v_vec8`, `t11_sv_struct` |
+| `0x5` | a Verilog predefined type: `logic`, `bit`, `real`, `scalar_int`, `integer`, `int`, `byte`, `longint` | `t11_v_bit_edge` |
+| `0xd` | Verilog `time` | `t11_v_time` |
+
+Read as bits: bit 1 is VHDL, bit 0 is Verilog, bit 2 is a predefined
+type and bit 3 is a time type.
+That is a reading, and only these five values have been seen.
+The reader keeps the word as `Type.Origin` and refuses any other value.
+
+*Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, the same one
+transition design in the two languages, whose one type entry begins
+with `5` where the VHDL one begins with `2`.
+*Confirmed by* every tier 11 case: the word is `1`, `5` or `0xd` in all
+44 and never `2`.
+
+**Layout.**
+The `u16` after the origin of an array or record entry is `1` for a
+VHDL type, `3` for a packed Verilog type and `2` for an unpacked one.
+A vector `reg [7:0]` is packed.
+A memory `reg [7:0] m [0:3]` is an unpacked array of a packed vector,
+and its entry says `2` while the vector's says `3`.
+A `struct packed` says `3` and a plain `struct` says `2`.
+
+*Found by* `t11_sv_struct` against `t11_sv_ustruct`, the same two
+field struct packed and unpacked, which differ in this half word and
+in the declaration size.
+*Confirmed by* `t11_v_mem4`, whose two array entries carry both values.
+
+**Scalars.**
+`logic` and `bit` are enumerations of four literals, with a different
+variant word:
+
+| Type | Entry |
+| :--- | :--- |
+| `logic` | `[5][0][1][4]` `0 1 Z X` `[0]` |
+| `bit` | `[5][1][1][4]` `0 1 0 0` `[0]` |
+| `real` | `[5][1][f64 0][f64 0][0]` |
+| `scalar_int` | `[5][-2147483647][2147483647][1]` |
+
+`logic` is the type of a `reg`, a `wire` and a SystemVerilog `logic`
+alike.
+`bit` lists its two literals and then two more `0`, so the literal list
+is four long for both and the variant tells them apart.
+What the variant and class words mean beyond that is open.
+`real` has no bounds: both are `0`.
+`scalar_int` is the index type of every Verilog array, as `NATURAL` is
+the index type of `STD_ULOGIC_VECTOR`, and its low bound is
+`-2147483647`, one above `INTEGER`'s.
+
+**Vectors and integral types.**
+A vector such as `reg [7:0]` is an array entry with an empty name,
+origin `1`, layout `3`, element `logic`, index `scalar_int`, and one
+triple `(0, 0, -2)`.
+The bounds are in the declaration record, as for a VHDL vector.
+So every unnamed vector in a design shares one entry, whatever its
+width or direction: `t11_v_vec8`, `t11_v_vec8_asc`, `t11_v_vec33`,
+`t11_v_vec100` and `t11_v_two_w64` all hold the same three entries.
+The named integral types are the same array entry with a name and
+their own bounds:
+
+| Type | Origin | Element | Range | Found by |
+| :--- | ---: | :--- | :--- | :--- |
+| `integer` | `0x5` | `logic` | `(31, 0, -1)` | `t11_v_integer` |
+| `time` | `0xd` | `logic` | `(63, 0, -1)` | `t11_v_time` |
+| `int` | `0x5` | `bit` | `(31, 0, -1)` | `t11_sv_int` |
+| `byte` | `0x5` | `bit` | `(7, 0, -1)` | `t11_sv_byte` |
+| `longint` | `0x5` | `bit` | `(63, 0, -1)` | `t11_sv_longint` |
+
+A declaration of a named type has no range records of its own.
+Signedness is not recorded anywhere: the dump of `t11_v_signed8`,
+`reg signed [7:0]`, is the dump of `t11_v_vec8` outside the
+timestamps, and the two files differ in 17 bytes.
+
+*Found by* `t11_v_integer` against `t11_v_vec8`, where the vector's
+bounds moved from the declaration into the type entry and took a name.
+
+**Two dimensional packed arrays.**
+`logic [1:0][3:0]` in `t11_sv_arr2d` is an array of an array: the
+outer entry has `dims` `1`, element the inner vector entry, and two
+`(0, 0, -2)` triples, and the declaration carries `(1 downto 0)
+(3 downto 0)` and size 8.
+A memory `reg [7:0] m [0:3]` is the same shape with layout `2` on the
+outer entry.
+
+**Structs.**
+A `struct` is a record entry with an empty name, origin `1`, layout
+`2` or `3`, and fields written as in VHDL: `name NUL [u32 type]
+[u32 nranges]` then triples.
+A vector field carries its bounds, `(39 downto 0)` in
+`t11_sv_struct40`, and a scalar field none.
+The `typedef` that names it is a separate entry of kind `0x07`:
+`[1][target][0]`, where `target` is the index of the struct entry,
+and the declaration points at the alias, not the struct.
+The reader follows aliases before it reads a type.
+
+*Found by* `t11_sv_struct` against `t2_record`, which showed the
+record entry unnamed and a new entry after it holding the name.
+
+**Enums.**
+A SystemVerilog `enum` is an entry of kind `0x04`:
+`[1][base][n][8]` then `n` times `name NUL [u64 value]`, then
+`[u32 nranges]` and that many triples, with no `-99`.
+`base` is the index of the entry the values are stored in.
+An `enum {IDLE, RUN, DONE}` has base `int`, values 0, 1, 2 and no
+triples.
+An `enum logic [3:0] {A=1, B=5, C=9}` has base the unnamed vector
+entry, the three values as given, and one triple `(3, 0, -1)`, the
+bounds the vector entry does not hold.
+The `8` has not moved; it may be the byte size of a value.
+The typedef is a kind `0x07` alias as for a struct.
+
+*Found by* `t11_sv_enum` against `t2_enum`.
+*Confirmed by* `t11_sv_enum4`, which moved the base and added the
+triple.
+
+**What does not reach the table.**
+A `string` variable, `t11_sv_str`, produces no type entry, no
+declaration and no object, though its `initial` scope is there.
+See [hierarchy.md](hierarchy.md).
 
 ## What the earlier size measurements meant
 

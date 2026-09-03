@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 141 cases.
+They are the same in all 197 cases.
 
 
 ## Scope records
@@ -135,7 +135,7 @@ The record has 9 words:
 | ---: | :--- |
 | 0 | entity name, offset into the scope name pool, `-1` if none |
 | 1 | architecture name, same pool, `-1` if none |
-| 2 | kind: `0x13` the root, `0x09` an entity, `0x0a` a package, `0x0c` a generate or a block, `0x0d` a process |
+| 2 | kind: `0x13` the root, `0x09` an entity, `0x0a` a package, `0x0c` a generate or a block, `0x0d` a process; for Verilog `0x00` a module, `0x05` a named block, `0x07` a process |
 | 3 | number of declarations |
 | 4 | 0, see below |
 | 5 | file index of the architecture |
@@ -177,7 +177,7 @@ bytes after the last record:
 | 1 | 0 |
 | 2 | file index |
 | 3 | line |
-| 4 | value size in bytes, see [values.md](values.md) |
+| 4 | value size, bytes for VHDL and bits for Verilog, see [values.md](values.md) |
 | 5 | type index into the type table, see [types.md](types.md) |
 | 6 | number of range records |
 | 7 | index of the first range record, `-1` if none |
@@ -193,6 +193,9 @@ The kinds seen:
 | `0x0f` | variable declared in a process | `t6_var_int`, `t6_proc2` |
 | `0x12` | generic | `t4_gen_default` |
 | `0x13` | constant: an architecture constant, a loop index or a generate index | `t8_gen_if`, `t5_tr1000`, `t6_tr1300`, `t7_gen_for` |
+| `0x00` | Verilog variable: `reg`, `integer`, `real`, `time`, a SystemVerilog `logic`, `int`, struct or enum | `t11_v_bit_edge` |
+| `0x01` | Verilog `parameter` | `t11_v_param` |
+| `0x03` | Verilog net: a `wire`, and every port | `t11_v_wire`, `t11_v_port` |
 
 Word 9 was recorded as the constant 5 through tier 7, where no case had
 a port.
@@ -621,3 +624,129 @@ and the corpus test counts objects by distinct path.
 second logged range after an unlogged object, and showing eight objects
 where six were expected.
 *Confirmed by* `t9_var_inst3`.
+
+
+## Verilog modules, processes and nets
+
+Tier 11 repeats the hierarchy cases in Verilog.
+The debug section has the same regions and record shapes, and the
+differences are in the kind words, the scope names and the handle
+strides.
+Every claim below reproduces with `wdbcvt -dump`.
+
+**Units.**
+A module is a unit of kind `0x00`, with the module name at word 0 and
+no architecture name.
+Words 5 to 8 all point at the `module` line.
+A process is a unit of kind `0x07` with words 7 and 8 zero, as a VHDL
+process, and a named block, `begin : blk`, is a unit of kind `0x05`.
+The root is `0x13`, as for VHDL.
+
+*Found by* `t11_v_bit_edge` against `t1_bit_one_edge`.
+*Confirmed by* `t11_v_always`, which adds the block.
+
+**Process scopes.**
+Every `initial`, every `always` and every continuous assignment is a
+process scope under its module, named after its kind, its source line
+and a counter:
+
+| Statement | Scope name | Found by |
+| :--- | :--- | :--- |
+| `initial` at line 15 | `Initial15_0` | `t11_v_bit_edge` |
+| `always` at line 10 | `Always10_0` | `t11_v_always` |
+| `assign` at line 10 | `NetRegassign10_2` | `t11_v_wire` |
+| `always ... begin : blk` at line 12 | `blk` and `Always12_1`, both at line 12 | `t11_v_always` |
+
+The counter after the underscore is per design, and its order is open:
+in `t11_v_port` the two processes of `tb` are `_0` and `_1` and the
+child's assignment is `_2`, while in `t11_v_hier1` the child's two are
+`_0` and `_1` and `tb`'s is `_2`.
+
+**Implicit initial scopes.**
+A module whose variables have initializers, `reg s = 1'b0;`, gets one
+extra process scope, `Initial<line>_<n>`, at the line of the first
+such declaration.
+`t11_v_bit_edge` has `tb.Initial13_1` for the `reg` at line 13 beside
+`tb.Initial15_0` for the `initial` block at line 15.
+`t11_v_two_w64` initializes two variables at lines 7 and 8 and has one
+scope, `tb.Initial7_1`.
+Every `.v` initializer produces it: `reg`, `reg [7:0]`, `integer`,
+`real` and `time`.
+In SystemVerilog only an `enum` and a `string` initializer do;
+`logic`, `bit`, `int`, `byte`, `longint`, a vector and a struct with an
+initializer do not.
+The scope adds `0x98` bytes of handle space: `t11_v_bit_edge` has
+`0x9b4` where `t11_sv_logic`, the same design with `logic` instead of
+`reg`, has `0x91c`.
+It also changes the records at time 0; see [values.md](values.md).
+
+*Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, four scopes
+where three were expected.
+*Confirmed by* `t11_sv_logic` against `t11_v_bit_edge`, and by
+`t11_sv_enum`, `t11_sv_enum4` and `t11_sv_str`, the SystemVerilog
+cases that have the scope.
+
+**Instances and generates.**
+An instance is a scope named after the instance, `tb.dut`, with the
+child module's unit, as an entity instance is.
+A generate loop does not get a scope of its own: `t11_v_gen_for` has
+`tb.g[0].dut` and `tb.g[1].dut` directly under `tb`, where
+`t7_gen_for` has `\g(0)\` scopes of kind `0x0c`.
+The `genvar` is not a declaration and not an object.
+The two instances share one unit, and their process scopes carry the
+same names, `Initial9_0` and `Initial7_1` under each.
+
+*Found by* `t11_v_gen_for` against `t7_gen_for`.
+
+**Declarations.**
+A `reg` or any other variable is kind `0x00`, a `wire` is kind `0x03`,
+and a port is kind `0x03` with the port mode in word 9, `1` for
+`input` and `2` for `output`, whether or not the port has a net type.
+A `parameter` is kind `0x01`, with the size 32, the unnamed vector type
+and a range `(31 downto 0)`.
+Word 4 is the value size in bits, not bytes: 1 for a `reg`, 8 for
+`reg [7:0]`, 32 for `integer`, `real` and `int`, 64 for `time`, the
+sum of the element sizes for a memory, and for a struct the rule in
+[values.md](values.md).
+
+*Found by* `t11_v_wire` against `t11_v_bit_edge`, and `t11_v_port`
+against `t8_port_in`.
+
+**Objects and handles.**
+Nets are given handles before variables.
+In `t11_v_wire` the wire `w` holds `0x768` and the `reg` `s` holds
+`0x828`, and in `t11_v_port` the wire `y` holds `0x768`, the input
+port `a` holds `0x828` and the `reg` `x` holds `0x8e8`.
+An output port shares the handle of the wire on its net, `0x768` for
+`b` and `y`, as a VHDL port does.
+An input port connected to a `reg` does not share the `reg`'s handle;
+`a` and `x` are distinct objects with their own records.
+The second handle of a variable is the handle plus the record size,
+8 bytes per 32 bits of value, and the next object's handle is the
+second handle plus `0xb8`.
+`t11_v_two_w64` has `p`, 64 bits, at `0x768` and `q` at `0x830`, which
+is `0x768 + 16 + 0xb8`.
+So Verilog objects are `0xb8` plus the record size apart, the stride
+of a VHDL open port, where VHDL signals are `0xe8` plus the rounded
+size apart.
+The handle space grows by more than that per object: `t11_v_two_w64`,
+which widens the variable to 64 bits and adds a second one bit
+variable, has `0x100` more than `t11_v_bit_edge`, where the strides
+account for `0xc8`.
+VHDL signals do the same; see the open questions in
+[../format.md](../format.md).
+A `parameter` is an object with a handle and no second handle, the
+shape of a VHDL generic, in a second arena: `0x8c0` in `t11_v_param`.
+
+*Found by* `t11_v_two_w64` against `t11_v_vec8`, and `t11_v_port`
+against `t8_port_in`.
+
+**What is missing.**
+A `string` variable, `t11_sv_str`, has its implicit `initial` scope
+and nothing else: no declaration, no object, no type entry, and a
+logged range count of 0.
+Its handle space is `0x9b4`, the same as `t11_v_bit_edge`, so the
+string appears to be given handle space and left out of the instance
+list.
+The clock toggle due at the `$finish` time in `t11_v_always` is not
+recorded, so the last record of `clk` is at 75 ns in a 100 ns run.
