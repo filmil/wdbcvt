@@ -326,6 +326,28 @@ The rule was not found; the table is the result.
 `transition_runs` entry, a start, a step and a count, because 70001
 values do not belong in a JSON file.
 
+Tier 10 is a sweep along one axis, the value size, to turn the chunk
+table of tier 9 into a rule.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t10_vec258` to `t10_vec272` | sizes between 257, whole, and 292, split | still whole |
+| `t10_vec273` to `t10_vec276` | one byte at a time | 274 whole, 275 two chunks, 276 four |
+| `t10_vec280` to `t10_vec500` | sizes in the four chunk band | four chunks throughout |
+| `t10_vec573` to `t10_vec576` | one byte at a time | the step to six is at 575 |
+| `t10_vec872`, `t10_vec874` | one byte either side | the step to eight is at 874 |
+| `t10_vec1022` to `t10_vec1200` | sizes around eight chunks of 146 | 146 is not a limit; the step to ten is between 1169 and 1200 |
+| `t10_vec11970`, `t10_vec11980` | just below 12000 | 82 chunks both, so the steps are 299 apart, not 300 |
+| `t10_vec20000`, `t10_vec30000` | wider than a page | 134 and 202 chunks of 149 and 148 |
+| `t10_real40` | 40 reals, the 320 bytes of `t10_vec320` | the same four chunks of 80 |
+
+The first twenty five cases were written from the tier 9 table, and
+the rule `2 * ceil((size + 24) / 299)` was fitted to their counts.
+The last twelve were written to sit one byte either side of the
+boundaries the rule predicts, and every one fell where it should.
+The reader now enforces the rule's addresses on every wide value, so
+a file that chunks differently is refused rather than read.
+
 Not written yet, in order: the same ladder in Verilog and
 SystemVerilog, to find out whether the source language reaches the
 database at all; a `log_wave` that covers a package, to see a package
@@ -385,7 +407,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 116 cases through tier 9.
+5. The reader now reproduces all 141 cases through tier 10.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

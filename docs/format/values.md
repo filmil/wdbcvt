@@ -166,7 +166,7 @@ listed and that writes on the signal's handle.
 
 ## Wide values: chunks
 
-A value longer than 146 bytes is not one record.
+A value of 275 bytes or more is not one record.
 It is written as a run of records with consecutive keys, each carrying
 a chunk of the value, and a chunk is addressed by its handle: the
 object's handle plus the chunk's byte offset in the value.
@@ -204,38 +204,51 @@ an integer.
 The chunk sizes depend on the value size alone, and the same chunking
 is used at every time, including the duplicate time 0 records of a net
 with several objects.
-The corpus sweep over `t9_vec*` and `t9_int73`:
+The rule, fitted to the 55 wide values of the `t9_vec*`, `t10_vec*`,
+`t9_int73` and `t10_real40` cases and holding for every one:
 
-| Value bytes | Chunks | Sizes |
-| ---: | ---: | :--- |
-| 200 | 1 | 200 |
-| 256 | 1 | 256 |
-| 257 | 1 | 257 |
-| 292 | 4 | 73, 73, 73, 73 |
-| 300 | 4 | 75, 75, 75, 75 |
-| 584 | 6 | 97 five times, then 99 |
-| 730 | 6 | 121 five times, then 125 |
-| 1024 | 8 | 128 eight times |
-| 1100 | 8 | 137 seven times, then 141 |
-| 1168 | 8 | 146 eight times |
-| 1300 | 10 | 130 ten times |
-| 1460 | 10 | 146 ten times |
-| 1600 | 12 | 133 eleven times, then 137 |
-| 2048 | 14 | 146 thirteen times, then 150 |
-| 2920 | 20 | 146 twenty times |
-| 3000 | 22 | 136 twenty one times, then 144 |
-| 4096 | 28 | 146 twenty seven times, then 154 |
-| 12000 | 82 | 146 eighty one times, then 174 |
+| Value bytes | Chunks | Chunk bytes |
+| :--- | :--- | :--- |
+| `size < 275` | 1 | `size` |
+| `size >= 275` | `n = 2 * ceil((size + 24) / 299)` | `floor(size / n)`, the last takes the rest |
 
-Three regularities hold across the table.
-A value of 257 bytes or less is one record.
-The chunk count is even.
-Every chunk but the last is at most 146 bytes, and the last absorbs a
-remainder of up to 28 bytes.
-The rule that picks 4 chunks for 292 bytes and 6 for 584 is not known:
-`ceil(size / 146)` gives 2 and 4, and a reader that needs the count
-must read it off the records.
-The reader here does not need it, because it joins by address.
+So the chunks of one value are equal, and the last is up to `n - 1`
+bytes longer.
+The reader computes the run from the size and refuses a file whose
+records sit at other addresses, which is how the rule is checked on
+every case.
+
+| Case | Bytes | Chunks | Sizes |
+| :--- | ---: | ---: | :--- |
+| `t10_vec274` | 274 | 1 | 274 |
+| `t10_vec275` | 275 | 2 | 137, 138 |
+| `t10_vec276` | 276 | 4 | 69 four times |
+| `t9_vec292`, `t9_int73` | 292 | 4 | 73 four times |
+| `t10_vec574` | 574 | 4 | 143 three times, then 145 |
+| `t10_vec575` | 575 | 6 | 95 five times, then 100 |
+| `t10_vec872` | 872 | 6 | 145 five times, then 147 |
+| `t10_vec874` | 874 | 8 | 109 seven times, then 111 |
+| `t9_vec1168` | 1168 | 8 | 146 eight times |
+| `t10_vec1200` | 1200 | 10 | 120 ten times |
+| `t9_vec3000` | 3000 | 22 | 136 twenty one times, then 144 |
+| `t9_vec4096` | 4096 | 28 | 146 twenty seven times, then 154 |
+| `t9_vec12000` | 12000 | 82 | 146 eighty one times, then 174 |
+| `t10_vec20000` | 20000 | 134 | 149, then 183 |
+| `t10_vec30000` | 30000 | 202 | 148, then 252 |
+
+The count steps up by two every 299 bytes from 276: at 276, 575, 874,
+1173 and so on, and `t10_vec574` against `t10_vec575` and
+`t10_vec872` against `t10_vec874` are the pairs that pinned the step.
+`t10_vec274` against `t10_vec275` pinned the first split, and
+`t10_vec275` against `t10_vec276` showed the one size that gives two
+chunks.
+The first reading, chunks of at most 146 bytes with an even count, came
+from the tier 9 sizes alone and was wrong twice over: `t10_vec20000`
+has chunks of 149, and the count is even because the rule doubles it,
+not because 146 divides anything.
+What 24 and 299 are is open.
+`t10_real40`, 40 reals of 8 bytes, is chunked exactly as
+`t10_vec320`, 80 bytes four times, so the element type does not enter.
 
 An arena is `0x800` handles and a value can be longer than that.
 `t9_vec12000` spans arenas 0 to 6, and the page directory lists seven
@@ -244,8 +257,8 @@ arena records for one object.
 *Found by* `t9_vec292` against `t9_vec256` and `t9_vec257`: the
 widest value before tier 9 was the 32 bytes of `t2_array2d`, and the
 first records longer than 257 bytes came back in pieces.
-*Confirmed by* the sweep above and by the reader reading all of them
-back against the truth.
+*Confirmed by* the reader reading all 55 wide values back against the
+truth with the rule's addresses enforced.
 `t9_int73` separates a byte split from an element split.
 
 A page holds 10240 bytes: 20 bytes of header and then whole records.
