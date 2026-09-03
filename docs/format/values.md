@@ -813,6 +813,39 @@ at the handle and four at the handle plus 8.
 `m[0]` lands on pairs 1 and 2 and whose write of `m[1]` on pairs 0
 and 1.
 
+**A port bound to a slice.**
+A Verilog port bound to a slice of a net shares the net's handle, as
+a VHDL one does, and the object's offset word counts bits from bit 0
+of the net, where the VHDL offset counts bytes from the left element;
+see [hierarchy.md](hierarchy.md).
+The port's value is the bits `offset` to `offset + width - 1` of the
+net's pairs, and a slice that starts past pair 0 lies in the pair its
+bits fall in.
+`//hdl/serv:sim` binds `i_wb_adr` to `wb_mem_adr[12:2]` with offset
+2, `i_ctrl_misalign` to `lsb[1]` with offset 1, `i_wb_rdt` of
+`decode` to `i_wb_rdt[31:2]` with offset 2 and of `immdec` to
+`i_wb_rdt[31:7]` with offset 7, and `i_shamt` of `bufreg` to
+`o_dbus_dat[26:24]` with offset 24, all in pair 0 of a 32 bit net.
+Tier 37 pins it on a `wire v = r` in `tb` with the child's input port
+bound to a slice: `t37_v_port_slc__` binds `v[5:2]` of 8 bits and the
+object holds offset 2, `t37_v_port_bit__` binds `v[3]` and holds 3,
+`t37_v_port_pair1` binds `v[39:34]` of 40 bits and holds 34, so the
+port's bits are 2 to 7 of pair 1, and `t37_v_port_span_` binds
+`v[35:28]` and holds 28, bits 28 to 31 of pair 0 and 0 to 3 of pair
+1.
+The port has no record of its own: `truth.json` lists its values, and
+the reader takes them from the net's records, shifted down.
+A port bound to a slice of a `reg` is a net of its own, on its own
+handle with offset 0, holding the slice's value as its own records:
+`t37_v_port_reg__` binds `r[5:2]` and the port holds `XXXX`, `XXXX`,
+`0000`, `1111`, `0001`, the second `X` being the driver the `reg`
+connection makes under the tier 19 count.
+
+*Found by* `//hdl/serv:sim` against `t9_port_slice`, six port
+objects whose records were read as chunks at the wrong address.
+*Confirmed by* the five tier 37 cases, and every value of
+`//hdl/serv:sim` against its VCD.
+
 **Chunks.**
 The chunk rule above applies to a Verilog value's record bytes,
 `8 * ceil(bits / 32)`, with the same constants as for VHDL: a value
@@ -1316,6 +1349,87 @@ where the edge case holds three.
 *Confirmed by* `t17_v_net_same` against `t11_v_wire`, and
 `t17_v_mem_same` against `t11_v_mem4`; `t17_v_reg_nb` and
 `t17_v_nb_swap` for the nonblocking form.
+
+**Writes of the value held, from a clocked process or a shared net.**
+`//hdl/serv:sim`, a RISC-V core, holds 2965811 records that repeat
+the value before them, and the tier 17 rule above covers none of
+them: `s <= 1'b0` at every clock edge, and nets of the core
+re-evaluated at every clock.
+Tier 36 takes the two apart in flat modules, each count pinned as
+`records` in `truth.json`.
+
+A nonblocking assignment in a clocked `always` block records the
+value it writes when the block runs for the first time, and at every
+later run that follows an event on an operand of the block, changed
+or not.
+`t36_v_nb_clk_lit`, `always @(posedge clk) s <= 1'b0;` on a
+`reg s = 1'b0`, holds `X`, `0`, and `0` again at 25 ns, the first
+edge, and nothing at 75 ns.
+`t36_v_nb_clk_tog`, `s <= a & b` with `b` held at 0 and `a` toggling
+at 30 and 60 ns, holds a `0` at 25 ns and another at 75 ns, the edge
+after each toggle, and `t36_v_nb_clk_150` runs three edges after one
+toggle and holds `0` at 25 and 75 ns and nothing at 125 ns.
+The event is per block, not per assignment: in `t36_v_nb_clk_two`
+the block holds `s <= a & b; t <= 1'b0;` and `t` records at 25 and
+75 ns as `s` does, though its right hand side is a literal.
+A `reg` without an initializer, `t36_v_nb_clk_x__`, holds `X` and
+then `0` at 25 ns, a change.
+Every other write of the value held records nothing: a blocking
+assignment in the same block, `t36_v_bl_clk_lit`; `always @(a or b)
+s = a & b`, `t36_v_comb_and__`, which runs at time 0 and records the
+`0` there; `always @(a) s <= 1'b0`, `t36_v_nb_evt_lit`; `always #25
+s <= 1'b0`, `t36_v_nb_dly_lit`; two `@(posedge clk) s <= 1'b0` in an
+`initial` block, `t36_v_nb_ini_evt`; `s <= 1'b0` twice from an
+`initial` block, `t36_v_nb_two_lit`; and `s = a & b` from an
+`initial` block, `t36_v_init_expr_`.
+A reader changes none of it: `t36_v_nb_clk_rd_`, `t36_v_bl_clk_rd_`
+and `t36_v_comb_rd___` add `wire c = s` and hold the same records.
+The repeated record is not an event: `t36_v_nb_clk_net` drives
+`assign w = s | b` from the flop of `t36_v_nb_clk_tog` and `w` holds
+`X`, `0` and nothing more, and `t36_v_hier_p_nba` binds the flop to
+a child's input port, read inside, and the port holds `X`, `X`, `0`.
+
+A net whose drivers and readers together number two or more, the
+net that holds the extra `X` of tier 19, records every evaluation of
+a driver, changed or not.
+`t36_v_net_copy__` drives `assign w = sel ? a : b` and adds
+`wire c = w`; `w` holds `X`, `X`, `0`, then `0` at 10 ns when `a`
+changes while `sel` selects `b`, `1` at 10 ns when `b` changes, and
+`1` at 30 and 60 ns when `sel` toggles between two equal operands,
+seven records where `t36_v_net_mux_w_`, the same net without `c`,
+holds `X`, `0`, `1`.
+The reader may be anything: `wire c = ~w` in `t36_v_net_rd_not`,
+`wire [1:0] c = {w, sel}` in `t36_v_net_rd_cat` and `always @(w) c =
+w` in `t36_v_net_rd_alw` give the same seven records, and so does a
+second driver with no reader, `assign w = a & b` twice in
+`t36_v_net_2drv__`, five records where `t36_v_net_and___` holds two.
+The net that reads records only its changes: `c` holds `X`, `0`, `1`
+in each case.
+Ports are readers and drivers as tier 19 counts them: inside a child,
+`wire i = sel ? a : b` records every evaluation when `assign w = i`
+drives an output port from it, `t36_v_hier_int__`, `t36_v_hier_i_sel`
+with `sel` a `reg` of the child, `t36_v_hier_i_ab_` with `a` and `b`
+`reg`s of the child, `t36_v_hier_i_and` and `t36_v_hier_i_or_`, and
+records its changes alone when nothing reads it, `t36_v_hier_i_noc`,
+or when the child has no ports at all, `t36_v_hier_regs_`.
+A net assigned straight to an output port, `t36_v_hier_mux__` and
+`t36_v_hier_and__`, records its changes alone: the port joins the
+parent's net, and that net has one driver and no reader.
+So the rule of tier 19 reads in full: a net with one driver and no
+reader records its changes; any other net records every evaluation
+of a driver, of which the extra `X` at time 0 is the first.
+`rreg` of `//hdl/serv:sim`, `wire rreg = rtrig0 ? i_rreg1 :
+i_rreg0` read by `assign o_raddr = {rreg, rcnt}`, records at every
+clock while `rtrig0` toggles, 54413 records for 40935 changes.
+
+*Found by* `//hdl/serv:sim` against `t17_v_reg_same` and
+`t17_v_net_same`, then `t36_v_nb_clk_lit` against `t17_v_reg_same`,
+three records against two, and `t36_v_net_copy__` against
+`t36_v_net_mux_w_`, seven against three.
+*Confirmed by* the other 40 tier 36 cases, each with its count
+pinned in `truth.json`, and by `TestVCD` on `//hdl/serv:sim`, which
+matches the VCD once the repeats are dropped on both sides; see
+[vcd.md](vcd.md).
 
 **What is not recorded.**
 The `always #25 clk = ~clk` of `t11_v_always` is due at 100 ns, the

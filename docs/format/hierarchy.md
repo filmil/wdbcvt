@@ -315,7 +315,7 @@ variable that the simulator gave storage.
 | `0` | 8 | handle |
 | `8` | 8 | second handle for a signal, 0 for the others |
 | `16` | 4 | scope index |
-| `20` | 4 | byte offset into the value at the handle, 0 unless the object is a port bound to a slice |
+| `20` | 4 | offset into the value at the handle, 0 unless the object is a port bound to a slice: bytes for VHDL, bits for Verilog |
 | `24` | 4 | 0 |
 | `28` | 4 | 0 for a signal, 2 when the second handle is 0 |
 | `32` | 8 | declaration index |
@@ -334,7 +334,15 @@ vector and holds 1 again, the offset of `x(2)`, and `t9_port_sliceto`
 binds `x(0)` of a `0 to 1` vector and holds 0.
 So the port's value is `size` bytes of the signal's value from that
 offset, and the reader decodes it from the signal's records.
+A Verilog port bound to a slice of a net holds the offset in bits
+from bit 0 of the net: `wb_mem_adr[12:2]` in `//hdl/serv:sim` gives
+offset 2, `o_dbus_dat[26:24]` gives 24, and `v[39:34]` of a 40 bit
+wire in `t37_v_port_pair1` gives 34, into the second word pair.
 See [values.md](values.md).
+
+*Found by* `//hdl/serv:sim` against `t9_port_slice`.
+*Confirmed by* `t37_v_port_slc__`, `t37_v_port_bit__`,
+`t37_v_port_pair1` and `t37_v_port_span_`.
 
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
@@ -945,9 +953,22 @@ outside the noise mask.
 the record of `n`, which is computed from it, and nothing else: the
 same unit, the same declaration and the same handles as the default of
 7.
+A Verilog top elaborated with `-generic_top` is another matter: the
+top scope and its unit of `//hdl/serv:sim`, run with `-generic_top
+memfile=...`, are named
+
+```
+tb(memfile="external/+http_archive+serv/sw/hello_uart.hex")
+```
+
+the parameter and its value spelled into the name, and the VCD's
+`$scope module` line carries the same name.
+Every object path below starts with it, and `TestVCD` strips the
+parenthesis when it decides what the VCD may leave out.
 
 *Found by* `t22_o0`, `t22_mt_off` and `t22_gen_top`, each against
-`t22_base`, and `t24_dbg_drivers` against `t24_two_drivers`.
+`t22_base`, and `t24_dbg_drivers` against `t24_two_drivers`; the
+Verilog top name by `//hdl/serv:sim` against `t22_gen_top`.
 
 
 ## Debug levels
@@ -1521,10 +1542,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 603 of 603 cases, and the
+*Confirmed by* the region length check in 649 of 649 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 603 of 603 cases and
+and *confirmed by* the reader's range check in 649 of 649 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

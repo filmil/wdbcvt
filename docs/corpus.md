@@ -1114,23 +1114,127 @@ The reader reads every value, `TestVCD` agrees with Vivado's VCD, and
 The design is not a corpus case: it has no `truth.json`, and the VCD
 and the bench's own check stand in for it.
 
+`//hdl/serv:sim` is the design from outside this repository: **SERV**
+1.4.0, the bit serial RISC-V core, as the `servant_sim` system with a
+RAM, a timer and a GPIO, running the `hello_uart` program from its own
+`sw` directory.
+The plan above named `rules_fusesoc` as the way to build it.
+The bench uses a pinned `http_archive` of the SERV release instead,
+with a build file in `third_party/serv` that lists the sources by
+hand and one patch that moves a declaration above its first use, which
+`xvlog` requires.
+The archive is smaller than a FuseSoC tool chain, its hash pins the
+sources, and the bench controls the elaboration: the top gets the
+program through `-generic_top memfile=...`, and the firmware ends the
+run itself when it writes the halt address.
+The bench is `hdl/serv/tb.v`, adapted from SERV's `servant_tb.v` with
+its UART decoder and its timeout.
+The database holds 968 objects over 281 scopes, 23 module instances
+under the top, 3.3 ms of run, and the reader reads every value and
+`TestVCD` agrees with Vivado's VCD.
+It is not a corpus case: it has no `truth.json`, and the VCD stands in
+for it.
+
+SERV taught three things the ladder had not, each then pinned by a
+tier of its own: a port bound to a slice of a Verilog net, whose
+object offset counts bits, tier 37; the writes of the value held by a
+clocked nonblocking assignment and by a shared net, tier 36; and the
+name of a Verilog top elaborated with `-generic_top`,
+`tb(memfile="...")`.
+It also caught two names `go-vcd-parser` does not read, `bufreg` and
+the top's, so `TestVCD` now hides every name before parsing.
+
 Not written yet: a `string` value, which has no object to hold one,
-see `t11_sv_str`; and a design from outside this repository.
+see `t11_sv_str`.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
 discovered.
+SERV came after the ladder, not instead of it: a database from SERV
+differs from the baseline in hundreds of ways at once, and each of the
+three things it taught was worked out in a tier of minimal pairs.
 
-The intended end point is a real processor rather than a toy: **SERV**,
-the bit serial RISC-V core, built through `rules_fusesoc`, which is
-already a module in the registry. That gives a design nobody wrote for
-this experiment, with a hierarchy, a register file, and a trace long
-enough to cross whatever block boundaries the format has. It is the
-test that the reader works on something it was not tuned against.
+**Tier 36: writes of the value held.**
+Verilog only.
+SERV holds 2965811 records that repeat the value before them, and the
+tier 17 rule, that a write of the value held records nothing, covers
+none of them.
+The tier takes the clocked nonblocking assignment and the shared net
+apart, one axis per case, with the record count of every signal pinned
+as `records` in `truth.json`.
+The `truth.json` transitions list changes, since `TestCorpus` collapses
+a repeated value; `records` is what pins the repeats.
 
-It comes after the ladder, not instead of it. A database from SERV
-differs from the baseline in hundreds of ways at once, so on its own it
-would teach nothing about which byte means what.
+| Case | Differs from | In | Records of the signal |
+| :--- | :--- | :--- | :--- |
+| `t36_v_nb_clk_lit` | `t17_v_reg_same` | `s <= 1'b0` at every posedge | 3: `X`, `0`, `0` at 25 ns |
+| `t36_v_bl_clk_lit` | `t36_v_nb_clk_lit` | blocking | 2 |
+| `t36_v_nb_clk_exp` | `t36_v_nb_clk_lit` | `s <= a & b`, operands held | 3 |
+| `t36_v_init_expr_` | `t36_v_nb_clk_exp` | `s = a & b` from `initial` | 2 |
+| `t36_v_net_mux___` | `t17_v_net_same` | `w = sel ? a : b`, `a = b` | 2 |
+| `t36_v_net_and___` | `t17_v_net_same` | `w = a & b`, `b = 0` held | 2 |
+| `t36_v_comb_and__` | `t36_v_net_and___` | `always @(a or b) s = a & b` | 2 |
+| `t36_v_nb_clk_tog` | `t36_v_nb_clk_exp` | `a` toggling at 30 and 60 ns | 4: `0` at 25 and 75 ns |
+| `t36_v_nb_clk_chg` | `t36_v_nb_clk_tog` | `s <= a`, `a` set at 30 ns | 4 |
+| `t36_v_nb_clk_x__` | `t36_v_nb_clk_lit` | no initializer | 2: `X`, `0` at 25 ns |
+| `t36_v_nb_two_lit` | `t17_v_reg_same` | `s <= 1'b0` twice from `initial` | 2 |
+| `t36_v_nb_evt_lit` | `t36_v_nb_clk_lit` | `always @(a) s <= 1'b0` | 2 |
+| `t36_v_nb_ini_evt` | `t36_v_nb_clk_lit` | two `@(posedge clk)` in `initial` | 2 |
+| `t36_v_nb_dly_lit` | `t36_v_nb_clk_lit` | `always #25 s <= 1'b0` | 2 |
+| `t36_v_nb_clk_150` | `t36_v_nb_clk_tog` | three edges, one toggle | 4: nothing at 125 ns |
+| `t36_v_nb_clk_two` | `t36_v_nb_clk_tog` | `t <= 1'b0` in the same block | `t` 4, as `s` |
+| `t36_v_nb_clk_net` | `t36_v_nb_clk_tog` | `assign w = s \| b` from the flop | `w` 2 |
+| `t36_v_net_and_b_` | `t36_v_net_and___` | `b` drops to 0 at 20 ns | 2 |
+| `t36_v_net_flop__` | `t36_v_net_and_b_` | `a` a flop | 2 |
+| `t36_v_net_cnt___` | `t36_v_net_flop__` | `w = (c[4:2] == 3'b111)` | 2 |
+| `t36_v_net_mux_w_` | `t36_v_net_mux___` | `a` and `b` written to 1 at 10 ns | 3 |
+| `t36_v_net_mux_v6` | `t36_v_net_mux_w_` | 6 bit vectors | 3 |
+| `t36_v_hier_mux__` | `t36_v_net_mux_w_` | the mux in a child, ports | 4: one `X` per object on the handle, then the changes |
+| `t36_v_hier_int__` | `t36_v_hier_mux__` | `wire i` inside, port from `i` | `i` 7 |
+| `t36_v_hier_and__` | `t36_v_net_and_b_` | the and in a child | 3 |
+| `t36_v_hier_regs_` | `t36_v_hier_int__` | portless child | `i` 3 |
+| `t36_v_net_wires_` | `t36_v_net_mux_w_` | operands wires of the regs | 3 |
+| `t36_v_hier_i_and` | `t36_v_hier_int__` | `i = a & b` | `i` 5 |
+| `t36_v_hier_i_or_` | `t36_v_hier_int__` | `i = a \| b` | `i` 6 |
+| `t36_v_hier_i_sel` | `t36_v_hier_int__` | `sel` a reg of the child | `i` 7 |
+| `t36_v_hier_i_ab_` | `t36_v_hier_int__` | `a`, `b` regs of the child | `i` 7 |
+| `t36_v_net_copy__` | `t36_v_net_mux_w_` | `wire c = w` | `w` 7 |
+| `t36_v_hier_i_noc` | `t36_v_hier_int__` | nothing reads `i` | `i` 3 |
+| `t36_v_net_rd_not` | `t36_v_net_copy__` | `wire c = ~w` | `w` 7 |
+| `t36_v_net_rd_cat` | `t36_v_net_copy__` | `wire [1:0] c = {w, sel}` | `w` 7 |
+| `t36_v_net_rd_alw` | `t36_v_net_copy__` | `always @(w) c = w` | `w` 7 |
+| `t36_v_bl_clk_rd_` | `t36_v_bl_clk_lit` | `wire c = s` | 2 |
+| `t36_v_nb_clk_rd_` | `t36_v_nb_clk_lit` | `wire c = s` | 3 |
+| `t36_v_comb_rd___` | `t36_v_comb_and__` | `wire c = s` | 2 |
+| `t36_v_hier_p_nba` | `t36_v_nb_clk_lit` | `s` bound to a child input port | the port `X`, `X`, `0` |
+| `t36_v_net_2drv__` | `t36_v_net_and___` | `assign w = a & b` twice | 5 |
+
+The two rules are in [format/values.md](format/values.md): a clocked
+nonblocking assignment records on its first run and after an event on
+an operand of the block, and a net with two or more drivers and
+readers records every evaluation of a driver.
+The reader changed nothing for this tier.
+`TestVCD` changed: the VCD keeps a few of these writes and drops the
+rest, so the test compares the changes on both sides, see
+[format/vcd.md](format/vcd.md).
+
+**Tier 37: a port bound to a slice of a Verilog net.**
+`t9_port_slice` bound a VHDL port to a slice and found the object
+offset in bytes.
+SERV binds `i_wb_adr` to `wb_mem_adr[12:2]` and the reader, counting
+bytes, read the wrong bits.
+The tier moves the slice through a 40 bit net.
+
+| Case | Differs from | In | Offset |
+| :--- | :--- | :--- | :--- |
+| `t37_v_port_slc__` | `t9_port_slice` | Verilog, `v[5:2]` of 8 bits | 2, in bits |
+| `t37_v_port_bit__` | `t37_v_port_slc__` | `v[3]` | 3 |
+| `t37_v_port_pair1` | `t37_v_port_slc__` | `v[39:34]` of 40 bits | 34, in pair 1 |
+| `t37_v_port_span_` | `t37_v_port_pair1` | `v[35:28]` | 28, across pairs 0 and 1 |
+| `t37_v_port_reg__` | `t37_v_port_slc__` | the actual a `reg` | none: a handle of its own, 5 records |
+
+The reader's `Changes` gained the bit offset for a Verilog port: it
+reads the pairs the bits fall in and shifts them down.
 
 
 ## Record which comparison produced which finding
@@ -1170,9 +1274,10 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 603 cases through tier 35, and
-   matches the VCD of every one of them, and of `//hdl/counter:sim`
-   and `//hdl/uart:sim`, where the VCD holds anything.
+5. The reader now reproduces all 649 cases through tier 37, and
+   matches the VCD of every one of them, and of `//hdl/counter:sim`,
+   `//hdl/uart:sim` and `//hdl/serv:sim`, where the VCD holds
+   anything.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

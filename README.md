@@ -52,6 +52,11 @@ where the tool should not be used.
 * `hdl/uart/` holds a larger VHDL design, a UART looped back into a
   FIFO, that confirms the reader on a hierarchy not written to ask one
   question.
+* `hdl/serv/` holds a Verilog bench around SERV, the bit serial RISC-V
+  core, running its `hello_uart` program: a design nobody wrote for
+  this repository.
+  `third_party/serv/` holds the build file and the patch for the
+  pinned SERV archive fetched in `MODULE.bazel`.
 * `cmd/wdbcvt/` is the command line tool.
   Today it probes a `.wdb` and reports measurements; it grows into a
   converter as the format becomes known.

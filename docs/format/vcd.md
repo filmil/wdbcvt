@@ -33,9 +33,9 @@ the files by eye.
 
 ## What the VCD carries
 
-All 603 cases, `//hdl/counter:sim` and `//hdl/uart:sim` pass, and
-every object of the database is either in its VCD or covered by one
-line of this table.
+All 649 cases, `//hdl/counter:sim`, `//hdl/uart:sim` and
+`//hdl/serv:sim` pass, and every object of the database is either in
+its VCD or covered by one line of this table.
 
 | Object | In the VCD |
 | :--- | :--- |
@@ -111,11 +111,31 @@ comparing, by the rules the comparison found necessary:
   one VCD entry and three database records.
   Delta cycles that return a signal to its old value, `t7_delta`, are
   one VCD entry carrying the old value and two database records.
-* The set of times at which an object has a VCD entry equals the set
-  of times at which it has a database record, in every case.
+* The set of times at which an object has a VCD entry equalled the
+  set of times at which it has a database record through tier 35.
   In particular the missing time 0 `X` record of a spilled Verilog
   variable, `t13_v_tr430`, is invisible here, because the `0` record at
   time 0 remains.
+* Tier 36 and `//hdl/serv:sim` broke that equality: the database
+  records a clocked nonblocking assignment of the value held and every
+  evaluation of a shared net, see [values.md](values.md), and the VCD
+  drops most of those writes and keeps a few.
+  `s` of `t36_v_nb_clk_lit` has a database record at 25 ns and no VCD
+  entry there.
+  `rf_wen` of `//hdl/serv:sim` is `X` in the database at 0, 31000 and
+  93000 ps and `x` in the VCD at 0 and 93000 ps, the same record bytes
+  at 31000 and 93000.
+  Which repeats the VCD keeps is open.
+  Four other corpus cases have a VCD entry that repeats the value
+  before it, none of them a tier 36 write: `t7_delta` and `t22_vh_ns`
+  return the signal to its old value within one VCD time step, so the
+  last value of the step repeats the value before the step;
+  `t1_nine_state` writes `X` over `U` and both are `x` in the VCD;
+  `t34_res_3drv____` writes the resolved `X` a second time at 80 ns,
+  and that write the VCD keeps.
+  So `TestVCD` compares the changes of value on both sides, each list
+  with its repeats dropped, and leaves the count of records to
+  `records` in `truth.json`.
 
 
 ## Names and codes
@@ -165,6 +185,10 @@ v0.2.0 needs Go 1.27.1 and the repository's Go toolchain is 1.26.2.
 v0.1.0 does not read three spellings xsim uses in `$scope` and `$var`
 lines: a VHDL extended identifier `\g(0)\`, a Verilog escaped
 identifier `\g.r `, and a generate instance `g[0].dut`.
-The test swaps each such name for `hiddenN` before parsing and puts it
-back when it builds the path, in `hideNames`.
+Nor does it read a plain name that starts like a value: `$scope module
+bufreg` of `//hdl/serv:sim` fails at the `b`, read as a binary vector,
+and the top `tb(memfile="...")` fails at the parenthesis.
+The test swaps every name in a `$scope` or `$var` line for `hiddenN`
+before parsing and puts it back when it builds the path, in
+`hideNames`.
 Values, times and codes are read by the parser unchanged.
