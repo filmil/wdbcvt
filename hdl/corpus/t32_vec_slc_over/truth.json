@@ -1,0 +1,42 @@
+{
+  "case": "t32_vec_slc_over",
+  "axis": "v <= x\"FF\"; v(3 downto 0) <= x\"0\" in one delta",
+  "differs_from": "t32_vec_slice___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "std_ulogic_vector"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "11110000"
+    }
+  ]
+}

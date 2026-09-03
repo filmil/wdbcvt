@@ -1,0 +1,58 @@
+{
+  "case": "t32_rec_intlast_",
+  "axis": "r.a <= '1' behind the integer field",
+  "differs_from": "t32_rec_intfld__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "type": "ri_t",
+      "fields": [
+        {
+          "name": "i",
+          "width": 32,
+          "type": "integer"
+        },
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "r.a",
+      "value": "1"
+    }
+  ]
+}

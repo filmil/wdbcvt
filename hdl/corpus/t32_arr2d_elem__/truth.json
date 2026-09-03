@@ -1,0 +1,42 @@
+{
+  "case": "t32_arr2d_elem__",
+  "axis": "m(1, 0) <= '1' of an array (0 to 1, 0 to 2)",
+  "differs_from": "t18_arr_2dim____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 6,
+      "type": "mat_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "000100"
+    }
+  ]
+}
