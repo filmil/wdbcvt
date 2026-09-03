@@ -52,9 +52,12 @@ where the tool should not be used.
 * `cmd/wdbcvt/` is the command line tool.
   Today it probes a `.wdb` and reports measurements; it grows into a
   converter as the format becomes known.
-  The first output format is VCD, written through
-  `github.com/filmil/go-vcd-parser`.
-  FST comes later; [docs/fst-output.md](docs/fst-output.md) records how.
+  VCD comes first as a checking step, through
+  `github.com/filmil/go-vcd-parser`, but the deliverable is FST.
+  VCD cannot represent integers, reals, enumerations, records or arrays,
+  so a WDB to VCD converter drops most of a real design silently.
+  [docs/fst-output.md](docs/fst-output.md) records the measurement and
+  the plan.
 * `pkg/wdb/` holds the library the tool is built on.
 * `docs/` holds everything known about the format, written down as it is
   discovered. [docs/README.md](docs/README.md) is the index;

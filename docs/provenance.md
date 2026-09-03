@@ -45,11 +45,22 @@ The method is black box observation of those output files.
 No claim about the format is load bearing until at least one guard
 below agrees with it.
 
-**1. The VCD from the same simulation run.**
+**1. The VCD from the same simulation run, for the signals it can
+hold.**
 Every corpus case writes `sim.vcd` beside `sim.wdb`, from one run of one
-design. VCD is specified in IEEE 1800 and is text. It is the answer key:
-whatever the `.wdb` says about a signal, the `.vcd` from the same run
-says it too, in a form that has been readable for thirty years.
+design. VCD is specified in IEEE 1800 and is text.
+
+The limit has to be stated with the guard, because it is narrower than
+it first appears. **VCD cannot represent most of what the database
+holds.** Measured on Vivado's own VCD writer, signals of type `boolean`,
+`integer`, `real`, `time`, `character`, a user enumeration, a record or
+an array produce no `$var` and no value changes at all. Only
+`std_ulogic`, `bit` and the vector types survive. See
+[format.md](format.md).
+
+So this guard covers bit and vector signals, and nothing else. For the
+other types there is no independent reading of the same run, and guards
+3 and 5 have to carry the weight alone.
 
 **2. `go-vcd-parser`, which this project did not write.**
 The answer key is read by `github.com/filmil/go-vcd-parser`, an existing
@@ -64,18 +75,40 @@ times and values that the simulation was written to produce. It is
 derived from the design, not from the database. The decoder has to
 reproduce it. See [corpus.md](corpus.md).
 
-**4. Independent simulators.**
+**4. Independent simulators, for the signals VCD can hold.**
 GHDL and nvc simulate the same VHDL and write their own waveforms. They
 share no code with Vivado. Where they agree with the decoded `.wdb`, the
 agreement is evidence about the design rather than about one tool's
-quirks. Every corpus case was already checked this way before any `.wdb`
-existed: all nine analyzed, elaborated and ran under `ghdl --std=08`,
-and every `truth.json` matched the VCD from that run.
+quirks. Every Tier 0 and Tier 1 case was checked this way before any
+`.wdb` existed: all nine analyzed, elaborated and ran under
+`ghdl --std=08`, and every `truth.json` matched the VCD from that run.
+
+This guard inherits the same limit as guard 1, because it is read
+through VCD. GHDL emits nothing for the same types Vivado's VCD drops.
 
 **5. `libfst` for the output side.**
 The FST writer is checked by reading its output back with `libfst`, the
 reference implementation, vendored test only. See
 [fst-output.md](fst-output.md).
+
+
+## Which guard covers which type
+
+| Signal type | VCD answer key | `truth.json` | Independent simulator | libfst |
+| :--- | :---: | :---: | :---: | :---: |
+| `std_ulogic`, `bit` | yes | yes | yes | yes |
+| vectors, `unsigned`, `signed` | yes | yes | yes | yes |
+| `boolean`, `integer`, `real`, `time`, `character` | no | yes | no | yes |
+| enumerations, records, arrays | no | yes | no | yes |
+
+For the bottom two rows, a decoded value rests on `truth.json` and on
+the FST round trip. That is thinner than the top two rows, and a reader
+should treat claims about those types with correspondingly more caution
+until a second guard exists for them.
+
+The obvious way to add one is to write FST and read it back with
+`libfst`, which can hold every type in the table. That is guard 5, and
+it is the reason FST matters here beyond being a nicer output format.
 
 
 ## The rules that follow

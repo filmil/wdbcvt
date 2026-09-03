@@ -5,10 +5,51 @@
 
 ## Why this document exists
 
-VCD is the first output format, because the answer key is already a VCD.
-FST is the one worth arriving at.
-This records what was found about FST, and which route to take, so the
-decision does not have to be made again under time pressure.
+FST is not a nicer output format to arrive at eventually.
+**It is the only one of the two that can hold what the database holds**,
+so it is required for the conversion to be correct at all.
+This records what was found about FST, and which route to take.
+
+
+## What VCD loses, measured
+
+Vivado writes `sim.vcd` from the same run that writes `sim.wdb`.
+For eight of the fifteen types in the corpus, that VCD holds no `$var`
+and no value changes: `boolean`, `integer`, `real`, `time`,
+`character`, user enumerations, records and arrays are simply absent.
+Only `std_ulogic`, `bit` and the vector types survive.
+The measurement is in [format.md](format.md).
+
+A `.wdb` to VCD converter would therefore drop most of a real design's
+signals, and drop them **silently**, because VCD has nowhere to put
+them and no way to say so.
+
+FST has somewhere to put them. From `fstapi.h`:
+
+| Need | FST provides |
+| :--- | :--- |
+| integers | `FST_VT_VCD_INTEGER`, `FST_VT_SV_INT` and the sized integer types |
+| reals | `FST_VT_VCD_REAL`, `FST_VT_SV_SHORTREAL` |
+| time | `FST_VT_VCD_TIME`, `FST_VT_VCD_REALTIME` |
+| strings and characters | `FST_VT_GEN_STRING`, variable length |
+| enumerations with their literal names | `FST_VT_SV_ENUM`, plus `fstWriterCreateEnumTable` and `fstWriterEmitEnumTableRef` |
+
+That last row matters more than it looks. The database stores
+enumeration literals as text, `'U' 'X' '0' '1' 'Z' 'W' 'L' 'H' '-'` for
+`std_ulogic` and `crimson viridian cobalt` for a user type. FST can
+carry those names through to the viewer. VCD cannot.
+
+
+## The order of work, revised
+
+VCD still comes first, but for a smaller reason than before: it is the
+format the answer key is already in, so the first end to end check of
+the decoder compares like with like on bit and vector signals.
+
+It is a checking step, not the deliverable.
+The deliverable is FST, because a converter that silently drops every
+integer, real, enumeration and record in a design is not a converter
+anyone should use.
 
 
 ## What FST is
@@ -127,12 +168,19 @@ and compression. Compare decoded content.
 
 ## Order of work
 
-1. Decode enough of `.wdb` to produce VCD. Check against `sim.vcd`.
-2. Split the decoder's output model away from the VCD writer.
+1. Decode enough of `.wdb` to produce VCD for bit and vector signals.
+   Check against `sim.vcd`, which covers exactly those.
+2. Split the decoder's output model away from the VCD writer. The model
+   has to represent integers, reals, times, strings, enumerations with
+   their literal names, records and arrays, because the database does
+   and VCD does not. A model shaped around what VCD can express would
+   have to be rebuilt.
 3. Add the FST writer against that model.
-4. Add the libfst read-back test.
+4. Add the libfst read-back test. For the eight types VCD drops, this
+   is the **only** independent check there is, so it is not optional.
 
-Step 2 is the one that is cheap now and expensive later.
+Step 2 is the one that is cheap now and expensive later, and the reason
+is step 4.
 
 
 ## Sources

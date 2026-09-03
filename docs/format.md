@@ -164,6 +164,61 @@ spread across 254 extra literals, is about 4 bytes each, which matches
 the 4 byte spacing measured in the `std_ulogic` literal table.
 
 
+## VCD cannot hold what the database holds
+
+This is a property of VCD, not of any one writer, and it decides what a
+converter can honestly produce.
+
+Vivado writes `sim.vcd` from the same simulation run that writes
+`sim.wdb`. For eight of the fifteen types measured, that VCD contains
+**no `$var` declaration and no value changes at all**. The signal is
+absent, not degraded.
+
+| Type | In Vivado's own VCD |
+| :--- | :--- |
+| `std_ulogic`, `bit` | present, as `wire 1` |
+| `std_ulogic_vector`, `std_logic_vector`, `unsigned`, `signed` | present, as `wire N` |
+| `boolean` | **absent** |
+| `integer` | **absent** |
+| `real` | **absent** |
+| `time` | **absent** |
+| `character` | **absent** |
+| user enumeration | **absent** |
+| record | **absent** |
+| array | **absent** |
+
+The whole VCD for the `integer` case is 123 bytes of header:
+
+```
+$date
+   Thu Sep  3 08:52:42 2026
+$end
+$version
+  2025.2
+$end
+$timescale
+  1ps
+$end
+$enddefinitions $end
+$dumpvars
+$end
+```
+
+Two consequences, both of which change what this project should do.
+
+**The VCD answer key only covers bit and vector signals.** For the other
+eight types there is no independent reading of the same run to check a
+decoder against. `provenance.md` says which guard applies where.
+
+**A `.wdb` to VCD converter is lossy, and silently so.** It would drop
+every integer, real, enumeration, record and array in a design without
+reporting anything, because VCD has nowhere to put them. FST does: it
+has `FST_VT_VCD_INTEGER`, `FST_VT_VCD_REAL`, `FST_VT_VCD_TIME`,
+`FST_VT_GEN_STRING` and `FST_VT_SV_ENUM`, and `fstWriterCreateEnumTable`
+for enumerations with their literal names. See
+[fst-output.md](fst-output.md).
+
+
 ## How hierarchy is stored
 
 Scope names are stored as a sequence of NUL terminated strings in the
