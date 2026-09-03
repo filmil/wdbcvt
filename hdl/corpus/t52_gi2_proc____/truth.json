@@ -1,0 +1,42 @@
+{
+  "case": "t52_gi2_proc____",
+  "axis": "the iteration holding a process and no signal",
+  "differs_from": "t52_inst2_proc__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.g(0)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "0"
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "1"
+    }
+  ]
+}

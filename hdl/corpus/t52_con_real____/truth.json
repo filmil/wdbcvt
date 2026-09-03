@@ -1,0 +1,45 @@
+{
+  "case": "t52_con_real____",
+  "axis": "an architecture constant of real before an integer one, for the handle stride",
+  "differs_from": "t52_var_real____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "type": "real",
+      "kind": "constant",
+      "port": "",
+      "storage": 2
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "type": "integer",
+      "kind": "constant",
+      "port": "",
+      "storage": 2,
+      "value": "1"
+    }
+  ]
+}

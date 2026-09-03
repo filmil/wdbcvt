@@ -1,0 +1,68 @@
+{
+  "case": "t52_inst2_sigprc",
+  "axis": "the child with a signal driven by a process",
+  "differs_from": "t52_inst2_sig___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.d0",
+      "name": "c",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.d1",
+      "name": "c",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.d0.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.d1.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.d0.c",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.d1.c",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "d0",
+      "k": 0
+    },
+    {
+      "instance": "d1",
+      "k": 1
+    }
+  ]
+}

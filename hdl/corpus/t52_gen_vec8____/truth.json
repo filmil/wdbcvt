@@ -1,0 +1,42 @@
+{
+  "case": "t52_gen_vec8____",
+  "axis": "a generic of std_ulogic_vector(7 downto 0) before an integer one, for the handle stride",
+  "differs_from": "t52_var_vec8____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "a",
+      "type": "std_ulogic_vector",
+      "value": "00000000"
+    },
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "b",
+      "type": "integer",
+      "value": "1"
+    }
+  ]
+}
