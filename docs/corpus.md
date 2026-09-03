@@ -1079,9 +1079,23 @@ wrong: a resolved signal with several drivers records each
 transaction, and the second `Z` was the assignment at time 0.
 The reader needed no change.
 
+`//hdl/uart:sim` is the realistic design after the counter: a UART
+transmitter looped back into a receiver whose characters fill a FIFO,
+under one `uart_loop` entity with two generics, driven by a bench that
+sends six characters, takes them out of the queue and counts
+mismatches in `errors`.
+The database holds 59 objects over 24 scopes, 17 types, 8 arenas and
+17 pages, with enumerated states, ranged integers, a memory of
+vectors, nested records and fields driven through three levels of
+ports.
+The reader reads every value, `TestVCD` agrees with Vivado's VCD, and
+`errors` reads back as 0.
+The design is not a corpus case: it has no `truth.json`, and the VCD
+and the bench's own check stand in for it.
+
 Not written yet: a `string` value, which has no object to hold one,
-see `t11_sv_str`; a typedef of an unpacked struct array; and a
-realistic design beyond the counter.
+see `t11_sv_str`; a typedef of an unpacked struct array; and a design
+from outside this repository.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -1137,8 +1151,8 @@ it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
 5. The reader now reproduces all 597 cases through tier 34, and
-   matches the VCD of every one of them, and of `//hdl/counter:sim`,
-   where the VCD holds anything.
+   matches the VCD of every one of them, and of `//hdl/counter:sim`
+   and `//hdl/uart:sim`, where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

@@ -568,11 +568,17 @@ A write is per driver.
 `t34_two_prc_adj_` assigns `r.b` from process `p` and `r.c` from
 process `q` in one delta and holds two 1 byte records at 50 ns, where
 `t32_rec_two_adj_` with both from `p` holds one 2 byte record.
-The records of different processes at one time sit in the reverse
-order of the processes in the source: `q` before `p` whichever field
-each writes, `t34_two_prc_adj_` and `t34_two_prc_rev_`, and `g(2)`,
-`g(1)`, `g(0)` for the three concurrent assignments of
-`t34_gen_elems___`, which holds `0001`, `0011`, `0111` at 50 ns.
+The records of different processes at one time sit in the order the
+simulator ran the processes, which is not the source order: `q`
+before `p` whichever field each writes, `t34_two_prc_adj_` and
+`t34_two_prc_rev_`, and `g(2)`, `g(1)`, `g(0)` for the three
+concurrent assignments of `t34_gen_elems___`, which holds `0001`,
+`0011`, `0111` at 50 ns.
+In `//hdl/uart:sim` the three concurrent assignments to the fields of
+the FIFO's `stat` at 1615 ns land as `head`, `count`, `empty`, the
+order in which the process behind them assigned the signals they
+read, so the order is the scheduler's and a reader must not depend on
+it.
 
 *Found by* `t34_pmap_slice__` against `t9_port_slice2__`, and
 `t34_two_prc_adj_` against `t32_rec_two_adj_`.

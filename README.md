@@ -49,6 +49,9 @@ where the tool should not be used.
 * `hdl/counter/` holds a small VHDL design and its testbench.
   Simulating it produces the reference `sim.wdb`, and a `sim.vcd` from the
   same run that acts as the answer key.
+* `hdl/uart/` holds a larger VHDL design, a UART looped back into a
+  FIFO, that confirms the reader on a hierarchy not written to ask one
+  question.
 * `cmd/wdbcvt/` is the command line tool.
   Today it probes a `.wdb` and reports measurements; it grows into a
   converter as the format becomes known.
