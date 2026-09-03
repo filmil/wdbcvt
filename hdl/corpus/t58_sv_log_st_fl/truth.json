@@ -1,0 +1,129 @@
+{
+  "case": "t58_sv_log_st_fl",
+  "axis": "logging. log_wave names a field of a packed struct, in a SystemVerilog design with a logic, a vector, a memory, a packed struct, an int, a real, a parameter, a localparam, a generate with a wire, a named block with a variable and a static task, to see what the database logs.",
+  "differs_from": "t58_sv_log_all__",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "logged": false,
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "",
+      "logged": false,
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 8,
+      "type": "",
+      "elements": 2,
+      "element_width": 4,
+      "element_type": "",
+      "logged": false,
+      "declared": "memory of logic"
+    },
+    {
+      "scope": "tb",
+      "name": "st",
+      "type": "st_t",
+      "width": 5,
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        },
+        {
+          "name": "b",
+          "width": 4,
+          "type": "",
+          "declared": "logic"
+        }
+      ],
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "i",
+      "width": 32,
+      "type": "int",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 64,
+      "type": "real",
+      "logged": false
+    },
+    {
+      "scope": "tb.gb[0]",
+      "name": "gw",
+      "width": 1,
+      "type": "logic",
+      "logged": false,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.gb[1]",
+      "name": "gw",
+      "width": 1,
+      "type": "logic",
+      "logged": false,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.blk",
+      "name": "bv",
+      "width": 32,
+      "type": "int",
+      "logged": false
+    },
+    {
+      "scope": "tb.inc",
+      "name": "x",
+      "width": 32,
+      "type": "int",
+      "port": "in",
+      "logged": false
+    },
+    {
+      "scope": "tb.inc",
+      "name": "tmp",
+      "width": 32,
+      "type": "int",
+      "logged": false
+    }
+  ],
+  "transitions": [],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "P",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000000011",
+      "logged": false
+    },
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "L",
+      "type": "",
+      "declared": "localparam",
+      "value": "00000000000000000000000000000100",
+      "logged": false
+    }
+  ]
+}

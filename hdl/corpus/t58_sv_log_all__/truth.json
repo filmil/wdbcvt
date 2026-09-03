@@ -1,0 +1,252 @@
+{
+  "case": "t58_sv_log_all__",
+  "axis": "logging. log_wave names everything with -recursive *, in a SystemVerilog design with a logic, a vector, a memory, a packed struct, an int, a real, a parameter, a localparam, a generate with a wire, a named block with a variable and a static task, to see what the database logs.",
+  "differs_from": "t57_log_all_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 8,
+      "type": "",
+      "elements": 2,
+      "element_width": 4,
+      "element_type": "",
+      "declared": "memory of logic"
+    },
+    {
+      "scope": "tb",
+      "name": "st",
+      "type": "st_t",
+      "width": 5,
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        },
+        {
+          "name": "b",
+          "width": 4,
+          "type": "",
+          "declared": "logic"
+        }
+      ]
+    },
+    {
+      "scope": "tb",
+      "name": "i",
+      "width": 32,
+      "type": "int"
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 64,
+      "type": "real"
+    },
+    {
+      "scope": "tb.gb[0]",
+      "name": "gw",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.gb[1]",
+      "name": "gw",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.blk",
+      "name": "bv",
+      "width": 32,
+      "type": "int"
+    },
+    {
+      "scope": "tb.inc",
+      "name": "x",
+      "width": 32,
+      "type": "int",
+      "port": "in"
+    },
+    {
+      "scope": "tb.inc",
+      "name": "tmp",
+      "width": 32,
+      "type": "int"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "0101"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(0000, 0000)"
+    },
+    {
+      "time_ns": 10,
+      "signal": "m",
+      "value": "(0000, 1001)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "st.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "st.b",
+      "value": "0000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "st.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "st.b",
+      "value": "0011"
+    },
+    {
+      "time_ns": 0,
+      "signal": "i",
+      "value": "7"
+    },
+    {
+      "time_ns": 10,
+      "signal": "i",
+      "value": "2"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "0.5"
+    },
+    {
+      "time_ns": 10,
+      "signal": "r",
+      "value": "1.5"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.gb[0].gw",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.gb[0].gw",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.gb[0].gw",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.gb[1].gw",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.gb[1].gw",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.gb[1].gw",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.blk.bv",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.blk.bv",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.blk.bv",
+      "value": "2"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.inc.x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.inc.x",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.inc.tmp",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.inc.tmp",
+      "value": "2"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "P",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000000011"
+    },
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "L",
+      "type": "",
+      "declared": "localparam",
+      "value": "00000000000000000000000000000100"
+    }
+  ]
+}
