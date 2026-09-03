@@ -31,6 +31,10 @@ type truthSignal struct {
 	// inout, buffer or linkage. Empty for a signal declared in an
 	// architecture.
 	Port string `json:"port"`
+	// Position, when set, is the place of a Verilog port in its module's
+	// port list counted from 0, the tenth word of the instance record:
+	// t48_v_port_pos4_. Absent means not checked.
+	Position *int `json:"position"`
 	// Range is the declared index range of a vector, spelled the way
 	// the decoder renders it, "7 downto 0" or "-4 to 3". The tier 11
 	// cases wrote it first; the test has checked it since tier 41,
@@ -523,6 +527,9 @@ func TestCorpus(t *testing.T) {
 				}
 				if got := f.Decls[o.Decl].Mode.String(); got != mode {
 					t.Errorf("%s: port mode %s, truth says %s", path, got, mode)
+				}
+				if s.Position != nil && int(o.Position) != *s.Position {
+					t.Errorf("%s: port position %d, truth says %d", path, o.Position, *s.Position)
 				}
 				if k, ok := netKinds[s.Declared]; ok && s.Port == "" {
 					if got := f.Decls[o.Decl].Kind; got != k {

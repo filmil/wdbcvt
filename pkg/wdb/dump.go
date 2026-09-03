@@ -151,6 +151,9 @@ func (f *File) Dump(w io.Writer) error {
 		if o.Generic {
 			p(" (no second handle)")
 		}
+		if f.Decls[o.Decl].Mode != PortNone {
+			p(" position %d", o.Position)
+		}
 		if !o.Logged {
 			p(" (not logged)")
 		}

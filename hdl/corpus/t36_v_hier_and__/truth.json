@@ -39,7 +39,8 @@
       "type": "logic",
       "port": "in",
       "records": 2,
-      "declared": "wire"
+      "declared": "wire",
+      "position": 0
     },
     {
       "scope": "tb.u",
@@ -48,7 +49,8 @@
       "type": "logic",
       "port": "in",
       "records": 5,
-      "declared": "wire"
+      "declared": "wire",
+      "position": 1
     },
     {
       "scope": "tb.u",
@@ -57,7 +59,8 @@
       "type": "logic",
       "port": "in",
       "records": 3,
-      "declared": "wire"
+      "declared": "wire",
+      "position": 2
     },
     {
       "scope": "tb.u",
@@ -66,7 +69,8 @@
       "type": "logic",
       "port": "out",
       "records": 3,
-      "declared": "wire"
+      "declared": "wire",
+      "position": 3
     }
   ],
   "transitions": [

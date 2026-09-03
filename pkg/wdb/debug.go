@@ -322,6 +322,11 @@ type Object struct {
 	// at time 0; a declared variable gets none, and its arena may not
 	// exist.
 	Generic bool
+	// Position is the tenth word of the instance record: for a Verilog
+	// port, its place in the module's port list counted from 0, by the
+	// port list and not by the connection or by the declaration order
+	// of a non-ANSI header. It is 0 for a VHDL port, tier 48.
+	Position uint32
 }
 
 // Arena selects the arena whose pages hold the object's records.
@@ -595,11 +600,12 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 	for i := 0; i < n; i++ {
 		r := d[a+uint64(i*instRecLen):]
 		o := Object{
-			Handle:  binary.LittleEndian.Uint64(r[0:]),
-			Scope:   int(binary.LittleEndian.Uint32(r[16:])),
-			Offset:  binary.LittleEndian.Uint32(r[20:]),
-			Decl:    int(binary.LittleEndian.Uint64(r[32:])),
-			Generic: binary.LittleEndian.Uint32(r[28:]) == 2,
+			Handle:   binary.LittleEndian.Uint64(r[0:]),
+			Scope:    int(binary.LittleEndian.Uint32(r[16:])),
+			Offset:   binary.LittleEndian.Uint32(r[20:]),
+			Decl:     int(binary.LittleEndian.Uint64(r[32:])),
+			Generic:  binary.LittleEndian.Uint32(r[28:]) == 2,
+			Position: binary.LittleEndian.Uint32(r[40:]),
 		}
 		if o.Scope < 0 || o.Scope >= len(f.Scopes) {
 			return fmt.Errorf("object %d has scope %d of %d", i, o.Scope, len(f.Scopes))

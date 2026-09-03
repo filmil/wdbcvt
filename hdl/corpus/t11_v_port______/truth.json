@@ -24,7 +24,8 @@
       "width": 1,
       "type": "logic",
       "port": "in",
-      "declared": "wire"
+      "declared": "wire",
+      "position": 0
     },
     {
       "scope": "tb.dut",
@@ -32,7 +33,8 @@
       "width": 1,
       "type": "logic",
       "port": "out",
-      "declared": "wire"
+      "declared": "wire",
+      "position": 1
     }
   ],
   "transitions": [
