@@ -25,10 +25,12 @@ go_test(
         "corpus_test.go",
         "diff_test.go",
         "probe_test.go",
+        "vcd_test.go",
     ],
     data = [
         "//hdl/corpus:all_truth",
         "//hdl/corpus:all_wdb",
     ],
     embed = [":wdb"],
+    deps = ["@com_github_filmil_go_vcd_parser//vcd"],
 )
