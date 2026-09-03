@@ -181,7 +181,7 @@ func (f *File) decode(t int, data []byte, rs *[]Range) (Value, int, error) {
 		if err := need(8); err != nil {
 			return v, 0, err
 		}
-		v.Scalar = strconv.FormatInt(int64(binary.LittleEndian.Uint64(data)), 10) + " ps"
+		v.Scalar = strconv.FormatInt(int64(binary.LittleEndian.Uint64(data)), 10) + " " + ty.baseUnit()
 		return v, 8, nil
 	case KindArray:
 		dims, err := takeRanges(rs, ty.Dims, ty.Name)
@@ -262,6 +262,18 @@ func (t *Type) charEnum() bool {
 		}
 	}
 	return false
+}
+
+// baseUnit names the unit a physical value is counted in: the one
+// whose scale is 1, `ps` for TIME and `um` for the dist_t of
+// t21_phys_user. The scale of `fs` is 0, so TIME counts picoseconds.
+func (t *Type) baseUnit() string {
+	for _, u := range t.Units {
+		if u.Scale == 1 {
+			return u.Name
+		}
+	}
+	return "?"
 }
 
 func (f *File) String(v Value) string {
