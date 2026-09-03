@@ -1,0 +1,35 @@
+{
+  "case": "t5_arr_rec______",
+  "axis": "array element stride. A record element says whether elements are padded to the record's alignment.",
+  "differs_from": "t2_array2d______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "pair_array_t",
+      "elements": 3,
+      "element_type": "pair_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": [
+        "(alpha => 0, charlie => 0)",
+        "(alpha => 0, charlie => 0)",
+        "(alpha => 0, charlie => 0)"
+      ]
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": [
+        "(alpha => 1, charlie => 1)",
+        "(alpha => 0, charlie => 2)",
+        "(alpha => 1, charlie => 3)"
+      ]
+    }
+  ]
+}

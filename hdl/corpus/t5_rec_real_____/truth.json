@@ -1,0 +1,62 @@
+{
+  "case": "t5_rec_real_____",
+  "axis": "record field alignment. A one byte field followed by an eight byte one shows where the second is placed.",
+  "differs_from": "t2_record_______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "mix_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 64,
+          "type": "real"
+        },
+        {
+          "name": "charlie",
+          "width": 32,
+          "type": "integer"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.bravo",
+      "value": "0.0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.charlie",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.bravo",
+      "value": "1.5"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.charlie",
+      "value": "165"
+    }
+  ]
+}

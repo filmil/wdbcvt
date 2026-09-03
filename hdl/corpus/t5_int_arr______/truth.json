@@ -1,0 +1,38 @@
+{
+  "case": "t5_int_arr______",
+  "axis": "array element type. Elements wider than a byte say whether an array is elements back to back.",
+  "differs_from": "t2_array2d______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "int_array_t",
+      "elements": 4,
+      "element_width": 32,
+      "element_type": "integer"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": [
+        "1",
+        "-2",
+        "300",
+        "-40000"
+      ]
+    }
+  ]
+}
