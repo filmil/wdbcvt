@@ -16,7 +16,8 @@
       "width": 1,
       "type": "logic",
       "port": "in",
-      "declared": "wire"
+      "declared": "wire",
+      "storage": 1
     }
   ],
   "transitions": [

@@ -35,6 +35,10 @@ type truthSignal struct {
 	// port list counted from 0, the tenth word of the instance record:
 	// t48_v_port_pos4_. Absent means not checked.
 	Position *int `json:"position"`
+	// Storage, when set, is word 28 of the instance record: 1 for a
+	// port on a language boundary, t49_mix_2port___, 0 otherwise.
+	// Absent means not checked.
+	Storage *int `json:"storage"`
 	// Range is the declared index range of a vector, spelled the way
 	// the decoder renders it, "7 downto 0" or "-4 to 3". The tier 11
 	// cases wrote it first; the test has checked it since tier 41,
@@ -131,6 +135,11 @@ type truthVariable struct {
 	// Count expands the entry as it does a signal's, over Scope, Name
 	// and Value: the 70000 generate indexes of t46_gen_70000.
 	Count int `json:"count"`
+	// Storage, when set, is word 28 of the instance record: 2 for a
+	// generic, constant, variable or loop index, 3 for a scalar
+	// subprogram local, 4 for an array one and 6 for a signal
+	// parameter, tier 49. Absent means not checked.
+	Storage *int `json:"storage"`
 }
 
 // plainPath strips the extended identifier bars the database puts
@@ -531,6 +540,9 @@ func TestCorpus(t *testing.T) {
 				if s.Position != nil && int(o.Position) != *s.Position {
 					t.Errorf("%s: port position %d, truth says %d", path, o.Position, *s.Position)
 				}
+				if s.Storage != nil && int(o.Storage) != *s.Storage {
+					t.Errorf("%s: storage %d, truth says %d", path, o.Storage, *s.Storage)
+				}
 				if k, ok := netKinds[s.Declared]; ok && s.Port == "" {
 					if got := f.Decls[o.Decl].Kind; got != k {
 						t.Errorf("%s: declaration kind %s, truth says %s", path, got, s.Declared)
@@ -706,6 +718,9 @@ func TestCorpus(t *testing.T) {
 				dc := f.Decls[o.Decl]
 				if got := strings.ToLower(f.Types[dc.Type].Name); got != vr.Type {
 					t.Errorf("%s: type %s, truth says %s", path, got, vr.Type)
+				}
+				if vr.Storage != nil && int(o.Storage) != *vr.Storage {
+					t.Errorf("%s: storage %d, truth says %d", path, o.Storage, *vr.Storage)
 				}
 				ch, err := f.Changes(o)
 				if err != nil {

@@ -322,6 +322,12 @@ type Object struct {
 	// at time 0; a declared variable gets none, and its arena may not
 	// exist.
 	Generic bool
+	// Storage is word 28 of the instance record, read as the storage
+	// class of the object: 0 for a signal, 1 for a port on a language
+	// boundary, 2 for a generic, constant, variable or loop index, 3
+	// for a scalar subprogram local, 4 for an array subprogram local
+	// and 6 for a signal parameter of a subprogram, tier 49.
+	Storage uint32
 	// Position is the tenth word of the instance record: for a Verilog
 	// port, its place in the module's port list counted from 0, by the
 	// port list and not by the connection or by the declaration order
@@ -605,6 +611,7 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 			Offset:   binary.LittleEndian.Uint32(r[20:]),
 			Decl:     int(binary.LittleEndian.Uint64(r[32:])),
 			Generic:  binary.LittleEndian.Uint32(r[28:]) == 2,
+			Storage:  binary.LittleEndian.Uint32(r[28:]),
 			Position: binary.LittleEndian.Uint32(r[40:]),
 		}
 		if o.Scope < 0 || o.Scope >= len(f.Scopes) {

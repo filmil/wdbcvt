@@ -45,35 +45,40 @@
       "name": "c",
       "type": "std_ulogic",
       "kind": "local",
-      "port": "in"
+      "port": "in",
+      "storage": 3
     },
     {
       "scope": "tb.f",
       "name": "n",
       "type": "integer",
       "kind": "local",
-      "port": "in"
+      "port": "in",
+      "storage": 3
     },
     {
       "scope": "tb.f",
       "name": "r",
       "type": "real",
       "kind": "local",
-      "port": ""
+      "port": "",
+      "storage": 3
     },
     {
       "scope": "tb.f",
       "name": "w",
       "type": "std_ulogic_vector",
       "kind": "local",
-      "port": ""
+      "port": "",
+      "storage": 4
     },
     {
       "scope": "tb.f",
       "name": "m",
       "type": "integer",
       "kind": "local",
-      "port": ""
+      "port": "",
+      "storage": 3
     }
   ]
 }

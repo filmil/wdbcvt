@@ -77,42 +77,48 @@
       "name": "x",
       "type": "integer",
       "kind": "local",
-      "port": "in"
+      "port": "in",
+      "storage": 3
     },
     {
       "scope": "tb.inc",
       "name": "v",
       "type": "integer",
       "kind": "local",
-      "port": ""
+      "port": "",
+      "storage": 3
     },
     {
       "scope": "tb.bump",
       "name": "a",
       "type": "integer",
       "kind": "local",
-      "port": "inout"
+      "port": "inout",
+      "storage": 3
     },
     {
       "scope": "tb.bump",
       "name": "d",
       "type": "integer",
       "kind": "local",
-      "port": "in"
+      "port": "in",
+      "storage": 3
     },
     {
       "scope": "tb.bump",
       "name": "w",
       "type": "integer",
       "kind": "local",
-      "port": ""
+      "port": "",
+      "storage": 3
     },
     {
       "scope": "tb.p",
       "name": "m",
       "type": "integer",
       "kind": "variable",
-      "initial": "0"
+      "initial": "0",
+      "storage": 2
     }
   ]
 }

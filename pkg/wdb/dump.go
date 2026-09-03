@@ -151,6 +151,9 @@ func (f *File) Dump(w io.Writer) error {
 		if o.Generic {
 			p(" (no second handle)")
 		}
+		if o.Storage != 0 {
+			p(" storage %d", o.Storage)
+		}
 		if f.Decls[o.Decl].Mode != PortNone {
 			p(" position %d", o.Position)
 		}

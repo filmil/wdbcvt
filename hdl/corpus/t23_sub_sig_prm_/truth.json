@@ -29,14 +29,16 @@
       "name": "q",
       "type": "std_ulogic",
       "kind": "signal param",
-      "port": "out"
+      "port": "out",
+      "storage": 6
     },
     {
       "scope": "tb.drive",
       "name": "v",
       "type": "std_ulogic",
       "kind": "local",
-      "port": "in"
+      "port": "in",
+      "storage": 3
     }
   ]
 }

@@ -16,7 +16,8 @@
       "name": "a",
       "width": 1,
       "type": "std_ulogic",
-      "port": "in"
+      "port": "in",
+      "storage": 1
     }
   ],
   "transitions": [
