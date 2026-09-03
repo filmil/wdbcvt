@@ -1,0 +1,40 @@
+{
+  "case": "t13_sv_tdef_ua__",
+  "axis": "a typedef of an unpacked array",
+  "differs_from": "t12_sv_typedef__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 8,
+      "type": "arr_t",
+      "elements": 2,
+      "element_width": 4,
+      "element_type": "",
+      "declared": "logic [3:0] [0:1]"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXX, XXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(0000, XXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(0000, 0000)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(0000, 1010)"
+    }
+  ]
+}

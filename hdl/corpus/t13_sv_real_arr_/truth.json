@@ -1,0 +1,30 @@
+{
+  "case": "t13_sv_real_arr_",
+  "axis": "an unpacked array of two reals",
+  "differs_from": "t11_v_real______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 64,
+      "type": "",
+      "elements": 2,
+      "element_width": 32,
+      "element_type": "real",
+      "declared": "real [0:1]"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "(0, 0)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "r",
+      "value": "(0, 1.5)"
+    }
+  ]
+}

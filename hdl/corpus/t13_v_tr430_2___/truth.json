@@ -1,0 +1,56 @@
+{
+  "case": "t13_v_tr430_2___",
+  "axis": "a clock toggling for 430 nanoseconds beside a reg written once",
+  "differs_from": "t13_v_tr430_____",
+  "end_time_ns": 430,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "d",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "d",
+      "value": "1"
+    }
+  ],
+  "transition_runs": [
+    {
+      "signal": "clk",
+      "start_ns": 1,
+      "step_ns": 1,
+      "count": 429,
+      "values": [
+        "1",
+        "0"
+      ]
+    }
+  ]
+}

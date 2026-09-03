@@ -1,0 +1,76 @@
+{
+  "case": "t13_sv_iface____",
+  "axis": "an interface instance carrying one logic, passed to a child module",
+  "differs_from": "t11_v_port______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.b",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "q",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb.dut.p",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.b.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.p.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.p.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.b.d",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.q",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.p.d",
+      "value": "1"
+    }
+  ]
+}

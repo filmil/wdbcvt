@@ -1,0 +1,256 @@
+{
+  "case": "t13_v_hier3_net_",
+  "axis": "a wire and a reg at each of three levels",
+  "differs_from": "t12_v_proc_order",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "w0",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "r0",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "y",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "w1",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "r1",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.dut.u",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut.u",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut.u",
+      "name": "w2",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut.u",
+      "name": "r2",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "w0",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w0",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r0",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r0",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.w1",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.w1",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.r1",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.r1",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.w2",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.w2",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.r2",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.r2",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "w0",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "r0",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "y",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.o",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.w1",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.u.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.u.o",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.u.w2",
+      "value": "1"
+    }
+  ],
+  "final_per_time": [
+    "w0",
+    "y",
+    "tb.dut.i",
+    "tb.dut.o",
+    "tb.dut.w1",
+    "tb.dut.u.i",
+    "tb.dut.u.o",
+    "tb.dut.u.w2"
+  ]
+}

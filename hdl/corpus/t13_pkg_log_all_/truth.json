@@ -1,0 +1,43 @@
+{
+  "case": "t13_pkg_log_all_",
+  "axis": "the log_wave command. The same design as t9_pkg_sig, with log_wave -r /sig_pkg added, to see a package signal logged.",
+  "differs_from": "t9_pkg_sig______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "sig_pkg",
+      "name": "g",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "sig_pkg.g",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "sig_pkg.g",
+      "value": "1"
+    }
+  ],
+  "note": "log_wave -recursive * logs nothing under the package; log_wave -recursive /sig_pkg logs g, and it records like a signal of tb."
+}

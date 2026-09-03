@@ -1,0 +1,39 @@
+{
+  "case": "t13_v_tr420_____",
+  "axis": "a clock toggling every nanosecond for 420 nanoseconds",
+  "differs_from": "t13_v_tr2000____",
+  "end_time_ns": 420,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    }
+  ],
+  "transition_runs": [
+    {
+      "signal": "clk",
+      "start_ns": 1,
+      "step_ns": 1,
+      "count": 419,
+      "values": [
+        "1",
+        "0"
+      ]
+    }
+  ]
+}

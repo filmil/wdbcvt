@@ -1,0 +1,43 @@
+{
+  "case": "t13_v_same_t____",
+  "axis": "three writes of one reg in one time step",
+  "differs_from": "t11_v_vec8______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "range": "7 downto 0",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000001"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000011"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

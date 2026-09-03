@@ -1,0 +1,40 @@
+{
+  "case": "t13_sv_struct_ar",
+  "axis": "an unpacked array of two packed structs",
+  "differs_from": "t11_sv_struct___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 10,
+      "type": "",
+      "elements": 2,
+      "element_width": 5,
+      "element_type": "s_t",
+      "declared": "s_t [0:1]"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => X, b => XXXX), (a => X, b => XXXX))"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => X, b => XXXX))"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => 0, b => 0000))"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => 1, b => 1010))"
+    }
+  ]
+}

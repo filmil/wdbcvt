@@ -1,0 +1,54 @@
+{
+  "case": "t13_v_blk_var___",
+  "axis": "a reg declared inside a named block",
+  "differs_from": "t11_v_always____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.blk",
+      "name": "t",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.blk.t",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.blk.t",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.blk.t",
+      "value": "1"
+    }
+  ]
+}

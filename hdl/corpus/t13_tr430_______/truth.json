@@ -1,0 +1,33 @@
+{
+  "case": "t13_tr430_______",
+  "axis": "a clock toggling every nanosecond for 430 nanoseconds, VHDL",
+  "differs_from": "t13_v_tr430_____",
+  "end_time_ns": 430,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    }
+  ],
+  "transition_runs": [
+    {
+      "signal": "clk",
+      "start_ns": 1,
+      "step_ns": 1,
+      "count": 430,
+      "values": [
+        "1",
+        "0"
+      ]
+    }
+  ]
+}

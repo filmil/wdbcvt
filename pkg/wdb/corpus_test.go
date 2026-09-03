@@ -65,6 +65,12 @@ type truthGeneric struct {
 	Type     string `json:"type"`
 	Value    string `json:"value"`
 	Width    int    `json:"width"`
+	// Scope names the scope of a parameter that is not under an
+	// instance of tb: the package p of t13_sv_pkg holds p.W.
+	Scope string `json:"scope"`
+	// Logged is false for a parameter that has no record at all: the
+	// package parameter of t13_sv_pkg.
+	Logged *bool `json:"logged"`
 }
 
 // truthVariable is a process variable: Kind is "variable" for a declared
@@ -441,12 +447,18 @@ func TestCorpus(t *testing.T) {
 					name, value = "k", strconv.Itoa(g.K)
 				}
 				path := "tb." + g.Instance + "." + name
+				if g.Scope != "" {
+					path = g.Scope + "." + name
+				}
 				o, ok := objByPath[path]
 				if !ok || !o.Generic {
 					t.Errorf("truth generic %s is not a generic object", path)
 					continue
 				}
 				dc := f.Decls[o.Decl]
+				if logged := g.Logged == nil || *g.Logged; o.Logged != logged {
+					t.Errorf("%s: logged %v, truth says %v", path, o.Logged, logged)
+				}
 				// A Verilog parameter is the same kind of object with
 				// its own declaration kind: t11_v_param.
 				if dc.Kind != DeclGeneric && dc.Kind != DeclParam {
@@ -461,6 +473,12 @@ func TestCorpus(t *testing.T) {
 				ch, err := f.Changes(o)
 				if err != nil {
 					t.Fatal(err)
+				}
+				if g.Logged != nil && !*g.Logged {
+					if len(ch) != 0 {
+						t.Errorf("%s: %d changes, truth says not logged", path, len(ch))
+					}
+					continue
 				}
 				if len(ch) != 1 || ch[0].TimePS != 0 {
 					t.Errorf("%s: %d changes, want one at time zero", path, len(ch))

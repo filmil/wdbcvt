@@ -1,0 +1,32 @@
+{
+  "case": "t13_v_gen_if_reg",
+  "axis": "a reg declared in an if generate block",
+  "differs_from": "t12_v_gen_reg___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "g.r",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "g.r",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "g.r",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "g.r",
+      "value": "1"
+    }
+  ]
+}

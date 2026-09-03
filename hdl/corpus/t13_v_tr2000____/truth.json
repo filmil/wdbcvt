@@ -1,0 +1,34 @@
+{
+  "case": "t13_v_tr2000____",
+  "axis": "a clock toggling every nanosecond for two microseconds",
+  "differs_from": "t11_v_always____",
+  "end_time_ns": 2000,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    }
+  ],
+  "transition_runs": [
+    {
+      "signal": "clk",
+      "start_ns": 1,
+      "step_ns": 1,
+      "count": 1999,
+      "values": [
+        "1",
+        "0"
+      ]
+    }
+  ]
+}

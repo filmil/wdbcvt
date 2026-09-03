@@ -1,0 +1,42 @@
+{
+  "case": "t13_v_str_param_",
+  "axis": "a parameter holding a string",
+  "differs_from": "t12_v_params____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "dut",
+      "name": "P",
+      "type": "",
+      "width": 40,
+      "declared": "parameter, a 40 bit string",
+      "value": "0110100001100101011011000110110001101111"
+    }
+  ]
+}
