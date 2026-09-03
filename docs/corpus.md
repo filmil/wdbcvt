@@ -1457,6 +1457,25 @@ VCD backdates the first value to `#0`.
 | `t45_two_tops____` | `t45_log_base____` | two `--top` options | two root children in option order; only the first logged by `*` |
 | `t45_two_tops_all` | `t45_two_tops____` | `log_wave -recursive /tb2` and `/tb` | both tops record |
 
+**Tier 46: scale, and the cost of a driver.**
+VHDL and Verilog.
+Every case so far had fewer than 2000 objects and 300 scopes.
+The tier pushes the counts past 65535 in both languages, nests an
+entity in itself 100 levels deep, and separates the price of a signal
+from the price of its drivers.
+The large cases list their signals in `truth.json` as one entry with a
+`count` and a `%d` in the names, which the corpus test expands.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t46_sig_1000____` | `t45_log_base____` | 1000 `std_ulogic` signals, two driven | undriven signals `0xc0` apart, driven `0xf0`; handle space `0x1088 + 2 * 0x148 + 998 * 0xf8` |
+| `t46_gen_70000___` | `t46_sig_1000____` | a for generate of 70000 iterations | 140004 scopes, 140000 objects and 18147 slots in whole 32 bit words; indexes after the last signal |
+| `t46_v_gen_70000_` | `t46_gen_70000___` | the same in Verilog | 70000 registers in one scope, `0xc0` apart, no stride for the writer |
+| `t46_deep_100____` | `t8_gen_if_______` | a recursive entity, 100 levels | 306 scopes, paths of 101 names; generics after the last signal |
+| `t46_drv_2_next__` | `t24_two_drivers_` | a driven signal after a two driver `std_logic` | the next handle `0x140` on |
+| `t46_drv_3_next__` | `t46_drv_2_next__` | a third driver | `0x178` on |
+| `t46_v_wire_4asg_` | `t19_v_wire_3drv_` | a fourth `assign` on a wire | `0xf0` on, as with three |
+
 
 ## Record which comparison produced which finding
 
@@ -1495,7 +1514,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 722 cases through tier 45, and
+5. The reader now reproduces all 729 cases through tier 46, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

@@ -135,6 +135,23 @@ Two scopes elaborated from the same process share one pool string:
 `p` sits at offset 20 in the `t2_hier3` pool and both `tb.p` and
 `tb.dut.inner.p` name it.
 
+The counts and indexes are whole 32 bit words, not 16 bit ones.
+`t46_gen_70000___` elaborates a for generate of 70000 iterations with
+a signal, a loop index and a process each, and has 140004 scopes,
+140004 units, 140000 objects and 140000 declarations, with `tb` at
+scope 1 holding `children 70004+1`, the last iteration's process at
+scope 140003 and the last object at 139999.
+`t46_v_gen_70000_` puts 70000 Verilog `reg` objects into one scope,
+`tb`, since a Verilog generate block adds no scope; see the Verilog
+section.
+`t46_deep_100____` is a recursive entity that instantiates itself
+under an if generate 100 levels deep, 306 scopes, and every path is a
+chain of parent links as it is at depth 2.
+The reader takes all three without a special case, and the corpus
+test checks every one of the 70000 signals, indexes and registers.
+*Found by* `t46_gen_70000___` against `t46_sig_1000____`.
+*Confirmed by* `t46_v_gen_70000_`, `t46_deep_100____`.
+
 Word 5 is the first object index.
 The objects of a scope are contiguous in the instance record list.
 `t6_proc2` has `tb` at object 0 (signals `a`, `b`), `tb.p` at object 2
@@ -367,7 +384,7 @@ Signals get handles from one counter.
 The first signal is `0x768` in every case.
 The second handle is the first plus the value size rounded up to a
 multiple of 8, and the next signal's handle is the second handle plus
-`0xe8`.
+`0xe8` when the signal has one driver.
 So the stride between one byte signals is `0xf0`, and between the two
 16 byte records of `t2_record_two` it is `0xf8`.
 
@@ -384,41 +401,50 @@ value's size, then `0xe8` bytes of something per signal.
 Nothing in the file depends on the reading, and the decoder does not
 use it.
 
-A port connected to a signal has no handle of its own.
-Its object carries the handle of the signal it is connected to, and so
-does every port further down a chain.
-In `t8_port_in`, `tb.x` and `tb.dut.a` both hold `0x768`, and in
-`t8_port_chain` the signal `tb.x`, the port `tb.dut.a` and the port
-`tb.dut.u.b` below it all hold `0x768`.
-The mode does not matter: `t8_port_out`, `t8_port_inout` and
-`t8_port_buffer` share the handle the same way.
-So a net is one handle, and the objects on it are names for it.
-The reader reports each object separately and the value records under
-each of them, since a record is looked up by handle.
-
-A port left `open` gets its own handle, and it costs `0xb8` plus the
-value size rounded up to 8, where a signal costs `0xe8` plus the same.
-`t8_port_open3` has one signal `x` at `0x768`, then three open one bit
-ports at `0x858`, `0x918` and `0x9d8`, `0xc0` apart, then a signal `s`
-of the child at `0xa98`.
-`t8_port_vec8` and `t8_port_vec16` have one open vector port at `0x768`
-and the child's signal `s` at `0x828` and `0x830`, so the port's stride
-is `0xb8` plus 8 and `0xb8` plus 16.
+Tier 46 splits the `0xe8` into `0xb8` for the signal and `0x30` for
+its driver.
+`t46_sig_1000____` declares a thousand `std_ulogic` signals and drives
+two of them, `s0` and `s999`.
+The driven `s0` at `0x768` is followed by `s1` at `0x858`, `0xf0` on,
+and every undriven signal after it is `0xc0` on, which is `0xb8` plus
+its 8 bytes of storage, the stride an open port has.
+`t46_gen_70000___` drives every one of its 70000 signals from a
+process of its own, and every stride is `0xf0`.
+A resolved `std_logic` with more drivers costs more: `0x140` for two,
+`t46_drv_2_next__`, and `0x178` for three, `t46_drv_3_next__`, which
+is `0xc0` plus `0x80` and `0xc0` plus `0xb8`.
+Two points fit `0x30` per driver plus `0x10` plus 8 per driver from
+the second driver on, and that is a guess in
+[format.md](../format.md).
+The reader does not use any of it.
 
 | Object | Handle stride | Found by |
 | :--- | :--- | :--- |
-| signal | `0xe8` plus the size rounded up to 8 | the table above |
+| signal, one driver | `0xe8` plus the size rounded up to 8 | the table above |
+| signal, no driver | `0xb8` plus the size rounded up to 8 | `t46_sig_1000____` |
+| `std_logic`, two and three drivers | `0x140` and `0x178` | `t46_drv_2_next__`, `t46_drv_3_next__` |
 | open port | `0xb8` plus the size rounded up to 8 | `t8_port_open3`, `t8_port_vec8`, `t8_port_vec16` |
 | connected port | none, it shares the signal's handle | `t8_port_in`, `t8_port_chain` |
 
-Generics, constants and variables get handles from somewhere else:
-`0xe98` for the lone generic of `t4_gen_default`, `0xf88` and `0x10a0`
-for the two of `t4_gen_diff_two`, `0xdf8` for the loop index of
-`t5_tr1000`, `0xde0` for the variable of `t6_var_int`, `0xf08` and
-`0xf0c` for the two variables of `t6_proc2`, which are 4 bytes apart,
-and `0xda8` for the architecture constant of `t8_gen_if`.
-There is no pattern yet that predicts them, and none is needed: the
-handle is read from the record.
+Generics, constants, variables and loop indexes get their handles after
+the last signal of the whole design, whatever scope declares them.
+`t46_gen_70000___` interleaves a signal and a loop index in every
+generate scope, and the objects list them in that order, yet the 70000
+signals run from `0x768` at `0xf0` and the 70000 indexes from
+`0x10066a8` at `0x118`, `0x640` past the end of the last signal's
+stride.
+`t46_deep_100____` does the same with 101 signals at `0xf0` and 101
+generics at `0x140`, again `0x640` past the last signal.
+The 109 cases of the corpus with both kinds of object all put every
+signal before every other object.
+Within the second region the strides vary, and they group by kind
+rather than by scope: `t7_gen_for` puts its three loop indexes at
+`0x1040`, `0x1070` and `0x10a0`, `0x30` apart, and then the three
+generics of the children at `0x1130`, `0x1248` and `0x1360`, `0x118`
+apart; `t46_gen_70000___` has its indexes `0x118` apart, and
+`t6_proc2` the integer variables of its two processes 4 apart.
+No rule fits that yet, and none is needed: the handle is read from the
+record.
 
 The decoder exposes the fifth word as `Object.Generic`, because it is 2
 for exactly the objects that are not signals.
@@ -1488,7 +1514,16 @@ second handle plus `0xb8`.
 is `0x768 + 16 + 0xb8`.
 So Verilog objects are `0xb8` plus the record size apart, the stride
 of a VHDL open port, where VHDL signals are `0xe8` plus the rounded
-size apart.
+size apart, `0x30` of which is the VHDL driver; see above.
+A Verilog `reg` pays nothing for its `initial` or `always` writer:
+`t46_v_gen_70000_` has 70000 registers at `0x768` and every stride is
+`0xc0`, whichever of them the `initial` block writes.
+A wire does pay for its continuous assignments, and not linearly:
+the object after a wire with no `assign` or one is `0xc0` on,
+`t19_v_wire_nodrv` and `t11_v_wire`, after one with two and a child
+port reading it `0xe8`, `t19_v_2drv_port`, with three `0xf0`,
+`t19_v_wire_3drv`, and with four `0xf0` again, `t46_v_wire_4asg_`.
+No rule fits those points.
 The handle space grows by more than that per object: `t11_v_two_w64`,
 which widens the variable to 64 bits and adds a second one bit
 variable, has `0x100` more than `t11_v_bit_edge`, where the strides
@@ -1662,10 +1697,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 722 of 722 cases, and the
+*Confirmed by* the region length check in 729 of 729 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 722 of 722 cases and
+and *confirmed by* the reader's range check in 729 of 729 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

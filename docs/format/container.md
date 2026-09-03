@@ -45,13 +45,13 @@ See [values.md](values.md).
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 722 cases |
-| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 722 cases |
-| `0x30` | 8 | `uint64` `0x40` | same | constant in all 722 cases |
+| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 729 cases |
+| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 729 cases |
+| `0x30` | 8 | `uint64` `0x40` | same | constant in all 729 cases |
 | `0x38` | 4 | `uint32` Unix time the database was written | the noise mask, two runs of `t3_tr1` | decodes to the file's own mtime |
-| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 722 cases |
-| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 722 cases |
-| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 722 cases |
+| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 729 cases |
+| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 729 cases |
+| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 729 cases |
 | `0xc4` | 4 | `uint32` per run duration, noise | the noise mask | differs between two runs of one case |
 
 The three `uint32` at `0x98` and the `3` at `0xc0` have not moved in any
@@ -88,6 +88,17 @@ so the table's length is `(pointer - 0x48 - 0xc8) / 8`.
 | `t7_sig24` | 24 | `0x2f60` | 4 | 6 |
 | `t9_vec4096` | 2 | `0x72d8` | 6 | 15 |
 | `t9_vec12000` | 1 | `0x9e50` | 7 | 20 |
+| `t46_sig_1000____` | 1000 | `0x3d9e8` | 95 | 124 |
+| `t46_deep_100____` | 202 | `0xedd8` | 30 | 30 |
+| `t46_v_gen_70000_` | 70000 | `0x108ed3c` | 6564 | 8478 |
+| `t46_gen_70000___` | 140000 | `0x23710a0` | 17776 | 18147 |
+
+The tier 46 rows are the large end: the slot count and every count and
+index in the file are whole 32 bit words, and a 49 MB file with 18147
+slots, 17776 arenas in use and 140000 objects reads by the same rules
+as a 5 KB one.
+*Found by* `t46_gen_70000___` against `t46_sig_1000____`.
+*Confirmed by* `t46_v_gen_70000_`.
 
 A slot can be `0` in the middle of the table as well as at its end.
 `t9_pkg_sig` declares a signal in a package, and that signal takes the
@@ -101,7 +112,7 @@ arenas 0 to 6, while slots 7 to 19 are `0`.
 The slot count is `ceil(handle space / 0x800)`, where the handle space
 is the trailer word at `0x18`, described below.
 The reader checks that rule on every file it opens, and it holds in all
-722 corpus cases.
+729 corpus cases.
 
 *Found by* `t5_sig10` against `t2_flat3`: the trailer and every
 directory entry sat 8 bytes later, and the `0x48` pointer said so.
@@ -110,7 +121,7 @@ through tier 6 and failed on `t7_sig07`, which has four slots for seven
 objects.
 `t7_sig14`, `t7_sig16` and `t7_sig24` then pinned the boundaries at
 `0x1800`, `0x2000` and `0x2800` of handle space.
-*Confirmed by* the reader's check across all 722 cases, including
+*Confirmed by* the reader's check across all 729 cases, including
 `t9_vec12000`, whose one object spans 20 slots.
 
 The slot count is not the arena count: `t6_sig05` has two arenas and
@@ -143,18 +154,18 @@ three slot header.
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 8 | `uint64` simulation end time, in the time unit the DBG section names, picoseconds in every case before tier 21 | the correlation sweep across all cases | 722 of 722 against `end_time_ns` in `truth.json`; `t21_v_ts_1ns_1ns` holds 100 for 100 ns |
-| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 722 cases |
-| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 722 of 722 cases |
-| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 722 cases; the arena span, by its value |
-| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 722 of 722 cases |
-| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 722 cases; the arena table's offset, by its value |
-| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 722 cases |
-| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 722 cases |
-| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 722 of 722 cases, checked against the marker |
+| `0x00` | 8 | `uint64` simulation end time, in the time unit the DBG section names, picoseconds in every case before tier 21 | the correlation sweep across all cases | 729 of 729 against `end_time_ns` in `truth.json`; `t21_v_ts_1ns_1ns` holds 100 for 100 ns |
+| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 729 cases |
+| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 729 of 729 cases |
+| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 729 cases; the arena span, by its value |
+| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 729 of 729 cases |
+| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 729 cases; the arena table's offset, by its value |
+| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 729 cases |
+| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 729 cases |
+| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 729 of 729 cases, checked against the marker |
 | `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 140 of 140 cases with a marker |
 | `0x40` | 4 | `uint32` `0x2800`, the size a value page inflates to | inflating a page | every page in every case inflates to 10240 bytes |
-| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 722 cases |
+| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 729 cases |
 
 The word at `0x18` is `0x11d0` for one bit with one edge, `0x1318` for
 two bits, and `0x2a38` for twenty.
@@ -164,7 +175,14 @@ tier 7 signal count cases, and each signal's handle is `0xf0` past the
 previous one, so a signal costs `0x58` beyond its handle stride.
 The arena table has one slot per `0x800` of it, which is what makes it
 the size of the handle space.
-Where the first `0x1088` and the `0x58` per signal go is open.
+Tier 46 splits the `0x58`: a signal nothing drives costs `0xf8`,
+`t0_bit_const` at `0x1180` against the `0x1088` of `t0_nosig`, and a
+driven one `0x148`, `t1_bit_one_edge` at `0x11d0`, so the driver is
+`0x50`, of which `0x30` is in the handle stride and `0x20` is not.
+The sum is exact at a thousand: `t46_sig_1000____`, two driven signals
+and 998 undriven ones, has `0x1088 + 2 * 0x148 + 998 * 0xf8`, which is
+its `0x3d9e8`.
+Where the first `0x1088` and the `0x20` per driver go is open.
 Ports cost handle space too: `t8_port_in`, one signal and one connected
 port that shares its handle, has `0x1288`, `0xb8` more than the one
 signal of `t1_bit_one_edge`, and `t8_port_open`, two open ports and no
@@ -190,6 +208,17 @@ Tier 9 adds a few more prices, each against the `0x11d0` of
 | `t9_block` | `0x13d8` | `0x208` | a block with a signal and an implicit process |
 | `t9_vec4096` | `0x72d8` | | two 4096 byte signals, 15 slots |
 | `t9_vec12000` | `0x9e50` | | one 12000 byte signal, 20 slots |
+| `t46_drv_2_next__` | `0x1428` | `0x258` | a `std_logic` with two drivers, next to a driven `std_ulogic`; as `t24_two_drivers` |
+| `t46_drv_3_next__` | `0x1510` | `0x340` | the same with three drivers; as `t34_res_3drv` |
+
+The type of a signal changes the price without changing the stride.
+The `bit`, `boolean`, `character`, `integer`, `real` and `time` signals
+of tier 2 cost `0x340` each over `t0_nosig`, `0x1f8` more than the
+`0x148` of a `std_ulogic`, and the `std_logic_vector`, `signed` and
+`unsigned` of 8 elements cost `0x338`, `0x1f8` more than the `0x140`
+of the `std_ulogic_vector` of `t1_vec8`.
+The user enumeration of `t2_enum` costs the `0x148` of a `std_ulogic`.
+That is data without a reading.
 
 Three trailer words describe the arena table together: `0xc8` at `0x20`
 is where it starts, the word at `0x0c` is how many slots it has, and
