@@ -1582,6 +1582,26 @@ orders the declarations of a unit.
 Signals first, then the data objects, each in source order, is the
 rule, and a subprogram's signal parameters count as signals.
 
+**Tier 51: subprogram objects of SystemVerilog, and three VHDL shapes.**
+SystemVerilog and VHDL.
+The SystemVerilog half varies the lifetime and the argument modes of a
+task, against a static task with the shape of `t12_v_task`.
+The VHDL half puts a loop, a file parameter and a package around a
+procedure.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t51_sv_task_stat` | `t12_v_task______` | the static task in a `.sv` file | the same as in `.v` |
+| `t51_sv_task_auto` | `t51_sv_task_stat` | `task automatic` | no argument or local in the file |
+| `t51_sv_task_ref_` | `t51_sv_task_auto` | a `ref` argument | nothing |
+| `t51_sv_task_out_` | `t51_sv_task_stat` | an `output` argument | its mode; 0 in the word at `40` |
+| `t51_sv_task_inou` | `t51_sv_task_out_` | an `inout` argument | its mode; `X`, then the value in and out |
+| `t51_sv_func_auto` | `t51_sv_task_auto` | `function automatic` | nothing |
+| `t51_sv_task_stvr` | `t51_sv_task_auto` | a `static` local in the automatic task | the local listed |
+| `t51_sub_loop_idx` | `t23_sub_sig_prm_` | a `for` loop in the procedure | no index |
+| `t51_sub_file_prm` | `t23_sub_sig_prm_` | a `file` parameter | absent, 8 bytes of frame; the file object a size 0 variable |
+| `t51_sub_pkg_proc` | `t23_sub_sig_prm_` | the procedure in a package | `pk.drive` under `pk` |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1619,7 +1639,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 769 cases through tier 50, and
+5. The reader now reproduces all 779 cases through tier 51, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

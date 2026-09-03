@@ -543,6 +543,15 @@ vector descriptor, see the frame section below.
 *Found by* `t49_sub_str_prm_` against `t23_sub_sig_prm_`.
 *Confirmed by* `t50_sub_ivec_prm`.
 
+A `file` parameter is absent the same way and takes 8 bytes of the
+frame: `procedure put(file f : int_file; signal q : out std_ulogic)`
+in `t51_sub_file_prm` has `q` alone, on `0xd8`.
+The file object of the architecture, `file fo : int_file open
+write_mode is "t51.bin"`, is a declaration of the variable kind
+`0x0f` with size 0 and the file type, and an object with one handle,
+storage class 2 and no record, as an access variable is.
+*Found by* `t51_sub_file_prm` against `t23_sub_sig_prm_`.
+
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
 See [values.md](values.md).
@@ -1080,6 +1089,11 @@ It gets one record at time 0, holding 0, whatever the loop's first
 value is.
 Found by `t5_tr1000` and `t6_tr1300`, whose loops run `0 to 999` and
 `0 to 1299`.
+A `for` loop index in a subprogram is not in the file, even under
+`-debug subprogram`: `t51_sub_loop_idx` loops `for i in 0 to 3` in a
+procedure and the procedure's declarations are its signal parameter
+and its variable `n` alone.
+Found by `t51_sub_loop_idx` against `t23_sub_sig_prm_`.
 A `for generate` index and an architecture constant are the same kind
 and record their value instead; see above.
 
@@ -1212,6 +1226,14 @@ procedure base `0xd0` in `t50_sub_var_vec_` and `t50_sub_var_rec_`,
 and nothing follows it to show its size.
 *Found by* `t50_sub_in_var__` against `t23_sub_sig_prm_`, and
 `t50_sub_func_prm` against `t49_sub_vec_prm_`.
+
+A procedure declared in a package is a scope under the package:
+`t51_sub_pkg_proc` calls `work.pk.drive(s, '1')` and the file has the
+package scope `pk` beside `tb` under the root, with `pk.drive` as its
+child, a procedure unit at the line of the body's declaration, and the
+parameters on `0xd0` and `0x110` as in `t23_sub_sig_prm_`.
+The scopes are listed breadth first, `tb`, `pk`, `tb.p`, `pk.drive`.
+*Found by* `t51_sub_pkg_proc` against `t23_sub_sig_prm_`.
 
 A procedure declared inside a process, the shape of `t9_proc_local`,
 gets two scopes: `t23_sub_in_proc` declares `flip` in process `p` and
@@ -1398,6 +1420,24 @@ A function called only from an initializer leaves nothing: `logic s =
 f()` in `t26_sv_logic_fn`, with `f` returning `1'b0`, has the units,
 scopes, declarations and handle space of `t11_sv_logic`, and `s`
 records `0` once, so the call was folded at elaboration.
+
+An `automatic` subprogram keeps its unit and scope and loses its
+arguments and locals: `task automatic inc(input logic [7:0] v)` with
+a local `tmp` in `t51_sv_task_auto` has the `tb.inc` scope with no
+first object, the task unit with no declarations, and the handle space
+`0xbb4` for the `0xc14` of the static task of `t51_sv_task_stat`.
+A `ref` argument, `t51_sv_task_ref_`, and an `automatic` function,
+`t51_sv_func_auto`, are the same.
+A `static` local of an `automatic` task is back in the file:
+`t51_sv_task_stvr` lists `tb.inc.tmp` and nothing for the argument.
+The `output` and `inout` arguments of a static task are listed with
+their modes, `t51_sv_task_out_` and `t51_sv_task_inou`, and every
+argument holds 0 in the word at `40` of its instance record, whatever
+its place in the argument list, where a module port holds its
+position.
+*Found by* `t51_sv_task_auto` against `t51_sv_task_stat`.
+*Confirmed by* `t51_sv_task_ref_`, `t51_sv_func_auto`,
+`t51_sv_task_stvr`, `t51_sv_task_out_` and `t51_sv_task_inou`.
 
 A cast in an initializer leaves a hidden variable in the module scope:
 `int s = int'(1.5)` in `t28_sv_int_cast` declares
@@ -1904,10 +1944,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 769 of 769 cases, and the
+*Confirmed by* the region length check in 779 of 779 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 769 of 769 cases and
+and *confirmed by* the reader's range check in 779 of 779 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
