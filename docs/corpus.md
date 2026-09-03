@@ -1676,6 +1676,45 @@ and a package of the design is used, referenced, or neither.
 | `t54_pkg_use_var_` | `t54_pkg_con_var_` | a use clause and no reference | the same |
 | `t54_pkg_unused__` | `t54_pkg_con_var_` | neither | the package absent |
 
+**Tier 55: the declarations of a subprogram beyond its variables.**
+VHDL, under `-debug subprogram`.
+A hunt for storage class 5: a constant, a loop, an alias, a file, a
+protected variable and a nested function in a subprogram, then the
+method scopes of a protected type wherever the type and its variable
+are declared.
+None of them is class 5.
+Two shapes xelab refuses: a VHDL-2008 subprogram instantiation,
+`function f3 is new f generic map (k => 3)`, elaborates with "not
+supported yet for simulation", and a method called on a package's
+shared variable by its selected name, `work.pk.ct.bump`, ends
+compilation with SIGABRT, so `t55_prot_pkg_sv_` reaches the variable
+through package subprograms instead.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t55_sub_loop____` | `t50_sub_func_prm` | a `for` loop in a function | no index; `c` and `v` on `0x40`, `0x44` |
+| `t55_sub_con_loc_` | `t55_sub_loop____` | a constant between them | a local of class 3; `v` on `0x58` |
+| `t55_sub_con_nori` | `t55_sub_con_loc_` | the initialiser of `v` not reading it | `0x58` still |
+| `t55_sub_2con____` | `t55_sub_con_nori` | two constants | `0x44`, `0x58`, `v` on `0x6c` |
+| `t55_sub_con_real` | `t55_sub_con_nori` | a real constant | `0x48`, `v` on `0x60` |
+| `t55_sub_var_init` | `t55_sub_con_loc_` | a variable in its place | `0x44`, `v` on `0x48` |
+| `t55_sub_con_arr_` | `t55_sub_con_loc_` | an array constant | class 4; `0x48`, `v` on `0x60` |
+| `t55_sub_alias___` | `t51_sub_loop_idx` | an alias of the local | absent; `v` on `0x110` |
+| `t55_sub_file_loc` | `t51_sub_loop_idx` | a file local before `v` | absent; `v` on `0x138` |
+| `t55_sub_prot_loc` | `t51_sub_loop_idx` | a protected local before `v` | absent; `v` on `0x11c`; the methods as scopes, twice |
+| `t55_sub_prot_2__` | `t55_sub_prot_loc` | two of them | `v` on `0x12c` |
+| `t55_sub_prot_3__` | `t55_sub_prot_2__` | three | `v` on `0x13c` |
+| `t55_sub_prot_typ` | `t55_sub_prot_loc` | the type and no variable of it | no method scopes |
+| `t55_sub_nested__` | `t50_sub_func_prm` | a function inside the function | `tb.g` and `tb.f.g`, one unit, `0x40` in each |
+| `t55_prot_shared_` | `t55_sub_prot_typ` | a shared variable of the type | the four scopes; `0x100` of handle space |
+| `t55_prot_arch_pr` | `t55_prot_shared_` | the process calling the methods | the same scopes |
+| `t55_prot_arch_2p` | `t55_prot_arch_pr` | two processes | the second pair under `tb` after `tb.p2` |
+| `t55_prot_pkg____` | `t55_prot_shared_` | the type in a package | `pk.bump`, `pk.get`; `tb.p.bump`, `tb.p.get` |
+| `t55_prot_pkg_prc` | `t55_prot_pkg____` | the process calling | the same |
+| `t55_prot_pkg_2p_` | `t55_prot_pkg_prc` | two processes, `p2` calling first | the second pair under `tb.p2` |
+| `t55_prot_pkg_2pl` | `t55_prot_pkg_2p_` | `p2` calling last | under `tb.p2` still |
+| `t55_prot_pkg_sv_` | `t55_prot_pkg_prc` | the variable in the package, behind package subprograms | `pk.bump`, `pk.get` twice under `pk`; the variable absent |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1713,7 +1752,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 829 cases through tier 54, and
+5. The reader now reproduces all 851 cases through tier 55, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

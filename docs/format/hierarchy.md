@@ -514,7 +514,12 @@ A signal parameter of a record type is 6 in `t50_sub_sig_rec_`.
 So 3 is a value the frame holds in place, a scalar or a pointer, 4 a
 value the frame holds through a descriptor, and 6 a reference to a
 signal, and none of the three depends on the class or the mode.
-5 has not been seen, in the 19 subprogram cases through tier 50.
+5 has not been seen, in the 48 cases built with `-debug subprogram`
+through tier 55.
+Tier 55 hunts for it among the declarations of a subprogram that are
+neither parameters nor plain variables, and finds each of them either
+a local of class 3 or 4 or absent from the file, see the constant,
+alias, file and protected paragraphs below.
 The reader keeps the word as `Storage` and the dump prints it when it
 is not 0; `Generic` stays the test for 2.
 
@@ -551,6 +556,57 @@ write_mode is "t51.bin"`, is a declaration of the variable kind
 `0x0f` with size 0 and the file type, and an object with one handle,
 storage class 2 and no record, as an access variable is.
 *Found by* `t51_sub_file_prm` against `t23_sub_sig_prm_`.
+
+A constant declared in a subprogram is a local of the same kind `0x14`
+as a variable, with no trace of being a constant: `k` of
+`t55_sub_con_loc_` is `local k : integer` of class 3, and the array
+constant `a` of `t55_sub_con_arr_` is class 4, as a variable of each
+type is.
+It takes more of the frame than a variable does.
+`t55_sub_loop____` declares `c : std_ulogic` and `variable v : integer`
+on `0x40` and `0x44`; `t55_sub_con_loc_` puts `constant k : integer`
+between them and `v` moves to `0x58`, 20 bytes past `k`, whether or
+not the initialiser of `v` reads `k` (`t55_sub_con_nori`), and a
+second constant in `t55_sub_2con____` is on `0x58` with `v` on
+`0x6c`.
+A real constant in `t55_sub_con_real` is on `0x48` with `v` on `0x60`,
+24 bytes past it.
+So a scalar constant takes its size plus 16 bytes of the frame, where
+a variable of the same type takes its size alone: `u` and `v` of
+`t55_sub_var_init` are on `0x44` and `0x48`.
+The array constant of `t55_sub_con_arr_` is on `0x48` with `v` on
+`0x60`, the 24 byte descriptor an array variable takes.
+None of them moves the handle space, which stays `0x11d0` from
+`t55_sub_loop____` through `t55_sub_con_real`.
+*Found by* `t55_sub_con_loc_` against `t55_sub_loop____`.
+*Confirmed by* `t55_sub_con_nori`, `t55_sub_2con____`,
+`t55_sub_con_real`, `t55_sub_var_init` and `t55_sub_con_arr_`.
+
+An alias, a file object and a variable of a protected type declared in
+a subprogram are all absent from the file: no declaration, no object,
+the same handle space `0x11e8` as `t51_sub_loop_idx`, whose procedure
+has the signal parameter and the integer local alone.
+The frame shows what each takes.
+The integer local after the signal parameter is on `0x110` in
+`t51_sub_loop_idx`.
+It stays on `0x110` in `t55_sub_alias___`, where `alias b : integer is
+v` follows it, so an alias takes nothing.
+It is on `0x138` in `t55_sub_file_loc`, where `file fl : int_file`
+precedes it, so a file local takes 40 bytes where the file parameter
+of `t51_sub_file_prm` took 8.
+It is on `0x11c`, `0x12c` and `0x13c` in `t55_sub_prot_loc`,
+`t55_sub_prot_2__` and `t55_sub_prot_3__`, where one, two and three
+variables of a protected type precede it, so the first takes 12 bytes
+and each further one 16.
+The 12 is not a multiple of the 8 that a pointer takes, and what the
+frame holds for a protected variable is open.
+A `for` loop index in a function is absent as it is in a procedure:
+`t55_sub_loop____` has `c` and `v` on `0x40` and `0x44` with the loop
+between them.
+*Found by* `t55_sub_alias___`, `t55_sub_file_loc` and
+`t55_sub_prot_loc` against `t51_sub_loop_idx`.
+*Confirmed by* `t55_sub_prot_2__`, `t55_sub_prot_3__` and
+`t55_sub_loop____` against `t50_sub_func_prm`.
 
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
@@ -1424,6 +1480,72 @@ and each lists an object for the local `r` on the same handle `0xd0`,
 so the file holds three objects for two declarations.
 *Found by* `t23_sub_in_proc` against `t22_dbg_sub_proc`.
 
+A function declared inside a function gets the same two scopes.
+`t55_sub_nested__` declares `g` inside `f`, and the file has `tb.g`
+as a child of `tb`, listed before `tb.p`, and `tb.f.g` as the child
+of `tb.f`, both on the one function unit of `g`, and each with its
+own objects for the parameter `n` and the local `w` on `0x40` and
+`0x44`, the function base, so the nested function numbers its frame
+from the base as a top level function does.
+So the file holds six objects for the four declarations of `f` and
+`g`, beside the signal.
+*Found by* `t55_sub_nested__` against `t50_sub_func_prm`.
+
+The methods of a protected type are subprogram scopes too, under
+`-debug subprogram`, and they come in two copies as a nested
+subprogram does.
+`t55_sub_prot_loc` declares `type counter_t is protected` with a
+procedure `bump` and an impure function `get` in the architecture,
+and a local `ct : counter_t` in a procedure, and the file has units
+for `bump` and `get`, at the lines of the protected body, with no
+declarations, and the scopes `tb.bump` and `tb.get` twice each, all
+four children of `tb`, the first pair before `tb.drive` and `tb.p`
+and the second pair after them.
+The variable `n` of the protected body is in the file nowhere, and
+neither is `ct`.
+The scopes do not move the handle space, which is the `0x11e8` of
+`t51_sub_loop_idx`.
+The type alone brings nothing: `t55_sub_prot_typ` declares the type
+and no variable of it and has neither the units nor the scopes.
+A shared variable of the type brings the same four scopes, whether
+its methods are called from a procedure in `t55_prot_shared_` or from
+the process in `t55_prot_arch_pr`, and with two processes in
+`t55_prot_arch_2p` the second pair is still under `tb`, after
+`tb.p2`.
+The shared variable is the object of tier 23, on the signal handle
+`0x858` or `0x870`, and costs `0x100` of handle space against
+`t55_sub_prot_typ`.
+
+When the protected type is declared in a package the second pair
+moves.
+`t55_prot_pkg____` declares the type in `pk` and the shared variable
+in the architecture, and the file has `pk.bump` and `pk.get` under
+`pk`, and `tb.p.bump` and `tb.p.get` under the process `tb.p`, the
+only process, on the same two units.
+With two processes `p` and `p2` the second pair is under `tb.p2`, the
+last one declared, in `t55_prot_pkg_2p_` where `p2` calls the methods
+first and in `t55_prot_pkg_2pl` where it calls them last, and
+`t55_prot_pkg_prc`, whose process calls the methods itself, has them
+under `tb.p` as `t55_prot_pkg____` does, whose procedure calls them.
+So the second pair sits under the last process of the architecture
+that declares the variable, whatever calls the methods and when.
+A process scope can therefore have children, and the reader's scope
+tree allows it.
+`t55_prot_pkg_sv_` declares the shared variable in the package as well
+and reaches it through two package subprograms named `bump` and `get`
+like the methods.
+The file has `pk.bump` and `pk.get` twice under `pk`, first the
+methods' units and then the package subprograms' units, and
+`tb.p.bump` and `tb.p.get` under the process on the methods' units
+alone, so the package subprograms get one scope as `pk.drive` of
+`t51_sub_pkg_proc` does, and the package shared variable is absent as
+a package constant is not.
+*Found by* `t55_sub_prot_loc` against `t51_sub_loop_idx`, and
+`t55_prot_pkg____` against `t55_prot_shared_`.
+*Confirmed by* `t55_sub_prot_typ`, `t55_sub_prot_2__`,
+`t55_prot_arch_pr`, `t55_prot_arch_2p`, `t55_prot_pkg_prc`,
+`t55_prot_pkg_2p_`, `t55_prot_pkg_2pl` and `t55_prot_pkg_sv_`.
+
 
 ## Two architectures of one entity
 
@@ -2124,10 +2246,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 829 of 829 cases, and the
+*Confirmed by* the region length check in 851 of 851 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 829 of 829 cases and
+and *confirmed by* the reader's range check in 851 of 851 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
