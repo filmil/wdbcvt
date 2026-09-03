@@ -15,6 +15,35 @@ See [docs/wdb-format.md](docs/wdb-format.md) for what has been measured so
 far and how the work proceeds.
 
 
+## How this format knowledge was obtained
+
+**This is an AI-first exploration.**
+The format was worked out by an AI agent running experiments against
+`.wdb` files and reading the bytes that came out.
+It is not a port of AMD code, not a decompilation, and not a
+specification.
+
+An agent that infers a format from examples produces measurements that
+reproduce and plausible stories about bytes, and the two look identical
+on the page.
+So nothing here rests on the derivation being trustworthy.
+Every claim is guarded by software this project did not write, and by
+references whose content is known before a `.wdb` is opened:
+
+* the `sim.vcd` that Vivado writes from the same simulation run, in the
+  IEEE 1800 text format,
+* `github.com/filmil/go-vcd-parser`, an existing parser with its own
+  tests, which reads that answer key,
+* a `truth.json` per corpus case, derived from the design rather than
+  from the database,
+* GHDL and nvc, simulators that share no code with Vivado,
+* `libfst`, the reference implementation, for checking FST output.
+
+Read [docs/provenance.md](docs/provenance.md) before relying on
+`dewdb` for anything. It states what the guards do and do not cover, and
+where the tool should not be used.
+
+
 ## Layout
 
 * `hdl/counter/` holds a small VHDL design and its testbench.
@@ -28,6 +57,8 @@ far and how the work proceeds.
   FST comes later; [docs/fst-output.md](docs/fst-output.md) records how.
 * `pkg/wdb/` holds the library the tool is built on.
 * `docs/wdb-format.md` records the findings.
+* `docs/provenance.md` records how those findings were obtained, and
+  what guards them.
 
 
 ## Building

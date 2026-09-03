@@ -109,6 +109,33 @@ Redirecting a step's stdin from `/dev/null` is the blunt version of the
 same rule.
 
 
+# Provenance rules
+
+This is an AI-first exploration of an undocumented format.
+`docs/provenance.md` states that plainly, names the guards that stand in
+for a specification, and says where `dewdb` should not be used.
+Keep it accurate as the guards change.
+
+Rules that follow from it, and that apply to every change here:
+
+* Do not soften the framing.
+  The README and `dewdb --help` both say that the format knowledge came
+  from an agent running experiments, not from documentation.
+  A reader who finds the tool without finding the docs still learns how
+  the knowledge was obtained.
+* A decoded field enters the findings table in `docs/wdb-format.md` only
+  with the command that reproduces it.
+  Everything else stays in the open questions section, labelled a guess.
+* A test asserts against a `truth.json`, or against the VCD as read by
+  `go-vcd-parser`.
+  A test that asserts against bytes the decoder itself produced proves
+  nothing, and must not be written.
+* Every claim is scoped to the Vivado version that produced the file.
+  Only 2025.2 has been observed.
+* Never describe this work as a specification, a port, or a
+  decompilation. It is none of those.
+
+
 # Engineering standards
 
 * Every new piece of functionality documents its public interface.
