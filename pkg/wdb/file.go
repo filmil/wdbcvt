@@ -78,24 +78,27 @@ func Read(d []byte) (*File, error) {
 		}
 		f.Pages = append(f.Pages, pages)
 	}
-	// The marker word has been the number of objects with at least one
-	// record, minus one, in every corpus case. t6_var_int fixes the
-	// reading: two objects, one with records, marker 0.
-	logged := 0
-	for _, o := range f.Objects {
+	// The logged ranges name the objects that have records. Every
+	// object inside a range has at least one; no object outside has
+	// any. t6_var_int has an unlogged variable after the last range,
+	// t9_mark_gap an unlogged package constant before the first, and
+	// t9_mark_two both.
+	for _, r := range f.Header.Logged {
+		if r[1] >= uint64(len(f.Objects)) {
+			return nil, fmt.Errorf("logged range [%d, %d] names an object past the %d objects", r[0], r[1], len(f.Objects))
+		}
+		for i := r[0]; i <= r[1]; i++ {
+			f.Objects[i].Logged = true
+		}
+	}
+	for i, o := range f.Objects {
 		ch, err := f.Changes(o)
 		if err != nil {
 			return nil, err
 		}
-		if len(ch) > 0 {
-			logged++
+		if (len(ch) > 0) != o.Logged {
+			return nil, fmt.Errorf("object %d (%s) has %d records, the logged ranges say logged=%v", i, f.ObjectPath(o), len(ch), o.Logged)
 		}
-	}
-	if f.Header.MarkerOffset != 0 && f.Header.Marker+1 != uint64(logged) {
-		return nil, fmt.Errorf("marker word %d, want one less than the %d logged objects", f.Header.Marker, logged)
-	}
-	if f.Header.MarkerOffset == 0 && logged != 0 {
-		return nil, fmt.Errorf("no marker, but %d logged objects", logged)
 	}
 	return f, nil
 }

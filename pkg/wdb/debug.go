@@ -113,11 +113,12 @@ type PortMode uint32
 
 // The port modes observed so far.
 const (
-	PortInout  PortMode = 0
-	PortIn     PortMode = 1
-	PortOut    PortMode = 2
-	PortBuffer PortMode = 3
-	PortNone   PortMode = 5 // not a port
+	PortInout   PortMode = 0
+	PortIn      PortMode = 1
+	PortOut     PortMode = 2
+	PortBuffer  PortMode = 3
+	PortLinkage PortMode = 4
+	PortNone    PortMode = 5 // not a port
 )
 
 func (m PortMode) String() string {
@@ -130,6 +131,8 @@ func (m PortMode) String() string {
 		return "out"
 	case PortBuffer:
 		return "buffer"
+	case PortLinkage:
+		return "linkage"
 	case PortNone:
 		return "none"
 	}
@@ -170,8 +173,18 @@ type Object struct {
 	// arena index in the upper bits and the record key in the low 11.
 	// Handles step by 0xf0 within an arena.
 	Handle uint64
+	// Offset is the byte offset of the object's value inside the value
+	// recorded at Handle. It is nonzero for a port bound to a slice of
+	// its actual: t9_port_slice binds a to x(0) of a 2 bit x and has
+	// handle x, offset 1.
+	Offset uint32
 	// Scope and Decl index File.Scopes and File.Decls.
 	Scope, Decl int
+	// Logged is set for an object inside one of the header's logged
+	// ranges: it has at least one record. An unlogged object has none:
+	// a variable, a package object, or a signal outside the logged
+	// hierarchy.
+	Logged bool
 	// Generic is set for a generic and for a variable: objects with no
 	// second handle, whose instance record has 2 in its fifth word. A
 	// signal has 1 there. A generic and a constant get one record
@@ -411,7 +424,8 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 		r := d[a+uint64(i*instRecLen):]
 		o := Object{
 			Handle:  binary.LittleEndian.Uint64(r[0:]),
-			Scope:   int(binary.LittleEndian.Uint64(r[16:])),
+			Scope:   int(binary.LittleEndian.Uint32(r[16:])),
+			Offset:  binary.LittleEndian.Uint32(r[20:]),
 			Decl:    int(binary.LittleEndian.Uint64(r[32:])),
 			Generic: binary.LittleEndian.Uint32(r[28:]) == 2,
 		}

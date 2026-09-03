@@ -37,6 +37,7 @@ const (
 	arenaCount   = 0x4b8       // uint64 number of pages
 	arenaMax     = 100         // pages one arena record can name
 	pageLen      = 10240       // every value page inflates to this many bytes
+	chunkLen     = 146         // a value wider than this is written as chunks; see Changes
 	markerLen    = 16
 )
 
@@ -77,17 +78,18 @@ type Header struct {
 	// costs 0xf0 of it, and the arena table has ceil(HandleSpace/0x800)
 	// slots. The trailer word at 0x0c repeats that slot count.
 	HandleSpace uint64
-	// HasSignals is the trailer word at 0x110 in a three slot header: 1
-	// when any object is logged.
-	HasSignals bool
 	// MarkerOffset is the trailer word at 0x118 in a three slot header:
-	// the file offset of a 16 byte record [uint64 0][uint64 objects-1],
-	// or 0 when no object is logged. It sits between the last arena
-	// record and the first page unless a page was flushed before the
-	// simulation ended, and then it follows that page.
+	// the file offset of the logged object ranges, or 0 when no object
+	// is logged. It sits between the last arena record and the first
+	// page unless a page was flushed before the simulation ended, and
+	// then it follows that page.
 	MarkerOffset uint64
-	// Marker is the second word of that record.
-	Marker uint64
+	// Logged lists the ranges of object indices that have records, as
+	// [first, last] pairs, read from MarkerOffset. The trailer word at
+	// 0x110 counts them. One range [0, n-1] was first read as a single
+	// marker word; t9_port_rec, with an unlogged package constant
+	// between two logged objects, has two.
+	Logged [][2]uint64
 	// PageSize is the trailer word at 0x120, the size a value page
 	// inflates to.
 	PageSize uint32
@@ -112,7 +114,8 @@ type Arena struct {
 	// never written.
 	Offset uint64
 	// Pages are the arena's pages in the order they were written, which
-	// is time order.
+	// is time order. More than arenaMax of them means the record chained
+	// to one or more continuation records.
 	Pages []PageRef
 }
 
@@ -154,18 +157,25 @@ func readHeader(d []byte) (Header, error) {
 	if want := (h.HandleSpace + arenaSpan - 1) / arenaSpan; uint64(len(h.ArenaOffsets)) != want {
 		return h, fmt.Errorf("arena table has %d slots, handle space %#x wants %d", len(h.ArenaOffsets), h.HandleSpace, want)
 	}
-	h.HasSignals = binary.LittleEndian.Uint64(t[0x30:]) != 0
+	ranges := binary.LittleEndian.Uint64(t[0x30:])
 	h.MarkerOffset = binary.LittleEndian.Uint64(t[0x38:])
 	h.PageSize = binary.LittleEndian.Uint32(t[0x40:])
-	if h.MarkerOffset != 0 {
-		if h.MarkerOffset+markerLen > uint64(len(d)) {
-			return h, fmt.Errorf("marker at %#x runs past the file", h.MarkerOffset)
+	if (h.MarkerOffset == 0) != (ranges == 0) {
+		return h, fmt.Errorf("marker at %#x with %d logged ranges", h.MarkerOffset, ranges)
+	}
+	if h.MarkerOffset+ranges*markerLen > uint64(len(d)) {
+		return h, fmt.Errorf("%d logged ranges at %#x run past the file", ranges, h.MarkerOffset)
+	}
+	for i := uint64(0); i < ranges; i++ {
+		m := d[h.MarkerOffset+i*markerLen:]
+		r := [2]uint64{binary.LittleEndian.Uint64(m), binary.LittleEndian.Uint64(m[8:])}
+		if r[0] > r[1] {
+			return h, fmt.Errorf("logged range %d is [%d, %d]", i, r[0], r[1])
 		}
-		m := d[h.MarkerOffset:]
-		if w := binary.LittleEndian.Uint64(m); w != 0 {
-			return h, fmt.Errorf("marker at %#x starts with %#x, want 0", h.MarkerOffset, w)
+		if i > 0 && r[0] <= h.Logged[i-1][1] {
+			return h, fmt.Errorf("logged range %d starts at %d, after the previous ended at %d", i, r[0], h.Logged[i-1][1])
 		}
-		h.Marker = binary.LittleEndian.Uint64(m[8:])
+		h.Logged = append(h.Logged, r)
 	}
 	for i := 0; i < 3; i++ {
 		p := binary.LittleEndian.Uint64(d[offDirPointers+8*i:])
@@ -201,9 +211,13 @@ func (h *Header) Dir(name string) (DirEntry, bool) {
 // arenas were first written, which is not always arena order:
 // t7_gen_for has arena 2 first. So the only check is that every named
 // record is at pageDirStart plus a multiple of arenaRecLen and that no
-// two slots share one. A record lists its pages as uint64 offsets from
-// arenaOffsets and uint32 compressed lengths from arenaLens, with the
-// page count at arenaCount; the slots past the count are zero.
+// two slots share one.
+//
+// A record names at most arenaMax pages. When an arena needs more, the
+// record's first word points at a continuation record of the same
+// layout, written among the pages right after the first page it names,
+// and the chain goes on from there: t9_tr70000 has 117 pages, 100 in
+// the record and 17 in one continuation.
 //
 // The result has one Arena per slot of the arena table. A slot that is
 // zero, an arena no object was written to, gives an Arena with a zero
@@ -223,34 +237,16 @@ func readPageDir(d []byte, h *Header, dbg DirEntry) ([]Arena, error) {
 			return nil, fmt.Errorf("arena table slots %d and %d both name the record at %#x", j, i, off)
 		}
 		seen[off] = i
-		if off+arenaRecLen > uint64(len(d)) {
-			return nil, fmt.Errorf("arena record %d at %#x runs past the file", i, off)
-		}
-		r := d[off : off+arenaRecLen]
-		n := binary.LittleEndian.Uint64(r[arenaCount:])
-		if n > arenaMax {
-			return nil, fmt.Errorf("arena record %d names %d pages, more than %d", i, n, arenaMax)
-		}
 		a := Arena{Offset: off}
-		for j := uint64(0); j < n; j++ {
-			ref := PageRef{
-				Offset:        binary.LittleEndian.Uint64(r[arenaOffsets+8*j:]),
-				CompressedLen: uint64(binary.LittleEndian.Uint32(r[arenaLens+4*j:])),
+		for rec, k := off, 0; rec != 0; k++ {
+			next, err := readArenaRecord(d, rec, i, k, &a)
+			if err != nil {
+				return nil, err
 			}
-			if ref.Offset+ref.CompressedLen > uint64(len(d)) {
-				return nil, fmt.Errorf("arena %d page %d at %#x+%d runs past the file", i, j, ref.Offset, ref.CompressedLen)
+			if next != 0 && next <= rec {
+				return nil, fmt.Errorf("arena record %d continuation %d at %#x points back to %#x", i, k, rec, next)
 			}
-			a.Pages = append(a.Pages, ref)
-		}
-		for _, b := range r[arenaOffsets+8*n : arenaLens] {
-			if b != 0 {
-				return nil, fmt.Errorf("arena record %d has a non-zero offset slot past page %d", i, n)
-			}
-		}
-		for _, b := range r[arenaLens+4*n : arenaCount] {
-			if b != 0 {
-				return nil, fmt.Errorf("arena record %d has a non-zero length slot past page %d", i, n)
-			}
+			rec = next
 		}
 		arenas[i] = a
 	}
@@ -261,4 +257,46 @@ func readPageDir(d []byte, h *Header, dbg DirEntry) ([]Arena, error) {
 		}
 	}
 	return arenas, nil
+}
+
+// readArenaRecord appends the pages one arena record names to a, and
+// returns the offset of the continuation record its first word names,
+// 0 when there is none. A record lists its pages as uint64 offsets from
+// arenaOffsets and uint32 compressed lengths from arenaLens, with the
+// page count at arenaCount; the slots past the count are zero. i is
+// the arena and k the position in the chain, for messages.
+func readArenaRecord(d []byte, off uint64, i, k int, a *Arena) (uint64, error) {
+	if off+arenaRecLen > uint64(len(d)) {
+		return 0, fmt.Errorf("arena record %d continuation %d at %#x runs past the file", i, k, off)
+	}
+	r := d[off : off+arenaRecLen]
+	next := binary.LittleEndian.Uint64(r[0:])
+	n := binary.LittleEndian.Uint64(r[arenaCount:])
+	if n > arenaMax {
+		return 0, fmt.Errorf("arena record %d continuation %d names %d pages, more than %d", i, k, n, arenaMax)
+	}
+	if next != 0 && n != arenaMax {
+		return 0, fmt.Errorf("arena record %d continuation %d names %d pages and still continues at %#x", i, k, n, next)
+	}
+	for j := uint64(0); j < n; j++ {
+		ref := PageRef{
+			Offset:        binary.LittleEndian.Uint64(r[arenaOffsets+8*j:]),
+			CompressedLen: uint64(binary.LittleEndian.Uint32(r[arenaLens+4*j:])),
+		}
+		if ref.Offset+ref.CompressedLen > uint64(len(d)) {
+			return 0, fmt.Errorf("arena %d page %d at %#x+%d runs past the file", i, len(a.Pages), ref.Offset, ref.CompressedLen)
+		}
+		a.Pages = append(a.Pages, ref)
+	}
+	for _, b := range r[arenaOffsets+8*n : arenaLens] {
+		if b != 0 {
+			return 0, fmt.Errorf("arena record %d continuation %d has a non-zero offset slot past page %d", i, k, n)
+		}
+	}
+	for _, b := range r[arenaLens+4*n : arenaCount] {
+		if b != 0 {
+			return 0, fmt.Errorf("arena record %d continuation %d has a non-zero length slot past page %d", i, k, n)
+		}
+	}
+	return next, nil
 }

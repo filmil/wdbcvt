@@ -21,8 +21,7 @@ func (f *File) Dump(w io.Writer) error {
 	p("  timestamp      %d\n", h.Timestamp)
 	p("  end time       %d ps\n", h.EndTimePS)
 	p("  handle space   %#x\n", h.HandleSpace)
-	p("  has signals    %v\n", h.HasSignals)
-	p("  marker         at %#x, %d\n", h.MarkerOffset, h.Marker)
+	p("  logged ranges  at %#x: %v\n", h.MarkerOffset, h.Logged)
 	p("  page size      %d\n", h.PageSize)
 	p("  arena table    %d slots:", len(h.ArenaOffsets))
 	for _, a := range h.ArenaOffsets {
@@ -121,8 +120,14 @@ func (f *File) Dump(w io.Writer) error {
 	p("objects (%d):\n", len(f.Objects))
 	for i, o := range f.Objects {
 		p("  [%d] handle %#x arena %d key %#x  %s", i, o.Handle, o.Arena(), o.Key(), f.ObjectPath(o))
+		if o.Offset != 0 {
+			p(" offset %d", o.Offset)
+		}
 		if o.Generic {
 			p(" (no second handle)")
+		}
+		if !o.Logged {
+			p(" (not logged)")
 		}
 		p("\n")
 	}
