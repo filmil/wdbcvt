@@ -184,6 +184,14 @@ func unpackBits(data []byte, nbits int) ([]byte, error) {
 	return bits, nil
 }
 
+// slotted reports whether a Verilog type instance takes whole word
+// pairs of its own inside an unpacked array: a real, or an unpacked
+// struct. Anything else packs into the array's bit string.
+func (f *File) slotted(t int) bool {
+	ty := &f.Types[f.resolve(t)]
+	return ty.Kind == KindReal || ty.Kind == KindRecord && ty.Layout == LayoutUnpacked
+}
+
 // decodeVerilog decodes the record bytes of one Verilog type instance.
 // An unpacked struct is decoded by slots: the last field sits in the
 // lowest word pairs and the first field in the highest, each field in
@@ -203,10 +211,14 @@ func (f *File) decodeVerilog(t int, data []byte, rs *[]Range) (Value, error) {
 		}
 		v.Scalar = strconv.FormatFloat(math.Float64frombits(binary.LittleEndian.Uint64(data)), 'g', -1, 64)
 		return v, nil
-	case ty.Kind == KindArray && ty.Layout == LayoutUnpacked && f.Types[f.resolve(ty.Elem)].Kind == KindReal:
+	case ty.Kind == KindArray && ty.Layout == LayoutUnpacked && f.slotted(ty.Elem):
 		// An unpacked array of real gives each element one pair, the
 		// last element lowest, as an unpacked struct does its fields:
 		// t13_sv_real_arr writes r[1] of real r [0:1] into pair 0.
+		// An unpacked array of unpacked structs does the same with a
+		// slot of one pair per rounded field: t35_sv_ust_arr__ writes
+		// m[1] of rec_t m [0:1] into pairs 0 and 1 of 4, b in pair 0
+		// and a in pair 1.
 		dims, err := f.arrayDims(ty, rs)
 		if err != nil {
 			return v, err
@@ -215,13 +227,19 @@ func (f *File) decodeVerilog(t int, data []byte, rs *[]Range) (Value, error) {
 		for _, r := range dims {
 			n *= r.Length()
 		}
-		if len(data) != 8*n {
-			return v, fmt.Errorf("%s: %d bytes for %d reals", ty.Name, len(data), n)
+		ers := *rs
+		eb, err := f.bitsOf(ty.Elem, &ers)
+		if err != nil {
+			return v, fmt.Errorf("%s: %w", ty.Name, err)
+		}
+		slot := 8 * ((eb + 31) / 32)
+		if len(data) != slot*n {
+			return v, fmt.Errorf("%s: %d bytes for %d slots of %d", ty.Name, len(data), n, slot)
 		}
 		v.Elems = make([]Value, n)
 		for i := 0; i < n; i++ {
 			ers := *rs
-			e, err := f.decodeVerilog(ty.Elem, data[8*(n-1-i):8*(n-i)], &ers)
+			e, err := f.decodeVerilog(ty.Elem, data[slot*(n-1-i):slot*(n-i)], &ers)
 			if err != nil {
 				return v, err
 			}
