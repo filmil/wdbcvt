@@ -1,0 +1,38 @@
+{
+  "case": "t28_sv_prm_int_u",
+  "axis": "parameter int unsigned K = 5",
+  "differs_from": "t26_sv_lp_int___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "K",
+      "type": "int",
+      "declared": "parameter int unsigned",
+      "value": "5",
+      "width": 32
+    }
+  ]
+}

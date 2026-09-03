@@ -1,0 +1,43 @@
+{
+  "case": "t28_sv_int_cast_",
+  "axis": "int s = int'(1.5), a cast",
+  "differs_from": "t27_sv_int_real_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "int"
+    },
+    {
+      "scope": "tb",
+      "name": "xilinx_isim_temp_0_ln5castingOp",
+      "width": 32,
+      "type": "int",
+      "declared": "hidden, from a cast"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "xilinx_isim_temp_0_ln5castingOp",
+      "value": "2"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "2"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

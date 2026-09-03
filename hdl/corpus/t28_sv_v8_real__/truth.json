@@ -1,0 +1,27 @@
+{
+  "case": "t28_sv_v8_real__",
+  "axis": "logic [7:0] s = 1.5, a real literal into a vector",
+  "differs_from": "t27_sv_int_real_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

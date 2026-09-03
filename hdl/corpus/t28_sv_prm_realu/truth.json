@@ -1,0 +1,37 @@
+{
+  "case": "t28_sv_prm_realu",
+  "axis": "parameter K = 1.5, untyped",
+  "differs_from": "t26_sv_real_prm_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "1.5"
+    }
+  ]
+}

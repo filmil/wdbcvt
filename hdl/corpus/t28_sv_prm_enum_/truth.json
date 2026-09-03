@@ -1,0 +1,38 @@
+{
+  "case": "t28_sv_prm_enum_",
+  "axis": "parameter state_t S = RUN, an enum parameter",
+  "differs_from": "t28_sv_prm_expr_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "S",
+      "type": "state_t",
+      "declared": "parameter state_t",
+      "value": "RUN",
+      "width": 32
+    }
+  ]
+}

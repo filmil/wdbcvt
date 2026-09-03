@@ -1,0 +1,38 @@
+{
+  "case": "t28_sv_v8_bitsel",
+  "axis": "logic [7:0] s = K[7:0], a part select of a parameter",
+  "differs_from": "t26_sv_logic_prm",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "00000000"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000001011010",
+      "width": 32
+    }
+  ]
+}
