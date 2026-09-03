@@ -1,0 +1,58 @@
+{
+  "case": "t2_flat3",
+  "axis": "aggregation: three signals instead of one record",
+  "differs_from": "t2_record",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "alpha",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "bravo",
+      "width": 8,
+      "type": "std_ulogic_vector"
+    },
+    {
+      "scope": "tb",
+      "name": "charlie",
+      "width": 32,
+      "type": "integer"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "bravo",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "charlie",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "bravo",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 50,
+      "signal": "charlie",
+      "value": "165"
+    }
+  ]
+}

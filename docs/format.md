@@ -244,20 +244,85 @@ design, and going from one level to three costs a further 160, so an
 additional empty scope is about 80 bytes.
 
 
-## How records and arrays are stored
+## How records are stored
 
-**Record field names are stored in the clear, and so is the record type
-name.** `t2_record` declares `bundle_t` with fields `alpha`, `bravo` and
-`charlie`, and all four names appear verbatim in the database.
+**A record is one signal object, not one per field, and its field names
+live in the type table rather than beside the signal.**
 
-A record of three fields costs +278 over a single bit, and an array of
-four 8-bit vectors costs +289. Both are far less than the +584 that one
-`std_logic_vector` costs, which suggests aggregates reuse the type
-entries of their members rather than repeating them.
+The decisive measurement is a pair that holds everything else fixed.
+`t2_record` has one signal of a three field record. `t2_flat3` has three
+separate signals with the same names, the same types, the same values
+and the same transition times. The only difference is the aggregation:
 
-Whether a record is stored as one object or flattened into one object
-per field is **not yet answered**. The field names being present is
-consistent with either.
+| Case | Bytes |
+| :--- | ---: |
+| `t2_record`, one record of three fields | 3955 |
+| `t2_flat3`, the same three fields as three signals | 5402 |
+
+The record is **1447 bytes smaller**. Flattening would not make a file
+smaller, so a record is not flattened.
+
+The type tables show why. `t2_flat3` declares only leaf types, and the
+names `alpha`, `bravo` and `charlie` do not appear in its type table at
+all, because there they are signal names:
+
+```
+392 STD_ULOGIC   ... 467 NATURAL   499 STD_ULOGIC_VECTOR   565 INTEGER
+```
+
+`t2_record` puts the record type first, with its field names inline,
+and then the member types:
+
+```
+392 bundle_t   413 alpha   427 bravo   453 charlie
+481 STD_ULOGIC ... 556 NATURAL   588 STD_ULOGIC_VECTOR   654 INTEGER
+```
+
+**Type entries are shared between signals of the same type.**
+`t2_record_two` declares two signals of one record type. `bundle_t`,
+`alpha` and `bravo` each appear **exactly once** in the file. Reproduce
+with `grep -aoc alpha sim.wdb`.
+
+**Nested records get their own type entry.** `t2_record_nested` wraps a
+record in a record, and the table holds the outer type, its field names,
+then the inner type, then the inner field names, then the leaf types:
+
+```
+392 outer_t   412 delta_f   452 echo_f
+479 inner_t   499 alpha     513 bravo
+551 STD_ULOGIC ...
+```
+
+So the type table is a flat list of type definitions in dependency
+order, and a field refers to a type in it.
+
+### What each thing costs
+
+| Change | Cost |
+| :--- | ---: |
+| A second signal, one bit | +1405 |
+| A second signal of a two field record | +1458 |
+| A third field on a record, `integer`, including the `INTEGER` type entry | +61 |
+| Wrapping two fields in a nested record and adding a bit | +108 |
+
+**The signal object dominates, not the field.** A signal costs about
+1400 to 1460 bytes whatever its type, while a field costs tens of bytes.
+That is the whole reason a record beats three signals by 1447 bytes: it
+is one signal object instead of three.
+
+For a decoder this means a record signal cannot be read from the signal
+table alone. Its field names, their order and their types are only in
+the type entry the signal points at.
+
+
+## How arrays are stored
+
+An array of four 8-bit vectors costs +289 over a single bit, which is
+close to the +278 a three field record costs and far below the +1405 a
+second signal costs. So an array is also one signal object.
+
+Whether the element type appears once with a count, or once per element,
+is **not yet answered**.
 
 
 ## The noise mask
@@ -293,7 +358,11 @@ several pairs and take the union before trusting it.
 2. Is the payload compressed, and with what?
    Check the entropy profile first, then look for `zlib` and `zstd`
    frame headers at the block boundaries the entropy profile suggests.
-3. Do the signal names survive in the clear?
+3. How are array elements represented in the type table, once with a
+   count or once each?
+4. Are the values of a record's fields stored as one blob per record or
+   one per field?
+5. Do the signal names survive in the clear?
    The names to look for are known exactly: `tb`, `dut`, `ctl`, `stat`,
    `clk`, `reset`, `enable`, `value`, `wrapped`, `counter`, and
    `counter_types`.
