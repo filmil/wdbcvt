@@ -143,6 +143,19 @@ type truth struct {
 	// a value spanning two arenas and written in pieces at one time
 	// comes back in an order the source does not fix: t12_v_mem40_t0.
 	FinalPerTime []string `json:"final_per_time"`
+	// Absent lists declarations the source has and the file does
+	// not: the parameter of a package nothing uses, t25_sv_pkg_prm,
+	// a parameter string, t26_sv_str_prm, an event, t26_sv_event, a
+	// function called only from an initializer, t26_sv_logic_fn.
+	Absent []truthAbsent `json:"absent"`
+}
+
+// truthAbsent is one declaration that leaves no object. Type is the
+// source keyword and is not checked.
+type truthAbsent struct {
+	Scope string `json:"scope"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
 }
 
 // corpusCases lists every case directory that has a truth.json and a
@@ -583,6 +596,20 @@ func TestCorpus(t *testing.T) {
 				}
 				if got := f.String(v); !sameValue(f, dc.Type, value, got) {
 					t.Errorf("%s = %s, truth says %s", path, got, value)
+				}
+			}
+
+			// Absent declarations: no object, and no declaration of
+			// the name in the scope's unit.
+			for _, ab := range tr.Absent {
+				path := ab.Scope + "." + ab.Name
+				if _, ok := objByPath[path]; ok {
+					t.Errorf("%s is an object, truth says absent", path)
+				}
+				for _, dc := range f.Decls {
+					if dc.Name == ab.Name {
+						t.Errorf("%s is declared, truth says absent", path)
+					}
 				}
 			}
 
