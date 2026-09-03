@@ -820,10 +820,13 @@ records once too.
 once, because the implicit process writes the value it already holds.
 A `real` records `0` once for the same reason, and so does
 `real s = 1.5` in `t25_sv_real_lit`.
-A `time` with an initializer, `time s = 10ns` in `t25_sv_time_lit`,
-records all `X` and then `10`, the value in the `timescale` unit, as
-the `.v` `time s = 0` of `t11_v_time` does, and `t25_sv_time_noin`
-without one holds the `X` record alone.
+A time literal runs as an implicit process in a `.sv` file: `time s
+= 10ns` in `t25_sv_time_lit` records all `X` and then `10`, the value
+in the `timescale` unit, and `int s = 10ns` in `t27_sv_int_time`
+records `0` and then `10`, while `time s = 0` in `t27_sv_time_uns`
+and `time s = 64'h0` in `t27_sv_time_szd` record `0` once.
+`t25_sv_time_noin`, a `time` without an initializer, holds the `X`
+record alone.
 An unsized literal changes nothing here: `logic s = 0` in
 `t25_sv_logic_int` and `int s = 32'h0` in `t25_sv_int_sized` each
 record once, while `integer s = 32'h0` in a `.v` file,

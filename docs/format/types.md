@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 400 of 400 cases decoding with the entry lengths chaining
+*Confirmed by* 456 of 456 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -403,6 +403,16 @@ A declaration of a named type has no range records of its own.
 Signedness is not recorded anywhere: the dump of `t11_v_signed8`,
 `reg signed [7:0]`, is the dump of `t11_v_vec8` outside the
 timestamps, and the two files differ in 17 bytes.
+The `unsigned` qualifier of an integral type is not recorded either:
+`int unsigned s` of `t27_sv_int_uns` is a declaration of the type
+`int`, and the file is that of `t11_sv_int` outside the timestamps,
+the line numbers and the scope name they change.
+So a `byte unsigned` holding 165 reads back as `-91`, and the truth of
+such a case says `unsigned` for the test to read the value back as an
+unsigned number: `t27_sv_byte_uns`, `t27_sv_lng_uns`,
+`t27_sv_intg_uns`, `t27_v_intg_uns`.
+`shortint` is the same array entry over `bit` with `(15, 0, -1)`,
+`t26_sv_shortint`.
 
 *Found by* `t11_v_integer` against `t11_v_vec8`, where the vector's
 bounds moved from the declaration into the type entry and took a name.

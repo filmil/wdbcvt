@@ -744,6 +744,82 @@ time.
 | `t25_sv_logic_exp` | `logic s = 1'b0 \| 1'b0` | class 1 |
 | `t25_sv_logic_x` | `logic s = 1'bx` | class 1 |
 
+Tier 26 varies the initializer forms tier 25 did not: a parameter
+reference, a function call, unsized hex, negative literals, sized
+literals narrower and wider than the target, `shortint`, two state
+vectors, signed vectors, a string literal into a vector, a
+concatenation, a replication, a conditional, an `event`, and the
+SystemVerilog parameter types in the root module.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t26_sv_logic_prm` | `logic s = K` | class 1, as `K` |
+| `t26_sv_int_prm` | `int s = K` | class 3 |
+| `t26_sv_logic_fn` | `logic s = f()` | class 1; no unit or scope for `f` |
+| `t26_sv_v8_unshex` | `logic [7:0] s = 'h00` | class 1 |
+| `t26_sv_logic_1` | `logic s = 1` | class 4 |
+| `t26_sv_int_neg` | `int s = -1` | class 3 |
+| `t26_sv_int_szd5` | `int s = 5'd3` | class 3 |
+| `t26_sv_int_szd64` | `int s = 64'h0` | class 3 |
+| `t26_sv_int_unhex` | `int s = 'h0` | class 3 |
+| `t26_sv_shortint` | `shortint s = 0` | class 3; the `shortint` entry |
+| `t26_sv_lng_szd` | `longint s = 64'h0` | class 3 |
+| `t26_sv_bit8_szd` | `bit [7:0] s = 8'h00` | class 1 |
+| `t26_sv_bit8_int` | `bit [7:0] s = 0` | class 4 |
+| `t26_sv_v32_int` | `logic [31:0] s = 0` | class 4 |
+| `t26_sv_v32_szd` | `logic [31:0] s = 32'h0` | class 1 |
+| `t26_sv_sgn8_neg` | `logic signed [7:0] s = -1` | class 3 |
+| `t26_sv_sgn8_szd` | `logic signed [7:0] s = 8'h00` | class 1 |
+| `t26_sv_real_int` | `real s = 1` | class 0 |
+| `t26_sv_v8_str` | `logic [7:0] s = "a"` | class 6 |
+| `t26_sv_v8_cat` | `{4'h0, 4'h0}` | class 1 |
+| `t26_sv_v8_rep` | `{8{1'b0}}` | class 1 |
+| `t26_sv_logic_cnd` | `(1 > 0) ? 1'b0 : 1'b1` | class 1 |
+| `t26_sv_integer_x` | `integer s = 'x` | class 3 |
+| `t26_sv_byte_neg` | `byte s = -1` | class 3 |
+| `t26_sv_str_prm` | `parameter string P` | no object |
+| `t26_sv_bit_prm` | `parameter bit B = 1'b1` | class 1 |
+| `t26_sv_lp_int` | `localparam int L = 3` | class 3 |
+| `t26_sv_real_prm` | `parameter real R = 1.5` in `.sv` | class 0 |
+| `t26_sv_v8_prm` | `parameter logic [7:0] P = 8'h5a` | class 1 |
+| `t26_sv_event` | `event e` | no object; `0x2c0` of handle space |
+
+Tier 27 varies signedness, after tier 26 left the codes 3 and 4
+looking like signed and unsigned integer initial values: `unsigned`
+on the integral types, negative and positive unsized literals into
+unsigned and signed vectors, signed sized literals, `time` from a
+sized literal and from `0`, string, real and time literals into an
+`int`, fill literals, and the packed types without an initializer.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t27_sv_int_uns` | `int unsigned s = 0` | class 3; `unsigned` not recorded |
+| `t27_sv_int_unsni` | `int unsigned s` | class 3 |
+| `t27_sv_byte_uns` | `byte unsigned s = 0` | class 4; reads back signed |
+| `t27_sv_lng_uns` | `longint unsigned s = 0` | class 3 |
+| `t27_sv_intg_uns` | `integer unsigned s = 0` | class 3 |
+| `t27_v_intg_uns` | the same in `.v` | class 3 |
+| `t27_sv_v8_neg` | `logic [7:0] s = -1` | class 4 |
+| `t27_sv_sgn8_pos` | `logic signed [7:0] s = 5` | class 3 |
+| `t27_sv_v8_ssized` | `logic [7:0] s = 8'sh05` | class 1 |
+| `t27_sv_sgn8_szdn` | `logic signed [7:0] s = -8'sd1` | class 1 |
+| `t27_v_sgn8_neg` | `reg signed [7:0] s = -1` in `.v` | class 0 |
+| `t27_sv_time_szd` | `time s = 64'h0` | class 4; one record |
+| `t27_sv_time_uns` | `time s = 0` in `.sv` | class 4; one record |
+| `t27_sv_int_str` | `int s = "a"` | class 3; `97` |
+| `t27_sv_int_real` | `int s = 1.5` | class 3; `2` |
+| `t27_sv_int_time` | `int s = 10ns` | class 3; `0` then `10` |
+| `t27_sv_real_szd` | `real s = 8'h05` | class 0 |
+| `t27_sv_v8_xfill` | `logic [7:0] s = 'x` | class 1 |
+| `t27_sv_v8_zfill` | `'z` | class 1 |
+| `t27_sv_v8_0fill` | `'0` | class 1 |
+| `t27_sv_v8_uns32` | `logic [7:0] s = 32'd5` | class 1 |
+| `t27_sv_bit_noini` | `bit s` | class 0 |
+| `t27_sv_byte_noin` | `byte s` | class 0 |
+| `t27_sv_bit8_noin` | `bit [7:0] s` | class 0 |
+| `t27_sv_v8_noini` | `logic [7:0] s` | class 0 |
+| `t27_sv_str_untyp` | `parameter P = "hello"` in `.sv` | an object of class 6 |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -801,7 +877,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 400 cases through tier 25, and
+5. The reader now reproduces all 456 cases through tier 27, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

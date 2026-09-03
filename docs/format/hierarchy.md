@@ -1022,6 +1022,10 @@ and their values at the call.
 `t12_v_func` declares the return variable `inc` first, then `v` and
 `tmp`, and the call writes `v`, `tmp` and then `inc`.
 The subprogram scope has no unit name and no process scope of its own.
+A function called only from an initializer leaves nothing: `logic s =
+f()` in `t26_sv_logic_fn`, with `f` returning `1'b0`, has the units,
+scopes, declarations and handle space of `t11_sv_logic`, and `s`
+records `0` once, so the call was folded at elaboration.
 
 A named block with a declaration of its own, `initial begin : blk reg
 t;` in `t13_v_blk_var`, is a block unit with one declaration, the
@@ -1317,8 +1321,19 @@ Their handle space is `0xa14` in all four, `0xf8` over the `0x91c`
 of `t11_sv_logic`, so each is given the same handle space whatever
 it holds, and the class member `x` is not there either.
 
+A `parameter string P = "hello"` goes the same way: `t26_sv_str_prm`
+has no object for `P` and 8 bytes of handle space over `t11_sv_logic`,
+where the untyped `parameter P = "hello"` of `t27_sv_str_untyp` is an
+object with a 40 bit record, as in the `.v` `t13_v_str_param`.
+An `event e` leaves no declaration and no object either, and is given
+`0x2c0` of handle space: the `logic s` declared after it in
+`t26_sv_event` has the handle `0xa28` where `t11_sv_logic` has
+`0x768`, and the handle space is `0xc14` for `0x91c`.
+
 *Found by* `t24_sv_queue` against `t11_sv_logic`.
-*Confirmed by* `t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class`.
+*Confirmed by* `t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class`,
+`t26_sv_str_prm` against `t27_sv_str_untyp`, and `t26_sv_event`
+against `t11_sv_logic`.
 The clock toggle due at the `$finish` time in `t11_v_always` is not
 recorded, so the last record of `clk` is at 75 ns in a 100 ns run.
 
@@ -1337,15 +1352,21 @@ length against word 13, and the dump prints them as `value classes`.
 Every VHDL object is class 0, and every VHDL case with objects holds
 the one entry `[0 0 0]`.
 A Verilog or SystemVerilog object is classed by its type and by the
-form of its initializer:
+form of its initializer.
+The integral types `shortint`, `int`, `integer` and `longint`, with or
+without `unsigned`, are class 3 whatever the initializer, and `time`
+is class 4 whatever the initializer.
+`real` and `shortreal` are class 0 whatever the initializer.
+Everything else, the packed types, is classed by the initializer
+alone:
 
 | Class | Objects | Found by |
 | ---: | :--- | :--- |
-| 0 | every VHDL object; a `reg`, `logic`, `bit` or net with no initializer; every `.v` variable with an initializer, which runs as an implicit process; an enum, unpacked struct, packed struct from a `'{}` pattern, `real` or `shortreal` with any initializer; a `real` parameter | `t11_v_bit_edge`, `t12_sv_noinit`, `t11_sv_enum`, `t25_sv_real_lit`, `t25_v_prm_real` |
-| 1 | a sized literal into a `logic`, `bit`, `byte`, packed struct, vector or parameter: `1'b0`, `1'bx`, `'0`, `'1`, `1'b0 \| 1'b0`, `8'h00`, `8'h5a`, `64'h0`, `byte s = 8'h05` | `t11_sv_logic`, `t25_sv_logic_x`, `t25_sv_logic_one`, `t25_sv_logic_exp`, `t25_sv_byte_szd`, `t12_v_param64` |
-| 3 | `int`, `integer`, `longint` or `byte` with an unsized literal, a sized literal or no initializer; an untyped, `integer` or `int` parameter or localparam, in a module or a package | `t11_sv_int`, `t25_sv_int_sized`, `t25_sv_int_noini`, `t11_v_integer`, `t25_v_int_noinit`, `t11_v_param`, `t13_sv_pkg` |
-| 4 | an unsized literal into a `logic` or `bit` scalar or vector: `logic s = 0`, `bit s = 0`, `logic [7:0] s = 0`, `logic [63:0] s = 0`; every `time`, with `= 0`, `= 10ns` or no initializer | `t25_sv_logic_int`, `t25_sv_bit_unsz`, `t25_sv_vec8_int`, `t25_sv_v64_unsz`, `t11_v_time`, `t25_sv_time_noin` |
-| 6 | a string parameter | `t13_v_str_param` |
+| 0 | every VHDL object; a `real`; a packed type with no initializer, `logic`, `bit`, `byte`, `bit [7:0]`, `logic [7:0]`, a net; every packed type in a `.v` file, whose initializer runs as an implicit process; an enum, an unpacked struct, a packed struct from a `'{}` pattern; a `real` parameter | `t11_v_bit_edge`, `t12_sv_noinit`, `t27_sv_byte_noin`, `t11_sv_enum`, `t25_sv_real_lit`, `t25_v_prm_real` |
+| 1 | a packed type from a sized literal, `1'b0`, `1'bx`, `8'h00`, `8'sh05`, `-8'sd1`, `32'd5`, `64'h0`; from a fill literal `'0`, `'1`, `'x`, `'z`; from a concatenation, a replication, a conditional, a function call or a parameter holding a sized literal; a parameter of a packed type, `parameter bit`, `parameter logic [7:0]`, `parameter [7:0]`; a packed struct or union from `'0` or a sized literal | `t11_sv_logic`, `t25_sv_logic_x`, `t27_sv_v8_xfill`, `t26_sv_v8_cat`, `t26_sv_v8_rep`, `t26_sv_logic_cnd`, `t26_sv_logic_fn`, `t26_sv_logic_prm`, `t26_sv_bit_prm`, `t12_v_param64`, `t24_sv_union` |
+| 3 | every `shortint`, `int`, `integer`, `longint`, `int unsigned`, `longint unsigned` and `integer unsigned`, with a sized, unsized, negative, real, string or time literal, `'x`, a parameter or no initializer; a signed packed type from an unsized literal, `logic signed [7:0] s = -1`, `logic signed [7:0] s = 5`, `byte s = 0`, `byte s = -1`; an untyped, `integer` or `int` parameter or localparam, in a module or a package | `t11_sv_int`, `t27_sv_int_uns`, `t26_sv_int_szd5`, `t27_sv_int_str`, `t27_sv_int_real`, `t26_sv_integer_x`, `t26_sv_sgn8_neg`, `t27_sv_sgn8_pos`, `t11_sv_byte`, `t11_v_param`, `t13_sv_pkg` |
+| 4 | every `time`, from `0`, `64'h0`, `10ns` or no initializer; an unsigned packed type from an unsized literal, `logic s = 0`, `logic s = 1`, `bit s = 0`, `logic [7:0] s = 0`, `logic [7:0] s = -1`, `bit [7:0] s = 0`, `logic [31:0] s = 0`, `logic [63:0] s = 0`, `byte unsigned s = 0` | `t11_v_time`, `t27_sv_time_szd`, `t25_sv_logic_int`, `t26_sv_logic_1`, `t25_sv_bit_unsz`, `t27_sv_v8_neg`, `t26_sv_v32_int`, `t27_sv_byte_uns` |
+| 6 | a packed type or an untyped parameter from a string literal: `logic [7:0] s = "a"`, `parameter P = "hello"` | `t26_sv_v8_str`, `t13_v_str_param`, `t27_sv_str_untyp` |
 
 The classes 2 and 5 have not been seen.
 The entries follow the objects: `t12_v_params` lists `s`, `K`, `P`,
@@ -1364,13 +1385,20 @@ The same declaration classes differently in the two languages: `reg
 8'h00` in `t25_sv_vec8_sz` is class 1, while `integer s = 32'h0` in
 `t25_v_int_sized` and `int s = 32'h0` in `t25_sv_int_sized` are both
 class 3.
-What the codes stand for is open; the split between a `.v`
-initializer, which runs as a process, and a `.sv` one, which is taken
-at declaration, and between a sized and an unsized literal, suggests
-a class of how the initial value is produced.
+Signedness moves an unsized literal between 3 and 4 for a packed
+type, `logic signed [7:0] s = 5` against `logic [7:0] s = -1`, and
+`byte` against `byte unsigned`, but not for an integral type, where
+`int unsigned` stays 3; a sized literal is 1 on either.
+The class is not the value's representation in the pages: the records
+of `t27_sv_byte_uns` are those of `t11_sv_byte` outside the value.
+What the codes stand for is open; the table reads as the kind of
+constant the elaborator holds for the initial value, none, a bit
+string, a signed integer, an unsigned integer or a string, with the
+integral types and `time` given their kind whatever the initializer,
+and that is a guess.
 
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 400 of 400 cases, and the
-tier 25 sweep over the initializer forms.
+*Confirmed by* the region length check in 456 of 456 cases, and the
+tier 25 to 27 sweeps over the initializer forms.
