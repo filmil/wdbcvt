@@ -171,10 +171,10 @@ comparison; see the tier 27 notes.
 An `absent` list names declarations the source has and the file does
 not, `parameter string P` or an `event`, and the test checks that no
 object carries the name; see the tier 25 and 26 notes.
-A generic can say `"stored": "float64"` for a value the declared type
-does not spell, and the test then checks the first eight bytes of the
-record against the `float64` of `value` instead of the decoded string;
-`t28_sv_prm_time` is the one case.
+A generic of an untyped time parameter gives `value` as the reader
+spells the `float64`, `1e+09` for `1s`; the `stored` field that once
+named the storage went away when the reader learned to decode it, in
+tier 30.
 
 
 ## The ladder
@@ -911,6 +911,82 @@ as an unsupported construct.
 | `t29_sv_for_modi` | `integer i` in the module | `i` records every value |
 | `t29_sv_foreach` | `foreach (a[i])` | `tb.Block8_1.i` records every value |
 
+Tier 30 goes after two things tier 28 left open: the value classes
+2 and 5, which no case had produced, and the 16 byte record of the
+untyped time parameter.
+Thirteen `logic [7:0]` initializers and nine untyped parameters try
+the forms not yet seen: a based literal without a size, signed and
+unsigned, a negated sized literal, an expression with one sized
+operand, a conditional with a sized arm, a comparison, a fill, a real
+expression, `$signed` and `$unsigned` of an unsized literal, a string
+wider than the target, a concatenation of strings, a 40 bit literal
+and a shift past 32 bits.
+Nine untyped time parameters vary the literal, the timescale, the
+position and the count.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t30_sv_v8_ubase` | `'d5` | class 1 |
+| `t30_sv_v8_sbase` | `'sd5` | class 1 |
+| `t30_sv_v8_negsz` | `-8'd1` | class 1 |
+| `t30_sv_v8_mixed` | `8'd5 + 1` | class 1 |
+| `t30_sv_v8_szexp` | `4'd5 + 4'd1` | class 1 |
+| `t30_sv_v8_uns` | `$unsigned(5)` | class 1 |
+| `t30_sv_v8_sgnu` | `$signed(5)` | class 4 |
+| `t30_sv_v8_realx` | `5 + 1.5` | class 0 |
+| `t30_sv_v8_cnd` | `1'b1 ? 8'd5 : 0` | class 1 |
+| `t30_sv_v8_1fill` | `'1` | class 1 |
+| `t30_sv_v8_cmp` | `(1 < 2)` | class 1 |
+| `t30_sv_v8_str2` | `"ab"` into 8 bits | class 6; `01100010` |
+| `t30_sv_v16_strc` | `{"a", "b"}` into 16 bits | class 6 |
+| `t30_sv_prm_ubase` | `parameter K = 'd5` | class 1, 32 bits |
+| `t30_sv_prm_szsgn` | `parameter K = 8'sd5` | class 1, 8 bits |
+| `t30_sv_prm_wide` | `parameter K = 40'h1` | class 1, 40 bits, 16 bytes; 8 more of handle space |
+| `t30_sv_prm_shft` | `parameter K = 1 << 40` | class 3, 32 bits, `0` |
+| `t30_sv_prm_realx` | `parameter K = 5.0 * 2` | `real`, class 0 |
+| `t30_sv_prm_cnd` | `parameter K = 1'b1 ? 3 : 4` | class 3 |
+| `t30_sv_prm_cmp` | `parameter K = (1 < 2)` | class 1, a `logic` of 1 bit |
+| `t30_sv_prm_strc` | `parameter K = {"a", "b"}` | class 6, 16 bits, `62 61` |
+| `t30_sv_prm_neg8` | `parameter K = -8'd1` | class 1, 8 bits, `ff` |
+| `t30_sv_ptm_20ns` | `parameter T = 20ns` | `float64` `20` |
+| `t30_sv_ptm_10ps` | `parameter T = 10ps` | `0.01`; the fraction is kept |
+| `t30_sv_ptm_1us` | `parameter T = 1us` | `1000` |
+| `t30_sv_ptm_1s` | `parameter T = 1s` | `1e9` |
+| `t30_sv_ptm_frac` | `parameter T = 10.5ns` | `10.5` |
+| `t30_sv_ptm_expr` | `parameter T = 10ns * 2` | the `real` entry, 32 bits, class 0 |
+| `t30_sv_ptm_late` | the parameter after the variable | nothing |
+| `t30_sv_ptm_ps_ts` | `timescale 1ps / 1ps` | `10000`; the unit of the file |
+| `t30_sv_ptm_two` | two time parameters | the second half of a record is the next parameter's value |
+
+Classes 2 and 5 did not appear.
+The time parameter's record resolved: the `float64` is the first eight
+bytes, and the reader decodes it, so the `stored` field of
+`truth.json` went away.
+
+Tier 31 is one word.
+Declaration word 1 had been recorded as `0` since tier 2, and every
+VHDL case agreed, because a VHDL file has one value class entry.
+A sweep of the word over every case showed `1` and `2` on some
+SystemVerilog declarations.
+Ten cases move one `int i = 5` beside a `logic s` through the values,
+the writes, the order and the language, with a `logic [7:0]` and a
+`.v` file for contrast.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t31_sv_w1_i5` | `int i = 5` after `logic s` | word 1 `0` on `s`, `1` on `i`; `[1 0 0] [3 0 0]` |
+| `t31_sv_w1_swap` | `i` before `s` | `0` on `i`, `1` on `s`; `[3 0 0] [1 0 0]` |
+| `t31_sv_w1_i0`, `t31_sv_w1_i1`, `t31_sv_w1_i165` | the value of `i` | the same words |
+| `t31_sv_w1_nowrt` | `i` never written | the same words |
+| `t31_sv_w1_own50` | `i` written after its own delay | the same words; the end time moves to 110 ns |
+| `t31_sv_w1_s5` | the `int` alone | `0`; `[3 0 0]` |
+| `t31_sv_w1_v8_5` | `logic [7:0] i = 5` | `1`; `[1 0 0] [4 0 0]` |
+| `t31_v_w1_int5` | the pair in a `.v` file | `1`; `[0 0 0] [3 0 0]` |
+
+Word 1 is the index of the value class entry.
+The reader keeps it, checks it, and the dump prints the class beside
+each declaration.
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -968,7 +1044,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 508 cases through tier 29, and
+5. The reader now reproduces all 549 cases through tier 31, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

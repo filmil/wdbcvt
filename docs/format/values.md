@@ -901,12 +901,45 @@ is 4 bits wide.
 records `10` in two pairs, and `parameter realtime T = 10ns` in
 `t28_sv_rtime_prm` is a `realtime` and records the `float64` `10`.
 `parameter T = 10ns` without a type, `t28_sv_prm_time`, declares an
-unnamed 64 bit vector, and its 16 byte record holds the `float64`
-`10` in its first eight bytes, `00 00 00 00 00 00 24 40`, and
-`a8 07 00 00 00 00 00 00` after it.
-Read as two pairs that is `0` with the mask `0x40240000` and then
-`0x7a8`, which is no value of the parameter, so the reader has no
-rule for it and the truth of the case names the `float64`.
+unnamed 64 bit vector of class 4, and its record holds the `float64`
+of the value counted in the time unit, `10` as
+`00 00 00 00 00 00 24 40`.
+The record is written 16 bytes long, and its second eight bytes are
+whatever follows the value in memory.
+`t30_sv_ptm_two` declares `T1 = 10ns` and `T2 = 20ns`: the record of
+`T1` holds `float64(10)` then `float64(20)`, and the record of `T2`
+holds `float64(20)` then `a8 07 00 00 00 00 00 00`, the eight bytes
+that also follow the one parameter of `t28_sv_prm_time`.
+The two parameters sit 8 bytes apart, at `0x808` and `0x810`, and the
+handle space grows by 8 for the second, so the second half of one
+record is the first half of the next.
+The value is the literal converted to the time unit with its fraction
+kept: `20ns` records `20`, `10ps` `0.01`, `1us` `1000`, `1s` `1e9`,
+`10.5ns` `10.5`, and `10ns` under `timescale 1ps / 1ps` records
+`10000`; `t30_sv_ptm_20ns`, `t30_sv_ptm_10ps`, `t30_sv_ptm_1us`,
+`t30_sv_ptm_1s`, `t30_sv_ptm_frac`, `t30_sv_ptm_ps_ts`.
+Declaring the parameter after the variable, `t30_sv_ptm_late`, changes
+nothing.
+An untyped parameter with a time expression is not this kind:
+`parameter T = 10ns * 2` in `t30_sv_ptm_expr` uses the `real` entry
+with 32 bits and class 0, and records one `float64` `20` in 8 bytes.
+The reader takes a parameter whose type is the unnamed 64 bit vector
+entry and whose class is 4 as a time parameter, keeps only the record
+written at the parameter's own address, and reads its first eight
+bytes as a `float64`, so that the over-read never counts as a change
+of the next parameter.
+The VCD writes the same parameter as the four state reading of the
+`float64` bytes, `z` where the mask word has a bit, and `TestVCD`
+expects the mismatch for every such parameter; see [vcd.md](vcd.md).
+A sized parameter wider than 32 bits records two pairs like a 64 bit
+one: `parameter K = 40'h1` in `t30_sv_prm_wide` declares 40 bits,
+records `01` and fifteen zero bytes, and takes 8 more bytes of handle
+space than a parameter of 32 bits or fewer, `0x92c` for `0x924`.
+An untyped expression is evaluated at 32 bits: `parameter K = 1 << 40`
+in `t30_sv_prm_shft` declares 32 bits and records `0`.
+A concatenation of string literals is a string: `parameter K =
+{"a", "b"}` in `t30_sv_prm_strc` declares 16 bits of class 6 and
+records `62 61`, the last character at bit 0 as for `"hello"`.
 
 The `X` record is absent when the variable's arena spills into a
 second page, because the page holding time 0 was then written out

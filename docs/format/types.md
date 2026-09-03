@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 508 of 508 cases decoding with the entry lengths chaining
+*Confirmed by* 549 of 549 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -496,8 +496,10 @@ bits, `t28_sv_rtime_var`, and a `parameter realtime` 16,
 `t28_sv_rtime_prm`.
 `parameter time T = 10ns` uses the `time` entry, `t28_sv_prm_tmtyp`,
 and `parameter T = 10ns` without a type uses the unnamed vector entry
-with 64 bits, `t28_sv_prm_time`, whose record is not a vector; see
-[values.md](values.md).
+with 64 bits, `t28_sv_prm_time`, whose record holds a `float64` and
+not a vector; see [values.md](values.md).
+A time expression, `parameter T = 10ns * 2` in `t30_sv_ptm_expr`,
+uses the `real` entry with 32 bits instead.
 A parameter of an enum type, `parameter state_t S = RUN` in
 `t28_sv_prm_enum`, uses the alias entry of the typedef with 32 bits,
 and `parameter int unsigned K` the `int` entry, `t28_sv_prm_int_u`,
