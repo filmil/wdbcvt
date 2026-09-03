@@ -532,10 +532,13 @@ An array of records uses that rounded size as its stride: the three
 `pair_t` of `t5_arr_rec` are at 0, 8 and 16.
 
 A record field of record type carries an extra range triple `(0, 8, 1)`
-in the type table, and the 8 matches the alignment.
-Whether it is the alignment or something else is open, because both a
-5 byte and a 9 byte inner record produce 8.
+in the type table, which was first read as this alignment; tier 7
+showed it to be the range of the inner `std_ulogic` field, `(0, 1, 1)`
+for a `bit` and absent for an inner record without an array field.
 See [types.md](types.md).
+An inner record of two `std_ulogic` still pads to 8 and puts the next
+field at 8: `outer_t` of `t7_rec_in2` is 16 bytes, as `t5_rec_sub5`
+with a 5 byte inner record is.
 
 
 ## VHDL partial writes
