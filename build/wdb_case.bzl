@@ -8,7 +8,7 @@ load(
     "vivado_simulation",
 )
 
-def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = []):
+def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = [], data = []):
     """Declares one corpus case.
 
     Every case is held to the same shape on purpose, so that two cases
@@ -38,6 +38,9 @@ def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = []):
         elaboration itself: the debug level, the VHDL time precision or
         a generic override. A `-debug` option here replaces the default
         `-debug typical`.
+      data: files the simulation reads at run time, for a case whose
+        axis is a memory loaded by `$readmemh`. The bench names them by
+        their path from the workspace root.
     """
     native.filegroup(
         name = "srcs",
@@ -54,11 +57,21 @@ def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = []):
         deps = extra_deps,
     )
 
+    # vivado_simulation takes its data as targets, not files.
+    sim_data = []
+    if data:
+        native.filegroup(
+            name = "data",
+            srcs = data,
+        )
+        sim_data = [":data"]
+
     vivado_simulation(
         name = "sim",
         library = ":lib",
         top = "tb",
         custom_tcl_script = tcl,
+        data = sim_data,
         xelab_args = xelab_args,
     )
 
