@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 706 of 706 cases decoding with the entry lengths chaining
+*Confirmed by* 713 of 713 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -325,6 +325,25 @@ brings the `TIME` physical entry in under origin `0xa`.
 *Found by* `t23_int_vector` against `t5_int_arr`.
 *Confirmed by* `t23_real_vector`, `t23_time_vector` and
 `t23_bool_vector`, each against `truth.json`.
+
+**String.**
+`STRING` is the same shape: an unconstrained array entry under origin
+`2` over `character`, indexed by `POSITIVE`, with the one triple
+`(0, 0, -2)`.
+`t23_file_text` had brought the entry in behind `text`; a string
+signal of the design brings it in on its own, and `character` and
+`POSITIVE` with it, where `t2_character` had `character` alone.
+The declaration of `s : string(1 to 5)` carries `(1 to 5)` and 5
+bytes, and `(3 to 7)` under `string(3 to 7)`, so the bounds are the
+ones written and not renumbered from 1.
+The value is one byte per character, the `character` literal's index,
+`68 65 6c 6c 6f` for `"hello"`, and the reader renders an array of a
+character enumeration as one string.
+A `string` process variable declares the same 5 bytes and `(1 to 5)`
+and has no record, as an `integer` variable has none.
+*Found by* `t44_str_sig` against `t2_character`.
+*Confirmed by* `t44_str_sig_3to7` and `t44_str_var` against
+`t6_var_int`.
 
 **Record.**
 Each field is `name NUL [u32 type][u32 nranges]` then that many

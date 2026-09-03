@@ -202,6 +202,21 @@ A `TIME` signal counts the same unit: `t <= 1500 fs` records 1500 in
 *Found by* `t22_vh_fs` against `t22_base`.
 *Confirmed by* `t22_vh_ns`.
 
+A time past 32 bits is stored whole.
+Every record time and page bound is read as 8 bytes, but no case
+before tier 44 had put more than 70010000 in one.
+`t44_time_5ms` changes at `5 ms` and holds the record at 5000000000,
+`t44_time_5s` at `5 sec` holds 5000000000000, and each file differs
+from `t1_bit_one_edge` in that record, the page's `t1` and the end
+time and nowhere else; the compressed page grows by 5 and 10 bytes.
+`t44_time_late` changes at 1 ns and then at 5 ms, so `t0` is 0 and
+`t1` 5000001000, and a Verilog `#5000000` under `1ns / 1ps`,
+`t44_v_time_5ms`, records 5000000000 the same way.
+So the 8 byte fields are 64 bit times, not 32 bit times with padding.
+*Found by* `t44_time_5ms` against `t1_bit_one_edge`.
+*Confirmed by* `t44_time_5s`, `t44_time_late` and `t44_v_time_5ms`,
+each against `truth.json`.
+
 A net shared by a signal and the ports connected to it is one handle,
 see [hierarchy.md](hierarchy.md), and its records show the connection
 twice over.

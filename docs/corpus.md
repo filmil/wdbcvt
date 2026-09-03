@@ -1417,6 +1417,24 @@ The child reads `a(a'right)` into a signal so that the port is used.
 | `t43_port_unc_out` | `t43_port_uncons_` | `a : out std_ulogic_vector` | the same |
 | `t43_port_unc_rec` | `t43_port_uncons_` | a port of a record with an unconstrained field | `(7 downto 0)` on the port; the field unconstrained in the type |
 
+**Tier 44: times past 32 bits, and strings.**
+VHDL and Verilog.
+Every record time and page bound is read as 8 bytes, but the largest
+time in the corpus was 70010000 ps, so the tier puts changes at 5 ms
+and 5 s to see whether the high half is used.
+A `string` had entered the type table only behind a `text` file, so
+the tier declares a string signal and a string variable.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t44_time_5ms____` | `t1_bit_one_edge` | an edge at `5 ms` | 5000000000 in the record, the page bound and the end time |
+| `t44_time_5s_____` | `t44_time_5ms____` | an edge at `5 sec` | 5000000000000 |
+| `t44_time_late___` | `t44_time_5ms____` | edges at 1 ns and 5 ms | `t0` 0, `t1` 5000001000 |
+| `t44_v_time_5ms__` | `t11_v_bit_edge` | Verilog `#5000000` under `1ns / 1ps` | the same as VHDL |
+| `t44_str_sig_____` | `t2_character` | `s : string(1 to 5)` | `STRING` over `character` by `POSITIVE`; `(1 to 5)`, 5 bytes |
+| `t44_str_sig_3to7` | `t44_str_sig_____` | `string(3 to 7)` | `(3 to 7)` as written |
+| `t44_str_var_____` | `t6_var_int` | a `string(1 to 5)` variable | a 5 byte declaration, no record |
+
 
 ## Record which comparison produced which finding
 
@@ -1455,7 +1473,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 706 cases through tier 43, and
+5. The reader now reproduces all 713 cases through tier 44, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
