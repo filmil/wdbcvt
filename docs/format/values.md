@@ -886,6 +886,49 @@ logged; only the logged ranges, the arena table and the pages differ.
 `t57_log_slice___` against `t57_log_bit_____`.
 *Confirmed by* the rest of tier 57, each against `truth.json`.
 
+Tier 58 asks the same of a SystemVerilog design: a `logic`, a
+vector, a memory, a packed struct, an `int`, a `real`, a `parameter`
+and a `localparam` in the module, a generate block with a wire, a
+named block with an `int`, and a static task with an argument and a
+local.
+
+| `log_wave` | Logged | Case |
+| :--- | :--- | :--- |
+| `-recursive *` | all thirteen objects | `t58_sv_log_all__` |
+| nothing | nothing | `t58_sv_log_none_` |
+| `/tb/v[3]`, one bit | nothing, "No matching HDL object" | `t58_sv_log_bit__` |
+| `/tb/v[2:1]`, a slice | the whole of `v` | `t58_sv_log_slc__` |
+| `/tb/m[1]`, one element of the memory | nothing, the warning | `t58_sv_log_mem_e` |
+| `/tb/m`, the memory | `m` | `t58_sv_log_mem__` |
+| `/tb/st.a`, a field of the struct | nothing, the warning | `t58_sv_log_st_fl` |
+| `/tb/st`, the struct | `st` | `t58_sv_log_st___` |
+| `/tb/i`, `/tb/r`, the module's `int` and `real` | that variable | `t58_sv_log_int__`, `t58_sv_log_real_` |
+| `/tb/P`, `/tb/L`, the parameter and the localparam | that parameter, one record at 0 | `t58_sv_log_prm__`, `t58_sv_log_lprm_` |
+| `/tb/blk/bv`, the named block's variable | `bv` | `t58_sv_log_blkv_` |
+| `/tb/blk`, the named block | `bv` | `t58_sv_log_blk__` |
+| `/tb/inc/x`, `/tb/inc/tmp`, the task's argument and local | that object | `t58_sv_log_tsk_a`, `t58_sv_log_tsk_l` |
+| `/tb/inc`, the task | `x` and `tmp` | `t58_sv_log_tsk__` |
+| `/tb/gb[1]`, a generate block by path | nothing, the warning | `t58_sv_log_gen__` |
+| `[get_objects -regexp {/tb/.*gb\[1\].*}]`, its wire | `gw` of block 1 | `t58_sv_log_gen_w` |
+| `/tb`, the module without `-recursive` | the ten objects of `tb`, the two wires among them | `t58_sv_log_top__` |
+
+So every Verilog variable is loggable, the `int` of the module and of
+the named block and the task's static argument and local included,
+which the VHDL variable is not, and a bit, a slice, an element or a
+field is the same as in VHDL: the slice names the whole, the rest
+nothing.
+A generate block is not a scope, see [hierarchy.md](hierarchy.md), and
+its wire is an object of the module named `\gb[1].gw ` with the
+closing space, which no spelling of a path reaches; `get_objects` with
+a regular expression returns the object and `log_wave` takes it.
+Handle space `0x15f4` and the thirteen objects on the same handles
+throughout; the same 3402 byte file for a script that logs nothing
+and for one naming a bit, an element, a field or a generate block.
+*Found by* `t58_sv_log_int__` and `t58_sv_log_blkv_` against
+`t57_log_var_____`, and `t58_sv_log_gen_w` against
+`t58_sv_log_gen__`.
+*Confirmed by* the rest of tier 58, each against `truth.json`.
+
 
 ## Verilog values
 

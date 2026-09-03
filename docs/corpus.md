@@ -1791,6 +1791,38 @@ list cannot end in the closing backslash of `\g(1)\`, so
 | `t57_log_proc____` | `/tb/p`, the process | `t57_log_all_____` |
 | `t57_log_top_____` | `/tb`, the top without `-recursive` | `t57_log_all_____` |
 
+**Tier 58: what `log_wave` can name, in SystemVerilog.**
+SystemVerilog, under `-debug typical`.
+The tier 57 question over a module with a `logic`, a vector, a
+memory, a packed struct, an `int`, a `real`, a `parameter`, a
+`localparam`, a generate block with a wire, a named block with an
+`int`, and a static task with an argument and a local.
+The generate block's wire has no path `log_wave` accepts, so
+`t58_sv_log_gen_w` hands it the result of `get_objects -regexp`.
+
+| Case | `log_wave` | Differs from |
+| :--- | :--- | :--- |
+| `t58_sv_log_all__` | `-recursive *` | `t57_log_all_____` |
+| `t58_sv_log_none_` | none | `t58_sv_log_all__` |
+| `t58_sv_log_bit__` | `{/tb/v[3]}`, one bit | `t58_sv_log_all__` |
+| `t58_sv_log_slc__` | `{/tb/v[2:1]}`, a slice | `t58_sv_log_all__` |
+| `t58_sv_log_mem_e` | `{/tb/m[1]}`, a memory element | `t58_sv_log_all__` |
+| `t58_sv_log_mem__` | `/tb/m`, the memory | `t58_sv_log_all__` |
+| `t58_sv_log_st_fl` | `/tb/st.a`, a struct field | `t58_sv_log_all__` |
+| `t58_sv_log_st___` | `/tb/st`, the struct | `t58_sv_log_all__` |
+| `t58_sv_log_int__` | `/tb/i`, the module's `int` | `t58_sv_log_all__` |
+| `t58_sv_log_real_` | `/tb/r`, the module's `real` | `t58_sv_log_all__` |
+| `t58_sv_log_prm__` | `/tb/P`, the parameter | `t58_sv_log_all__` |
+| `t58_sv_log_lprm_` | `/tb/L`, the localparam | `t58_sv_log_all__` |
+| `t58_sv_log_blkv_` | `/tb/blk/bv`, the named block's variable | `t58_sv_log_all__` |
+| `t58_sv_log_blk__` | `/tb/blk`, the named block | `t58_sv_log_all__` |
+| `t58_sv_log_tsk_l` | `/tb/inc/tmp`, the task's local | `t58_sv_log_all__` |
+| `t58_sv_log_tsk_a` | `/tb/inc/x`, the task's argument | `t58_sv_log_all__` |
+| `t58_sv_log_tsk__` | `/tb/inc`, the task | `t58_sv_log_all__` |
+| `t58_sv_log_gen_w` | `[get_objects -regexp {/tb/.*gb\[1\].*}]`, the generate wire | `t58_sv_log_all__` |
+| `t58_sv_log_gen__` | `{/tb/gb[1]}`, the generate block by path | `t58_sv_log_all__` |
+| `t58_sv_log_top__` | `/tb`, the module without `-recursive` | `t58_sv_log_all__` |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1828,7 +1860,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 897 cases through tier 57, and
+5. The reader now reproduces all 917 cases through tier 58, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
