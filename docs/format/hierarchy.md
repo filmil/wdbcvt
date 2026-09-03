@@ -1027,6 +1027,18 @@ f()` in `t26_sv_logic_fn`, with `f` returning `1'b0`, has the units,
 scopes, declarations and handle space of `t11_sv_logic`, and `s`
 records `0` once, so the call was folded at elaboration.
 
+A cast in an initializer leaves a hidden variable in the module scope:
+`int s = int'(1.5)` in `t28_sv_int_cast` declares
+`xilinx_isim_temp_0_ln5castingOp`, an `int` at file 0 line 0, as the
+module's first declaration and first object, at `0x768` before `s` at
+`0x828`, and adds a second process unit and scope at the line of the
+declaration, `tb.Initial5_1`.
+The name carries the line of the cast, `ln6` in `t28_sv_enum_cast`,
+whose hidden variable is a `state_t`, and the variable has the type
+of the cast, an unnamed 8 bit vector for `8'(0)` in `t28_sv_v8_szcast`.
+It is logged, holds one record at time 0 with the cast's value, and
+costs `0x190` of handle space over `t11_sv_int`, `0xaac` for `0x91c`.
+
 A named block with a declaration of its own, `initial begin : blk reg
 t;` in `t13_v_blk_var`, is a block unit with one declaration, the
 next after the module's one, and the block scope `tb.blk` holds the
@@ -1362,11 +1374,11 @@ alone:
 
 | Class | Objects | Found by |
 | ---: | :--- | :--- |
-| 0 | every VHDL object; a `real`; a packed type with no initializer, `logic`, `bit`, `byte`, `bit [7:0]`, `logic [7:0]`, a net; every packed type in a `.v` file, whose initializer runs as an implicit process; an enum, an unpacked struct, a packed struct from a `'{}` pattern; a `real` parameter | `t11_v_bit_edge`, `t12_sv_noinit`, `t27_sv_byte_noin`, `t11_sv_enum`, `t25_sv_real_lit`, `t25_v_prm_real` |
-| 1 | a packed type from a sized literal, `1'b0`, `1'bx`, `8'h00`, `8'sh05`, `-8'sd1`, `32'd5`, `64'h0`; from a fill literal `'0`, `'1`, `'x`, `'z`; from a concatenation, a replication, a conditional, a function call or a parameter holding a sized literal; a parameter of a packed type, `parameter bit`, `parameter logic [7:0]`, `parameter [7:0]`; a packed struct or union from `'0` or a sized literal | `t11_sv_logic`, `t25_sv_logic_x`, `t27_sv_v8_xfill`, `t26_sv_v8_cat`, `t26_sv_v8_rep`, `t26_sv_logic_cnd`, `t26_sv_logic_fn`, `t26_sv_logic_prm`, `t26_sv_bit_prm`, `t12_v_param64`, `t24_sv_union` |
-| 3 | every `shortint`, `int`, `integer`, `longint`, `int unsigned`, `longint unsigned` and `integer unsigned`, with a sized, unsized, negative, real, string or time literal, `'x`, a parameter or no initializer; a signed packed type from an unsized literal, `logic signed [7:0] s = -1`, `logic signed [7:0] s = 5`, `byte s = 0`, `byte s = -1`; an untyped, `integer` or `int` parameter or localparam, in a module or a package | `t11_sv_int`, `t27_sv_int_uns`, `t26_sv_int_szd5`, `t27_sv_int_str`, `t27_sv_int_real`, `t26_sv_integer_x`, `t26_sv_sgn8_neg`, `t27_sv_sgn8_pos`, `t11_sv_byte`, `t11_v_param`, `t13_sv_pkg` |
-| 4 | every `time`, from `0`, `64'h0`, `10ns` or no initializer; an unsigned packed type from an unsized literal, `logic s = 0`, `logic s = 1`, `bit s = 0`, `logic [7:0] s = 0`, `logic [7:0] s = -1`, `bit [7:0] s = 0`, `logic [31:0] s = 0`, `logic [63:0] s = 0`, `byte unsigned s = 0` | `t11_v_time`, `t27_sv_time_szd`, `t25_sv_logic_int`, `t26_sv_logic_1`, `t25_sv_bit_unsz`, `t27_sv_v8_neg`, `t26_sv_v32_int`, `t27_sv_byte_uns` |
-| 6 | a packed type or an untyped parameter from a string literal: `logic [7:0] s = "a"`, `parameter P = "hello"` | `t26_sv_v8_str`, `t13_v_str_param`, `t27_sv_str_untyp` |
+| 0 | every VHDL object; a `real`, a `realtime`; a packed type with no initializer, `logic`, `bit`, `byte`, `bit [7:0]`, `logic [7:0]`, a net; every packed type in a `.v` file, whose initializer runs as an implicit process; a packed type from a real literal, a time literal or `$time`, whose initializer runs as one; an enum from a literal, an unpacked struct or array, a packed struct from a `'{}` pattern; a `real` or `realtime` parameter, typed or untyped | `t11_v_bit_edge`, `t12_sv_noinit`, `t27_sv_byte_noin`, `t28_sv_v8_real`, `t28_sv_v64_time`, `t28_sv_v64_stime`, `t11_sv_enum`, `t28_sv_enum_pkd`, `t28_sv_pstr_pat`, `t28_sv_uarr_pat`, `t25_sv_real_lit`, `t25_v_prm_real`, `t28_sv_prm_realu`, `t28_sv_rtime_prm` |
+| 1 | a packed type from a sized literal, `1'b0`, `1'bx`, `8'h00`, `8'sh05`, `-8'sd1`, `32'd5`, `64'h0`; from a fill literal `'0`, `'1`, `'x`, `'z`; from a concatenation, a replication, a conditional, a function call, `$signed(8'h05)`, a part select of a parameter or a parameter holding a sized literal; a parameter of a packed type, `parameter bit`, `parameter logic [7:0]`, `parameter [7:0]`, or from a sized expression, `4'd5 + 4'd1`, or a string literal into a typed parameter; a packed struct or union from `'0` or a sized literal | `t11_sv_logic`, `t25_sv_logic_x`, `t27_sv_v8_xfill`, `t26_sv_v8_cat`, `t26_sv_v8_rep`, `t26_sv_logic_cnd`, `t26_sv_logic_fn`, `t28_sv_v8_signed`, `t28_sv_v8_bitsel`, `t26_sv_logic_prm`, `t26_sv_bit_prm`, `t12_v_param64`, `t28_sv_prm_szexp`, `t28_sv_prm_lstr`, `t24_sv_union`, `t28_sv_pstr_szd` |
+| 3 | every `shortint`, `int`, `integer`, `longint`, `int unsigned`, `longint unsigned` and `integer unsigned`, with a sized, unsized, negative, real, string or time literal, `'x`, a parameter, a cast or no initializer; a signed packed type from an unsized literal, `logic signed [7:0] s = -1`, `logic signed [7:0] s = 5`, `byte s = 0`, `byte s = -1`; an untyped, `integer`, `int`, `int unsigned` or enum parameter or localparam, in a module or a package, from a literal, `2 * 3`, `$clog2(8)`, `-1` or an enum literal; the hidden variable of a cast, `int'(1.5)`, `state_t'(1)`, `8'(0)` | `t11_sv_int`, `t27_sv_int_uns`, `t26_sv_int_szd5`, `t27_sv_int_str`, `t27_sv_int_real`, `t26_sv_integer_x`, `t26_sv_sgn8_neg`, `t27_sv_sgn8_pos`, `t11_sv_byte`, `t11_v_param`, `t13_sv_pkg`, `t28_sv_prm_expr`, `t28_sv_prm_clog`, `t28_sv_prm_neg`, `t28_sv_prm_int_u`, `t28_sv_prm_enum`, `t28_sv_int_cast`, `t28_sv_v8_szcast` |
+| 4 | every `time`, from `0`, `64'h0`, `10ns` or no initializer; a `time` or untyped parameter from `10ns`; an unsigned packed type from an unsized literal or expression, `logic s = 0`, `logic s = 1`, `bit s = 0`, `logic [7:0] s = 0`, `logic [7:0] s = -1`, `bit [7:0] s = 0`, `bit [7:0] s = -1`, `logic [31:0] s = 0`, `logic [63:0] s = 0`, `byte unsigned s = 0`, `logic [7:0] s = 2 ** 3`, `logic [7:0] s = K` with `parameter K = -1`, a packed struct from `0` | `t11_v_time`, `t27_sv_time_szd`, `t28_sv_prm_tmtyp`, `t28_sv_prm_time`, `t25_sv_logic_int`, `t26_sv_logic_1`, `t25_sv_bit_unsz`, `t27_sv_v8_neg`, `t28_sv_bit8_neg`, `t26_sv_v32_int`, `t27_sv_byte_uns`, `t28_sv_v8_pow`, `t28_sv_v8_prmneg`, `t28_sv_pstr_int` |
+| 6 | a packed type or an untyped parameter from a string literal: `logic [7:0] s = "a"`, `logic [15:0] s = "a"`, `parameter P = "hello"` | `t26_sv_v8_str`, `t28_sv_v16_str`, `t13_v_str_param`, `t27_sv_str_untyp` |
 
 The classes 2 and 5 have not been seen.
 The entries follow the objects: `t12_v_params` lists `s`, `K`, `P`,
@@ -1391,6 +1403,17 @@ type, `logic signed [7:0] s = 5` against `logic [7:0] s = -1`, and
 `int unsigned` stays 3; a sized literal is 1 on either.
 The class is not the value's representation in the pages: the records
 of `t27_sv_byte_uns` are those of `t11_sv_byte` outside the value.
+The class follows the target, not the expression: `logic [7:0] s = K`
+with `parameter K = -1` in `t28_sv_v8_prmneg` holds `[4 0 0] [3 0 0]`,
+`s` unsigned and `K` signed, where `s = -1` alone is 4 and `K` alone
+3.
+A string literal is 6 into a variable and 1 into a typed parameter,
+`t28_sv_v16_str` against `t28_sv_prm_lstr`.
+A cast in an initializer takes its class on the hidden variable it
+leaves, and the variable it initializes runs as a process and is 0:
+`t28_sv_int_cast` holds `[3 0 0]` for both, and `t28_sv_v8_szcast`
+`[3 0 0] [0 0 0]`, the hidden variable first; see the cast paragraph
+below.
 What the codes stand for is open; the table reads as the kind of
 constant the elaborator holds for the initial value, none, a bit
 string, a signed integer, an unsigned integer or a string, with the
@@ -1400,5 +1423,5 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 456 of 456 cases, and the
-tier 25 to 27 sweeps over the initializer forms.
+*Confirmed by* the region length check in 489 of 489 cases, and the
+tier 25 to 28 sweeps over the initializer forms.

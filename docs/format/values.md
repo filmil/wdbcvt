@@ -827,6 +827,28 @@ records `0` and then `10`, while `time s = 0` in `t27_sv_time_uns`
 and `time s = 64'h0` in `t27_sv_time_szd` record `0` once.
 `t25_sv_time_noin`, a `time` without an initializer, holds the `X`
 record alone.
+A time literal into a vector or a real does the same:
+`logic [63:0] s = 10ns` in `t28_sv_v64_time` records all `X` and
+then `10`, and `real s = 10ns` in `t28_sv_real_time` and
+`realtime s = 10ns` in `t28_sv_rtime_var` record `0` and then `10`.
+So does `$time`, `t28_sv_v64_stime`, all `X` and then `0`.
+A cast in an initializer runs as an implicit process too, and leaves
+a hidden variable behind: `int s = int'(1.5)` in `t28_sv_int_cast`
+records `0` and then `2` for `s`, and one record `2` at time 0 for
+`tb.xilinx_isim_temp_0_ln5castingOp`, an `int` declared at file 0
+line 0 in the module scope, logged like any variable.
+`state_t'(1)` in `t28_sv_enum_cast` and `8'(0)` in `t28_sv_v8_szcast`
+leave the same variable, of the cast's type, named by the line of the
+cast, and `s` records its default and then the value.
+A real literal into a vector is no process: `logic [7:0] s = 1.5` in
+`t28_sv_v8_real` records `00000010` once.
+An assignment pattern is none either: `'{a: 1'b0, b: 4'b0000}` into
+a packed struct, `t28_sv_pstr_pat`, `'{2'b00, 2'b01}` and
+`'{default: 2'b01}` into an unpacked array, `t28_sv_uarr_pat` and
+`t28_sv_uarr_dflt`, and `'{1'b0, 4'b0000}` into an unpacked struct,
+`t28_sv_str_pat`, each record once.
+An enum over `logic [1:0]` with an initializer, `t28_sv_enum_pkd`,
+records `XX` and then `RUN`, as `t11_sv_enum4` does.
 An unsized literal changes nothing here: `logic s = 0` in
 `t25_sv_logic_int` and `int s = 32'h0` in `t25_sv_int_sized` each
 record once, while `integer s = 32'h0` in a `.v` file,
@@ -843,6 +865,21 @@ first.
 `t13_v_str_param` records `parameter P = "hello"` as 40 bits in two
 pairs, `6f 6c 6c 65` low and `68` high, so the first character is at
 the top and the last at bit 0.
+An untyped parameter with an integer expression is a 32 bit vector:
+`parameter K = 2 * 3`, `$clog2(8)` and `-1` in `t28_sv_prm_expr`,
+`t28_sv_prm_clog` and `t28_sv_prm_neg` record `6`, `3` and all ones
+in one pair, and `parameter K = 4'd5 + 4'd1` in `t28_sv_prm_szexp`
+is 4 bits wide.
+`parameter time T = 10ns` in `t28_sv_prm_tmtyp` is a `time` and
+records `10` in two pairs, and `parameter realtime T = 10ns` in
+`t28_sv_rtime_prm` is a `realtime` and records the `float64` `10`.
+`parameter T = 10ns` without a type, `t28_sv_prm_time`, declares an
+unnamed 64 bit vector, and its 16 byte record holds the `float64`
+`10` in its first eight bytes, `00 00 00 00 00 00 24 40`, and
+`a8 07 00 00 00 00 00 00` after it.
+Read as two pairs that is `0` with the mask `0x40240000` and then
+`0x7a8`, which is no value of the parameter, so the reader has no
+rule for it and the truth of the case names the `float64`.
 
 The `X` record is absent when the variable's arena spills into a
 second page, because the page holding time 0 was then written out

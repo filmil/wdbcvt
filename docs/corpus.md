@@ -164,6 +164,17 @@ time step for them instead of the sequence; see the tier 12 notes.
 A signal can carry `records`, the number of records its object holds
 with repeats of one value included, for the cases that count the `X`
 records of a net at time 0; see the tier 16 notes.
+A signal can say `"unsigned": true` for an integral type declared
+`unsigned`, which the database does not record, and the test reads the
+decoded value back as an unsigned number of `width` bits before the
+comparison; see the tier 27 notes.
+An `absent` list names declarations the source has and the file does
+not, `parameter string P` or an `event`, and the test checks that no
+object carries the name; see the tier 25 and 26 notes.
+A generic can say `"stored": "float64"` for a value the declared type
+does not spell, and the test then checks the first eight bytes of the
+record against the `float64` of `value` instead of the decoded string;
+`t28_sv_prm_time` is the one case.
 
 
 ## The ladder
@@ -820,6 +831,52 @@ sized literal and from `0`, string, real and time literals into an
 | `t27_sv_v8_noini` | `logic [7:0] s` | class 0 |
 | `t27_sv_str_untyp` | `parameter P = "hello"` in `.sv` | an object of class 6 |
 
+Tier 28 hunts the value classes 2 and 5 with the initializers the
+earlier tiers did not try: a real and a time literal into a vector,
+enum literals and casts, assignment patterns into packed and unpacked
+targets, parameter expressions, `$clog2`, a time parameter typed and
+untyped, an enum parameter, `$time`, `$signed`, casts, a string into
+a wider vector and into a typed parameter, a negative parameter into
+an unsigned vector, and `realtime` after the untyped time parameter
+came back as a vector holding a `float64`.
+Neither class turned up.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t28_sv_v8_real` | `logic [7:0] s = 1.5` | class 0; `2` once |
+| `t28_sv_v64_time` | `logic [63:0] s = 10ns` | class 0; an implicit process |
+| `t28_sv_enum_pkd` | an enum over `logic [1:0]` from `RUN` | class 0; `XX` then `RUN` |
+| `t28_sv_enum_cast` | `state_t'(1)` | a hidden variable `xilinx_isim_temp_0_ln6castingOp` |
+| `t28_sv_pstr_pat` | a packed struct from `'{a: 1'b0, b: 4'b0000}` | class 0 |
+| `t28_sv_pstr_szd` | a packed struct from `5'b00000` | class 1 |
+| `t28_sv_pstr_int` | a packed struct from `0` | class 4 |
+| `t28_sv_uarr_pat` | `logic [1:0] s [0:1] = '{2'b00, 2'b01}` | class 0 |
+| `t28_sv_uarr_dflt` | `'{default: 2'b01}` | class 0 |
+| `t28_sv_prm_expr` | `parameter K = 2 * 3` | 32 bits, class 3 |
+| `t28_sv_prm_szexp` | `parameter K = 4'd5 + 4'd1` | 4 bits, class 1 |
+| `t28_sv_prm_clog` | `parameter K = $clog2(8)` | 32 bits, class 3 |
+| `t28_sv_prm_neg` | `parameter K = -1` | 32 bits, class 3 |
+| `t28_sv_prm_time` | `parameter T = 10ns` | a 64 bit vector, class 4, a `float64` record |
+| `t28_sv_prm_tmtyp` | `parameter time T = 10ns` | `time`, class 4 |
+| `t28_sv_prm_realu` | `parameter K = 1.5` | `real`, 32 bits, class 0 |
+| `t28_sv_prm_int_u` | `parameter int unsigned K = 5` | `int`, class 3 |
+| `t28_sv_prm_enum` | `parameter state_t S = RUN` | the alias, class 3 |
+| `t28_sv_v64_stime` | `logic [63:0] s = $time` | class 0; an implicit process |
+| `t28_sv_v8_signed` | `logic [7:0] s = $signed(8'h05)` | class 1 |
+| `t28_sv_int_cast` | `int s = int'(1.5)` | a hidden variable, class 3 |
+| `t28_sv_v8_szcast` | `logic [7:0] s = 8'(0)` | a hidden variable of class 3, `s` class 0 |
+| `t28_sv_v16_str` | `logic [15:0] s = "a"` | class 6 |
+| `t28_sv_prm_lstr` | `parameter logic [7:0] P = "a"` | class 1 |
+| `t28_sv_v8_prmneg` | `logic [7:0] s = K`, `parameter K = -1` | `s` class 4, `K` class 3 |
+| `t28_sv_bit8_neg` | `bit [7:0] s = -1` | class 4 |
+| `t28_sv_v8_bitsel` | `logic [7:0] s = K[7:0]` | class 1 |
+| `t28_sv_v8_pow` | `logic [7:0] s = 2 ** 3` | class 4 |
+| `t28_sv_real_time` | `real s = 10ns` | class 0; `0` then `10` |
+| `t28_sv_str_pat` | an unpacked struct from `'{1'b0, 4'b0000}` | class 0 |
+| `t28_sv_rtime_var` | `realtime s = 10ns` | the `realtime` entry; `0` then `10` |
+| `t28_sv_rtime_prm` | `parameter realtime T = 10ns` | `realtime`, 16 bits, class 0 |
+| `t28_sv_rtime_noi` | `realtime s` | `0` once |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -877,7 +934,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 456 cases through tier 27, and
+5. The reader now reproduces all 489 cases through tier 28, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

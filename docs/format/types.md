@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 456 of 456 cases decoding with the entry lengths chaining
+*Confirmed by* 489 of 489 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -487,6 +487,21 @@ entry with 32 bits and no range, and `parameter real R` uses the
 `real` entry.
 The `real` parameter declares 16 bits, where a `real` variable
 declares 32; both record one `float64` pair, and the 16 is open.
+An untyped parameter with a real literal, `parameter K = 1.5` in
+`t28_sv_prm_realu`, uses the `real` entry and declares 32 bits, so the
+16 goes with the `real` keyword.
+A `realtime` is a real entry of its own, named `realtime`, with the
+variant `1` of a Verilog `real`: a `realtime` variable declares 32
+bits, `t28_sv_rtime_var`, and a `parameter realtime` 16,
+`t28_sv_rtime_prm`.
+`parameter time T = 10ns` uses the `time` entry, `t28_sv_prm_tmtyp`,
+and `parameter T = 10ns` without a type uses the unnamed vector entry
+with 64 bits, `t28_sv_prm_time`, whose record is not a vector; see
+[values.md](values.md).
+A parameter of an enum type, `parameter state_t S = RUN` in
+`t28_sv_prm_enum`, uses the alias entry of the typedef with 32 bits,
+and `parameter int unsigned K` the `int` entry, `t28_sv_prm_int_u`,
+without the qualifier.
 A `localparam` is a parameter with no difference in the table.
 `reg [-4:3]` in `t12_v_neg_range` declares `(-4 to 3)`, so a bound is
 a signed word, and the record is that of `reg [0:7]`.
