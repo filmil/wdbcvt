@@ -788,7 +788,7 @@ An `output reg` port, `t12_v_port_reg`, keeps its own handle and holds
 `X` then its value, while the wire it drives in the parent holds `X`
 then the value, and the input port holds `X`, `X`, `0`.
 So the count is one `X` per object on the handle plus one for an
-input port, and what writes the extra one is open.
+input port, and the extra one was open until tier 16.
 `t13_v_hier3_net` runs a net through three levels and holds three `X`
 records on `w0`, a wire and the input port of `mid` at `0x768`, three
 on `w1`, a wire of `mid` and the input port of `leaf` at `0x8e8`, two
@@ -803,6 +803,34 @@ An interface signal, `t13_sv_iface`, is on one handle under the
 instance, `tb.b.d`, and under the child's interface port,
 `tb.dut.p.d`, and holds `X`, `X`, `0`, `1`: one `X` per object and
 nothing more, as a variable rather than a net.
+
+The extra `X` goes with a reader of the net.
+`t16_v_wire_rd1` adds `wire w2; assign w2 = w;` to `t11_v_wire`, and
+`w` holds `X`, `X`, `0`, `1` where it held `X`, `0`, `1`, while `w2`,
+which nothing reads, holds `X`, `0`, `1`.
+`t16_v_wire_rd2` reads `w` from two assignments and `w` still holds
+two `X` records, so the extra is one, not one per reader.
+`t16_v_wire_rdp` reads `w` from `always @(w) q = w;` and `w` holds
+two `X` records, so a process reader counts as an assignment does.
+`t16_v_wire_rdi` connects `w` to the input port of a child that reads
+nothing, and the net holds two `X` records for its two objects and
+no extra, so a port connection alone is not a reader.
+That is the input port of `t11_v_port`, read inside the child by
+`assign b = ~a`, and every net of `t13_v_hier3_net`: `w0`, `w1` and
+`w2` are each read by one `assign` and hold one `X` beyond their
+objects, and `y`, which nothing reads, holds exactly one per object.
+A `reg` gets no extra: `s` is read by `assign w = s` in every one of
+these cases and holds one `X`.
+So a net holds one `X` record at time 0 per object on its handle, and
+one more when anything reads it.
+The `truth.json` of these cases carries the count as `records` on
+the signal, and `TestCorpus` holds the object to it.
+
+*Found by* `t16_v_wire_rd1` against `t11_v_wire`, one record more.
+*Confirmed by* `t16_v_wire_rd2`, `t16_v_wire_rdp` and
+`t16_v_wire_rdi` against `t16_v_wire_rd1`, and the counts of
+`t11_v_wire`, `t12_v_port_wire` and `t13_v_hier3_net` pinned in
+their truths.
 
 **What is not recorded.**
 The `always #25 clk = ~clk` of `t11_v_always` is due at 100 ns, the

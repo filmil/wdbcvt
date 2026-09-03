@@ -159,6 +159,9 @@ transitions.
 `final_per_time` names the signals whose writes within one time step
 the file cannot order, and the test compares the last value of each
 time step for them instead of the sequence; see the tier 12 notes.
+A signal can carry `records`, the number of records its object holds
+with repeats of one value included, for the cases that count the `X`
+records of a net at time 0; see the tier 16 notes.
 
 
 ## The ladder
@@ -485,6 +488,18 @@ Tier 15 takes the rest of that list.
 | `t15_sv_iface_vec` | `logic [7:0] v` added to the interface | one more declaration and one more shared object per scope |
 | `t15_sv_iface_mp` | the child takes `bus_if.slave` | unit kind `0x02`, named `bus_if.slave`; a modport scope under the instance; the port scope is of the modport unit; port mode `in` |
 
+Tier 16 asks what writes the extra `X` record of a net at time 0,
+by adding readers to the wire of `t11_v_wire`.
+These truths carry a `records` count per signal, and `TestCorpus`
+holds the object to it.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t16_v_wire_rd1` | a second wire assigned from the first | the read wire holds one `X` more; the reading wire does not |
+| `t16_v_wire_rd2` | two wires assigned from the first | still one more |
+| `t16_v_wire_rdp` | an `always` process reading the wire | one more |
+| `t16_v_wire_rdi` | an input port that nothing inside reads | none more |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -542,7 +557,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 252 cases through tier 15, and
+5. The reader now reproduces all 256 cases through tier 16, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
