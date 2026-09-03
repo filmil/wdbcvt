@@ -35,6 +35,10 @@ type truthSignal struct {
 	// logs, such as a package signal outside the logged hierarchy:
 	// t9_pkg_sig. Absent means logged.
 	Logged *bool `json:"logged"`
+	// Declared is the source keyword of a Verilog object: reg, wire,
+	// or another net kind such as wand. When it names a net kind the
+	// declaration kind must be that kind: t19_v_wand. Absent for VHDL.
+	Declared string `json:"declared"`
 	// Records is the number of records the object holds, repeats of
 	// one value included, for the cases that count the X records of a
 	// net at time 0: t16_v_wire_rd1. Absent means not counted.
@@ -380,6 +384,11 @@ func TestCorpus(t *testing.T) {
 				}
 				if got := f.Decls[o.Decl].Mode.String(); got != mode {
 					t.Errorf("%s: port mode %s, truth says %s", path, got, mode)
+				}
+				if k, ok := netKinds[s.Declared]; ok && s.Port == "" {
+					if got := f.Decls[o.Decl].Kind; got != k {
+						t.Errorf("%s: declaration kind %s, truth says %s", path, got, s.Declared)
+					}
 				}
 				if logged := s.Logged == nil || *s.Logged; o.Logged != logged {
 					t.Errorf("%s: logged %v, truth says %v", path, o.Logged, logged)

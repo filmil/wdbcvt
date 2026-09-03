@@ -329,6 +329,12 @@ func TestVCD(t *testing.T) {
 				}
 				seen[vv.path] = true
 				dc := f.Decls[o.Decl]
+				// The VCD names a net by its kind, wand for a wand, and
+				// the declaration kind word says the same: t19_v_wand.
+				// A wire and a uwire are both wire.
+				if dc.Kind.IsNet() && vv.kind != dc.Kind.String() && !(dc.Kind == DeclNet && vv.kind == "wire") {
+					t.Errorf("%s: VCD kind %s, declaration kind %s", vv.path, vv.kind, dc.Kind)
+				}
 				ch, err := f.Changes(o)
 				if err != nil {
 					t.Fatal(err)
