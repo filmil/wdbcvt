@@ -631,6 +631,36 @@ line`, `-debug off` and `-debug subprogram` on its own make xsim refuse
 | `t22_mt_off` | `--mt off` | nothing |
 | `t22_gen_top` | `--generic_top k=9` | the values of `k` and `n` |
 
+Tier 23 declares what no earlier VHDL case had declared: file
+objects, a shared variable, a protected type, an access type,
+subprogram locals of every size, a signal parameter, a procedure
+inside a process, two architectures of one entity, and the 2008
+predefined vectors.
+The subprogram cases pass `-debug typical -debug subprogram` as tier
+22 did; the rest use the defaults.
+The access case crashed the reader on an unseen type kind.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t23_file_text` | `file f : text` in the architecture | the `TEXT` kind under the default debug level; `f` a 0 byte variable with one handle |
+| `t23_file_int` | a file of integer | the words `8` and `40` again |
+| `t23_file_sul` | a file of std_ulogic | the words `8` and `40` a third time |
+| `t23_shared_int` | a shared integer variable | kind `0x0f` in scope `tb`, on the variable handle, no record |
+| `t23_protected` | a protected type with one variable and one method | a record entry; the object with both handles in the signal handles |
+| `t23_access` | `type int_ptr is access integer` | kind `0x8`, the words `8` and `48`, a 48 byte variable |
+| `t23_access_vec` | an access to an unconstrained array | the same words |
+| `t23_sub_sizes` | locals of 1, 4, 8, 8 and 4 bytes | frame offsets aligned to each size; the vector 24 bytes |
+| `t23_sub_vec16` | the vector local at 16 elements | the next offset unchanged |
+| `t23_sub_vec32` | the vector local at 32 elements | the next offset unchanged; a descriptor |
+| `t23_sub_sig_prm` | `signal q : out std_ulogic` parameter | kind `0x15` with the mode; a 64 byte slot |
+| `t23_sub_in_proc` | a procedure declared in the process | two scopes, `tb.flip` and `tb.p.flip`, one unit |
+| `t23_arch_b` | `entity work.child(b)` of a child with two architectures | the unit `child(b)` only |
+| `t23_arch_both` | both architectures instantiated | two units, nothing shared |
+| `t23_int_vector` | `integer_vector(0 to 3)` | an unconstrained entry over `INTEGER`; the bounds in the declaration |
+| `t23_real_vector` | `real_vector(0 to 3)` | 32 bytes |
+| `t23_time_vector` | `time_vector(0 to 3)` | 32 bytes; the `TIME` entry |
+| `t23_bool_vector` | `boolean_vector(0 to 3)` | 4 bytes |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -688,7 +718,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 323 cases through tier 22, and
+5. The reader now reproduces all 341 cases through tier 23, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

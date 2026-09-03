@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 323 cases.
+They are the same in all 341 cases.
 
 
 ## Scope records
@@ -193,6 +193,8 @@ The kinds seen:
 | `0x0f` | variable declared in a process | `t6_var_int`, `t6_proc2` |
 | `0x12` | generic | `t4_gen_default` |
 | `0x13` | constant: an architecture constant, a loop index or a generate index | `t8_gen_if`, `t5_tr1000`, `t6_tr1300`, `t7_gen_for` |
+| `0x14` | parameter or variable of a subprogram, under `-debug subprogram` | `t22_dbg_subprog` |
+| `0x15` | signal parameter of a subprogram, under `-debug subprogram` | `t23_sub_sig_prm` |
 | `0x00` | Verilog variable: `reg`, `integer`, `real`, `time`, a SystemVerilog `logic`, `int`, struct or enum | `t11_v_bit_edge` |
 | `0x01` | Verilog `parameter` | `t11_v_param` |
 | `0x03` | Verilog net: a `wire` or `uwire`, and every port | `t11_v_wire`, `t11_v_port`, `t19_sv_uwire` |
@@ -686,6 +688,32 @@ second logged range after an unlogged object, and showing eight objects
 where six were expected.
 *Confirmed by* `t9_var_inst3`.
 
+A shared variable declared in the architecture is the same kind
+`0x0f`, in the entity's unit and the entity's scope, with one handle
+and no record: `sv` of `t23_shared_int`, an integer assigned once from
+the process, sits on `0xde0` as the process variable `v` of
+`t6_var_int` does, and only the scope it is listed under differs.
+A shared variable of a protected type is the exception: `c` of
+`t23_protected` is kind `0x0f` too, but its object has both handles,
+as a signal does, and sits at `0x858`, the next signal handle after
+`s`, rather than in the variable handles.
+It is not logged and has no record either.
+Its type is a record entry, see [types.md](types.md).
+
+A file object is a variable of kind `0x0f` as well, in the unit and
+scope of the architecture that declares it, on the variable handle
+`0xde0` with no second handle and no record, and declares 0 bytes:
+`f` of `t23_file_text`, `t23_file_int` and `t23_file_sul`.
+So the `textio` files that `-debug all` showed in tier 22 are the
+ordinary shape of a file object, not something the debug level adds.
+A variable of an access type is a process variable of 48 bytes with no
+record: `p` of `t23_access` and `t23_access_vec`.
+
+*Found by* `t23_shared_int` against `t6_var_int`, `t23_protected`
+against `t23_shared_int`, and `t23_file_text` against `t22_dbg_all`.
+*Confirmed by* `t23_file_int`, `t23_file_sul`, `t23_access` and
+`t23_access_vec`.
+
 
 ## Subprograms
 
@@ -719,6 +747,64 @@ trace information", and asks for `all` or `typical`.
 *Found by* `t22_dbg_subprog` against `t22_base`.
 *Confirmed by* `t22_dbg_sub_proc`, which adds the procedure, and
 `t22_dbg_all`.
+
+The frame offsets follow the alignment of each local.
+`t23_sub_sizes` declares a function with parameters `c : std_ulogic`
+and `n : integer` and variables `r : real`,
+`w : std_ulogic_vector(7 downto 0)` and `m : integer`, and their
+handles are `0x40`, `0x44`, `0x48`, `0x50` and `0x68`: the 1 byte
+`c` is followed by `n` at the next multiple of 4, `r` at the next
+multiple of 8, and `w` after the 8 bytes of `r`.
+`m` follows `w` at `0x68`, 24 bytes later, and stays at `0x68` when
+`w` is 16 elements in `t23_sub_vec16` and 32 elements in
+`t23_sub_vec32`, while the declaration record's size grows from 8 to
+16 to 32.
+So a vector local occupies 24 bytes of the frame whatever its length,
+which is the size of a descriptor rather than of the elements.
+*Found by* `t23_sub_sizes` against `t22_dbg_subprog`.
+*Confirmed by* `t23_sub_vec16` and `t23_sub_vec32`.
+
+A signal parameter is a declaration of kind `0x15`, its own kind,
+with its mode in word 9: `q` of `procedure drive(signal q : out
+std_ulogic; constant v : in std_ulogic)` in `t23_sub_sig_prm` is
+`0x15` `port out`, and `v` beside it is the ordinary `0x14` `port
+in`.
+`q` is on `0xd0`, the procedure base of `t22_dbg_sub_proc`, and `v`
+on `0x110`, 64 bytes later, so a signal parameter takes 64 bytes of
+the frame where a `std_ulogic` value takes one.
+The object has both handles and no record, and the signal `s` passed
+to `q` keeps its own handle and records.
+*Found by* `t23_sub_sig_prm` against `t22_dbg_sub_proc`.
+
+A procedure declared inside a process, the shape of `t9_proc_local`,
+gets two scopes: `t23_sub_in_proc` declares `flip` in process `p` and
+the file has `tb.flip` as a child of `tb`, listed before `tb.p`, and
+`tb.p.flip` as the child of `tb.p`.
+Both point at the same unit, the one procedure unit of kind `0x12`,
+and each lists an object for the local `r` on the same handle `0xd0`,
+so the file holds three objects for two declarations.
+*Found by* `t23_sub_in_proc` against `t22_dbg_sub_proc`.
+
+
+## Two architectures of one entity
+
+An entity with two architectures gets one unit per architecture that
+is instantiated, and none for the others.
+`t23_arch_b` instantiates `entity work.child(b)` of a `child` with
+architectures `a` and `b`, and the file has the one unit `child(b)`,
+with the unit's line at the `architecture b` line and its entity line
+at the entity, plus the one process unit of that architecture.
+`t23_arch_both` instantiates both as `da` and `db`, and the file has
+`child(a)` and `child(b)` as separate units, each with its own
+declaration of `s` and its own process unit, so the two instances
+share nothing, as two instances with different generics do in
+`t8_gen_nest`.
+The architecture name in the unit record is therefore the one the
+instance chose, and `t4_gen_explicit`, whose child has one
+architecture `sim`, is the degenerate case.
+
+*Found by* `t23_arch_b` against `t4_gen_explicit`.
+*Confirmed by* `t23_arch_both`.
 
 
 ## Library packages under `-debug all`

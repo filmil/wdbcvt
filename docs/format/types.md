@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 323 of 323 cases decoding with the entry lengths chaining
+*Confirmed by* 341 of 341 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -48,6 +48,8 @@ exactly to the word at `36`.
 | `0x05` | integer | `[u32 origin][i32 low][i32 high][u32 1]` |
 | `0x06` | real | `[u32 origin][u32 variant][f64 low][f64 high][u32 1]` for VHDL, `[u32 0]` for Verilog |
 | `0x07` | alias | `[u32 origin][u32 target][u32 nranges]` then that many range triples |
+| `0x08` | access | `[u32 origin][u32 designated][u32 8][u32 48]` |
+| `0x0c` | file | `[u32 origin][u32 element][u32 8][u32 40]` |
 | `0x0d` | physical | `[u32 origin][u32 n]` then `n` times `name NUL [u64 scale]` |
 | `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims]` then `dims` index type words, then `[u32 nranges]` and that many range triples, then `-99` |
 | `0x11` | record | `[u32 origin][u16 layout][u16 0xb][u32 n]` then `n` fields, then `-99` |
@@ -114,11 +116,34 @@ with: a `std_logic` signal gets an entry named `STD_LOGIC` with the nine
 nothing else in the file names `STD_ULOGIC`.
 
 **File.**
-A file type is kind `0xc`, seen only when `-debug all` brings the
-`textio` package in: `TEXT` of `t22_dbg_all` is origin `2`, the index
-of `STRING`, then the two words `8` and `40`, whose meaning is open.
-A `TEXT` variable declares 0 bytes and has no record.
+A file type is kind `0xc`: origin `2`, the index of the element type,
+then the two words `8` and `40`.
+It was first seen when `-debug all` brought the `textio` package in,
+as `TEXT` of `t22_dbg_all` over `STRING`, and a file declared in the
+design puts it in the table under the default debug level as well:
+`text` in `t23_file_text`, which also brings `character`, `POSITIVE`
+and `STRING` in, and the user types `int_file` over `INTEGER` and
+`sul_file` over `STD_ULOGIC`.
+The two words are `8` and `40` for all four, so they do not depend on
+the element type; what they mean is open.
+A file variable declares 0 bytes and has no record.
 *Found by* `t22_dbg_all` against `t22_base`.
+*Confirmed by* `t23_file_text`, `t23_file_int` and `t23_file_sul`.
+
+**Access.**
+An access type is kind `0x8`: origin `2`, the index of the designated
+type, then the two words `8` and `48`.
+The words are the same for `int_ptr` over `INTEGER` in `t23_access`
+and `vec_ptr` over the unconstrained `STD_ULOGIC_VECTOR` in
+`t23_access_vec`.
+A variable of an access type declares 48 bytes, the second word, and
+has no record, while a file variable declares 0 with its second word
+at 40, so the second word is not simply the declared size.
+The reader crashed on the kind before this case, and reads it with
+the same shape as a file type.
+*Found by* `t23_access` against `t6_var_int`, whose process variable is
+an integer.
+*Confirmed by* `t23_access_vec`.
 
 **Integer.**
 `INTEGER` is `-2147483648 to 2147483647` and `NATURAL` is
@@ -204,6 +229,22 @@ out of bytes 4 words early on the entry.
 *Confirmed by* `t18_arr_3dim`, `t19_arr_2d_vec` and `t19_arr_of_2dim`,
 and by `truth.json` of each against the decoded value.
 
+**Predefined vectors.**
+The VHDL 2008 `integer_vector`, `real_vector`, `time_vector` and
+`boolean_vector` are unconstrained array entries named in upper case,
+`INTEGER_VECTOR` and so on, over the scalar entry and indexed by
+`NATURAL`, with the one triple `(0, 0, -2)`.
+A signal `s : integer_vector(0 to 3)` carries `(0 to 3)` in its
+declaration record and nothing in the type, where the user type
+`int_array_t` of `t5_int_arr`, an `array (0 to 3) of integer`, holds
+`(0 to 3)` in the type entry as well.
+The values are 4, 8, 8 and 1 bytes per element as the scalar is, so
+the four signals are 16, 32, 32 and 4 bytes, and `time_vector`
+brings the `TIME` physical entry in under origin `0xa`.
+*Found by* `t23_int_vector` against `t5_int_arr`.
+*Confirmed by* `t23_real_vector`, `t23_time_vector` and
+`t23_bool_vector`, each against `truth.json`.
+
 **Record.**
 Each field is `name NUL [u32 type][u32 nranges]` then that many
 triples.
@@ -248,6 +289,16 @@ became that scalar's range.
 exactly three triples in field order.
 `t8_rec_realv` put a `real` beside the vector and got the vector's
 bounds alone, so a `real` has no range to contribute and is skipped.
+
+**Protected.**
+A protected type is a record entry.
+`counter` of `t23_protected`, a protected type whose body declares one
+variable `cnt : integer`, is kind `0x11` named `counter` with the one
+field `cnt` over `INTEGER`, and its methods leave nothing in the
+table.
+The shared variable of that type declares 8 bytes, the record's size
+rounded to 8, and has no record.
+*Found by* `t23_protected` against `t23_shared_int`.
 
 ## Verilog and SystemVerilog types
 
