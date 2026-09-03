@@ -822,7 +822,7 @@ objects, and `y`, which nothing reads, holds exactly one per object.
 A `reg` gets no extra: `s` is read by `assign w = s` in every one of
 these cases and holds one `X`.
 So a net holds one `X` record at time 0 per object on its handle, and
-one more when anything reads it.
+one more when anything reads it, was the tier 16 reading.
 The `truth.json` of these cases carries the count as `records` on
 the signal, and `TestCorpus` holds the object to it.
 
@@ -831,6 +831,40 @@ the signal, and `TestCorpus` holds the object to it.
 `t16_v_wire_rdi` against `t16_v_wire_rd1`, and the counts of
 `t11_v_wire`, `t12_v_port_wire` and `t13_v_hier3_net` pinned in
 their truths.
+
+Tier 19 counted drivers and corrected the reading.
+`t19_v_wand` drives a `wand` from two `assign` statements and nothing
+reads it, and the net holds two `X` records, where the tier 16 rule
+gave one.
+`t19_v_wire_3drv` drives a `wire` from three assignments of one
+value and holds two, not three, and `t19_v_wand_rd` adds a reader to
+the two drivers and still holds two.
+`t19_v_2drv_port` connects a wire with two drivers to an input port
+that nothing reads and the net holds three: two objects and one more.
+`t19_v_wire_nodrv` declares a wire with no driver and the net holds
+one record, `Z`, and no `X`; `t19_v_nodrv_rd` reads that wire from an
+assignment and the wire still holds the one `Z`, while the reading
+wire holds `X` then `Z`.
+So the records of a net before its first value are one per object on
+its handle, holding the net's initial value, `X` when a driver exists
+and `Z` for a `wire` with none, plus one more when the drivers and
+readers of the net together number two or more.
+A port connection from a `reg` counts as a driver, which is the
+second `X` of the input port `a` in `t11_v_port`, and a connection to
+a net joins the handles and counts as nothing.
+The pulled and supply nets hold `X` then their value at time 0 with no
+driver: `t19_v_tri0` and `t19_v_supply0` hold `X`, `0`, and
+`t19_v_tri1` and `t19_v_supply1` hold `X`, `1`.
+Why one extra record and not one per driver is open; the count is
+what the corpus pins.
+
+*Found by* `t19_v_wand` against `t11_v_wire`, two `X` records against
+one with nothing reading either net.
+*Confirmed by* `t19_v_wor`, `t19_v_triand` and `t19_v_trior` with the
+same two drivers, `t19_v_wire_3drv`, `t19_v_wand_rd`,
+`t19_v_2drv_port`, `t19_v_wire_nodrv` and `t19_v_nodrv_rd`, each
+with its count pinned in `truth.json`, and by every earlier count
+under the new rule.
 
 **Writes of the value held.**
 A Verilog write of the value already held produces no record, as a

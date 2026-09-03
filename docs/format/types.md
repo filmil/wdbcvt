@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 264 of 264 cases decoding with the entry lengths chaining
+*Confirmed by* 281 of 281 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -133,11 +133,24 @@ order, the last index fastest, one byte per `std_ulogic`: the
 `t18_arr_2dim` record `03 02 03 02 03 03` is `(('1','0','1'),
 ('0','1','1'))`.
 
+The index word names the integer entry of the index subtype:
+`INTEGER` in `t18_arr_2dim`, `NATURAL` for `STD_ULOGIC_VECTOR`.
+The triples are the type's own index ranges followed by the
+constraints of an unconstrained element: `t19_arr_2d_vec`, an
+`array (0 to 1, 0 to 2) of std_ulogic_vector(3 downto 0)`, has `dims`
+`2` and three triples, `(0 to 1) (0 to 2) (3 downto 0)`, and its
+value is 24 bytes in row major order with each vector's leftmost
+element first.
+An element type that is constrained adds nothing: `stack_t`, an
+`array (0 to 1) of mat_t` in `t19_arr_of_2dim`, has `dims` `1` and
+the one triple `(0 to 1)`, while its declaration record carries all
+three ranges `(0 to 1) (0 to 1) (0 to 2)`.
+
 *Found by* `t18_arr_2dim` against `t2_array2d`, where the reader ran
 out of bytes 4 words early on the entry.
 
-*Confirmed by* `t18_arr_3dim`, and by `truth.json` of both against the
-decoded value.
+*Confirmed by* `t18_arr_3dim`, `t19_arr_2d_vec` and `t19_arr_of_2dim`,
+and by `truth.json` of each against the decoded value.
 
 **Record.**
 Each field is `name NUL [u32 type][u32 nranges]` then that many

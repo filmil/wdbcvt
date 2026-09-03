@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 264 cases.
+They are the same in all 281 cases.
 
 
 ## Scope records
@@ -195,7 +195,16 @@ The kinds seen:
 | `0x13` | constant: an architecture constant, a loop index or a generate index | `t8_gen_if`, `t5_tr1000`, `t6_tr1300`, `t7_gen_for` |
 | `0x00` | Verilog variable: `reg`, `integer`, `real`, `time`, a SystemVerilog `logic`, `int`, struct or enum | `t11_v_bit_edge` |
 | `0x01` | Verilog `parameter` | `t11_v_param` |
-| `0x03` | Verilog net: a `wire`, and every port | `t11_v_wire`, `t11_v_port` |
+| `0x03` | Verilog net: a `wire` or `uwire`, and every port | `t11_v_wire`, `t11_v_port`, `t19_sv_uwire` |
+| `0x04` | `wand` | `t19_v_wand` |
+| `0x05` | `wor` | `t19_v_wor` |
+| `0x06` | `tri` | `t19_v_tri` |
+| `0x07` | `triand` | `t19_v_triand` |
+| `0x08` | `trior` | `t19_v_trior` |
+| `0x09` | `tri0` | `t19_v_tri0` |
+| `0x0a` | `tri1` | `t19_v_tri1` |
+| `0x0c` | `supply0` | `t19_v_supply0` |
+| `0x0d` | `supply1` | `t19_v_supply1` |
 
 Word 9 was recorded as the constant 5 through tier 7, where no case had
 a port.
@@ -825,6 +834,22 @@ A `reg` or any other variable is kind `0x00`, a `wire` is kind `0x03`,
 and a port is kind `0x03` with the port mode in word 9, `1` for
 `input`, `2` for `output` and `0` for `inout`, whether or not the
 port has a net type.
+The other net kinds have kinds of their own, `0x04` to `0x0d` in the
+order of the kinds table above, which is the order the Verilog
+standard lists them in with `tri0` and `tri1` after `trior`.
+`0x0b` is where `trireg` would fall; xsim refuses one with
+`[XSIM 43-4096] Trireg is not supported`, so it is unseen.
+A `uwire` is kind `0x03` like a `wire`.
+The VCD writer names each of these nets by the same keyword in its
+`$var` line, and `TestVCD` holds the declaration kind to it.
+A net's kind changes nothing else: `t19_v_tri` differs from
+`t11_v_wire` by that one word.
+
+*Found by* `t19_v_wand` against `t11_v_wire`, kind `0x04` against
+`0x03`.
+*Confirmed by* the other eight tier 19 net cases, each of one kind,
+and the `declared` keyword in their truths, which `TestCorpus` checks
+against the kind.
 A `parameter` is kind `0x01`, with the size 32, the unnamed vector type
 and a range `(31 downto 0)`.
 Word 4 is the value size in bits, not bytes: 1 for a `reg`, 8 for

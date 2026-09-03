@@ -522,6 +522,34 @@ signal with a reader gets the extra time 0 record a Verilog net does.
 | `t18_arr_3dim` | `array (0 to 1, 0 to 1, 0 to 2) of std_ulogic` | `dims` `3`, three index words |
 | `t18_sig_read` | `y <= s` beside `t1_bit_one_edge` | no extra record on `s` |
 
+Tier 19 follows the two dimensional array with vectors as elements and
+with an array over it, and walks the Verilog net kinds, first to see
+whether the declaration kind word tells them apart and then to count
+the time 0 records against drivers rather than readers.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t19_arr_2d_vec` | `array (0 to 1, 0 to 2) of std_ulogic_vector(3 downto 0)` | `dims` `2`, three triples, row major value |
+| `t19_arr_of_2dim` | `array (0 to 1) of mat_t` | `dims` `1`, one triple |
+| `t19_v_tri` | `tri w` | kind `0x06`, nothing else |
+| `t19_v_wand` | `wand w` with two drivers | kind `0x04`; two `X` records |
+| `t19_v_wor` | `wor w` with two drivers | kind `0x05`; two `X` records |
+| `t19_v_supply1` | `supply1 w` | kind `0x0d`; `X` then `1` |
+| `t19_v_wand_rd` | the `wand` read by an assignment | two `X` records |
+| `t19_v_wire_3drv` | three drivers of one wire | two `X` records |
+| `t19_v_wire_nodrv` | a wire with no driver | one `Z` record |
+| `t19_v_2drv_port` | two drivers and an input port | three `X` records |
+| `t19_v_nodrv_rd` | the undriven wire read | one `Z` record; the reader `X`, `Z` |
+| `t19_sv_uwire` | `uwire w` | kind `0x03` |
+| `t19_v_triand` | `triand w` with two drivers | kind `0x07` |
+| `t19_v_trior` | `trior w` with two drivers | kind `0x08` |
+| `t19_v_tri0` | `tri0 w` | kind `0x09`; `X` then `0` |
+| `t19_v_tri1` | `tri1 w` | kind `0x0a`; `X` then `1` |
+| `t19_v_supply0` | `supply0 w` | kind `0x0c`; `X` then `0` |
+
+A `trireg` case was written and dropped: xsim refuses it with
+`[XSIM 43-4096] Trireg is not supported`.
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -579,7 +607,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 264 cases through tier 18, and
+5. The reader now reproduces all 281 cases through tier 19, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

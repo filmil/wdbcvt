@@ -33,7 +33,7 @@ the files by eye.
 
 ## What the VCD carries
 
-All 264 cases pass, and every object of the database is either in its
+All 281 cases pass, and every object of the database is either in its
 VCD or covered by one line of this table.
 
 | Object | In the VCD |
@@ -44,6 +44,7 @@ VCD or covered by one line of this table.
 | VHDL generic or constant, of any type, including a generate index | no |
 | A signal outside `tb`, such as the package signal `sig_pkg.x` of `t13_pkg_log_all` | no; the script logs `/*` |
 | Verilog `reg`, `wire`, a vector, `integer`, `time`, `real`, `shortreal` | yes, as `reg`, `wire`, `integer`, `time` or `real` |
+| Verilog `wand`, `wor`, `tri`, `triand`, `trior`, `tri0`, `tri1`, `supply0`, `supply1` | yes, as that keyword; a `uwire` as `wire` |
 | Verilog `parameter`, including a string parameter | yes, as `parameter`; an untyped one with size `0` |
 | SystemVerilog `bit`, `logic`, `byte`, `int`, `longint`, an enum, a typedef | yes |
 | SystemVerilog packed struct | yes, as `reg N` over the fields |
