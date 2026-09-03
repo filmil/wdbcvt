@@ -653,10 +653,10 @@ varies the body of the child and of the iteration in step:
 | an undriven signal | `0x68` | `0x68` | `t52_inst2_sig___`, `t52_gi2_sig_____` |
 | a signal driven by a process | `0x118` | `0x118` | `t52_inst2_sigprc`, `t52_gi2_sigprc__` |
 
-So an instance and a generate iteration cost the same: `0x2c` for the
-scope and 4 for its integer, a process `0x90` more, a signal `0x38`
-more in this region beside its own `0xc0` in the first, and the
-signal's driver `0x20` more beside its `0x30` in the first.
+So an instance and a generate iteration cost the same: `0x28` for the
+scope and 8 for its integer, tier 53 below, a process `0x90` more, a
+signal `0x38` more in this region beside its own `0xc0` in the first,
+and the signal's driver `0x20` more beside its `0x30` in the first.
 That is the `0xf8` per signal and `0x50` per driver that tier 46 read
 off the handle space and could only half account for in the first
 region.
@@ -685,9 +685,63 @@ holds a signal driven by a process.
 `t46_deep_100____` has its generics `0x140` apart, `0x28` more than
 the signal, the process and the driver of each level, which is read
 as the if generate scope holding the next level, on that one point.
-`t6_proc2` has the integer variables of its two processes 4 apart,
-and where the region starts, `0xde0` with `tb` alone and `0xeb8` with
-two empty children, is open.
+`t6_proc2` has the integer variables of its two processes 4 apart.
+
+Tier 53 varies the body of the child one item at a time on the two
+instance shape and reads the cost of each:
+
+| Body | `k` stride | Cases |
+| :--- | ---: | :--- |
+| nothing, one child; three children | `0x30` | `t53_inst1_empty_`, `t53_inst3_empty_` |
+| a second generic; an architecture constant | `0x30`, the second object 4 past `k` | `t53_inst2_2gen__`, `t53_inst2_const_` |
+| two processes | `0x150` | `t53_inst2_2proc_` |
+| a process with a variable | `0xc0`, the variable 4 past `k` | `t53_inst2_var___` |
+| two undriven signals | `0xa0` | `t53_inst2_2sig__` |
+| a signal driven by a concurrent assignment | `0x118` | `t53_inst2_conc__` |
+| a `std_logic` driven by two processes | `0x1c8` | `t53_inst2_2drv__` |
+| an input port connected to `s`; left open | `0x68` | `t53_inst2_port__`, `t53_inst2_portop` |
+| an empty grandchild with a generic | `0x60` | `t53_inst2_nest__` |
+| the child under an if generate; under a block | `0x30`, and `0x50` before the first `k` | `t53_ifgen_inst__`, `t53_blk_inst____` |
+
+So a scope's block is `0x28`, plus its data objects laid out by the
+size rule and rounded up to a multiple of 8, plus `0x38` per signal
+or port, connected or open, plus `0x90` per process, a concurrent
+assignment being one, plus `0x20` per driver.
+The block holds the signals first, then the data objects, then the
+rest; a process variable sits among the data objects of the scope
+holding the process, `t53_inst2_var___` and `t6_proc2`.
+The generate and block scopes of a unit are laid out depth first
+after the unit's own block, and the instances the unit holds follow,
+each with the scopes and instances of its own unit the same way:
+`t53_ifgen_inst__` has `g0`, `g1`, `d0`, `d1`; `t53_inst2_nest__`
+has `d0`, `d0.e`, `d1`, `d1.e`; `t7_gen_for` has `g(0)`, `g(1)`,
+`g(2)`, `g`, then the three `dut`; and `t8_gen_nest` has `g(0)`,
+`g(0).h(0)`, `g(0).h(1)`, `g(0).h`, `g(1)`, its three, then `g`,
+which ends at `0x12c8`, and the first `dut` puts its signal there and
+its `k` at `0x1300`, then the other three `dut` `0x118` apart.
+
+The region starts `0x550` past the end of the last signal's first
+region stride, with the block of the root unit.
+`tb` of tier 52 has `s` with its driver and `p`, `0x38` plus `0x20`
+plus `0x90` plus `0x28`, so a data object of `tb` or of `tb.p` sits
+at `0x858` plus `0x550` plus `0x38`, `0xde0`, and the children start
+`0x110` past `0xda8`, at `0xeb8`, whether there are one, two or
+three of them.
+`t46_deep_100____` and `t46_gen_70000___` fit the same: `tb` with
+`p` alone costs `0xb8`, the first generic or index is `0x38` past
+that, `0x640` past the last signal, and each level of the chain costs
+`0x28` for its if generate, `0x30` for its scope and generic, and
+`0x38`, `0x20` and `0x90` for its signal, driver and process, `0x140`.
+The handle space is 8 more than the strides account for when a scope
+holds no data object: `0x58` for the two wrappers of
+`t53_ifgen_inst__`, `0x30` for the `g` of `t52_gi2_empty___` against
+the `0x11d0` the two integer cases imply, and that 8 is open.
+
+The first region has its own driver costs, and they are less regular:
+a concurrent assignment costs `0x50` where a process driver costs
+`0x30`, `c` `0x110` apart in `t53_inst2_conc__` for `0xf0`, and two
+process drivers cost `0x80`, `0x140` in `t53_inst2_2drv__` as in
+`t46_drv_2_next__`.
 None of it is needed: the handle is read from the record.
 
 The decoder exposes the fifth word as `Object.Generic`, because it is 2
@@ -2023,10 +2077,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 802 of 802 cases, and the
+*Confirmed by* the region length check in 816 of 816 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 802 of 802 cases and
+and *confirmed by* the reader's range check in 816 of 816 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

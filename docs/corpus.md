@@ -1631,6 +1631,29 @@ body of the child and of the iteration in step.
 | `t52_gi2_sig_____` | `t52_inst2_sig___` | an iteration for the instance | `0x68` |
 | `t52_gi2_sigprc__` | `t52_inst2_sigprc` | an iteration for the instance | `0x118` |
 
+**Tier 53: the cost of each item of a scope in the second region.**
+VHDL.
+The two instance shape of tier 52 with one item of the child's body
+varied per case, and three cases that change the number of children
+or wrap each child in an if generate or a block.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t53_inst1_empty_` | `t52_inst2_empty_` | one child | the first `k` at `0xeb8` still |
+| `t53_inst3_empty_` | `t52_inst2_empty_` | three children | `0x30` each from `0xeb8` |
+| `t53_inst2_2gen__` | `t52_inst2_empty_` | a second generic | 4 past `k`, the stride `0x30` still |
+| `t53_inst2_const_` | `t52_inst2_empty_` | an architecture constant | the same |
+| `t53_inst2_2proc_` | `t52_inst2_proc__` | a second process | `0x150`, `0x90` each |
+| `t53_inst2_var___` | `t52_inst2_proc__` | a variable in the process | 4 past `k`, the stride `0xc0` still |
+| `t53_inst2_2sig__` | `t52_inst2_sig___` | a second undriven signal | `0xa0`, `0x38` each |
+| `t53_inst2_conc__` | `t52_inst2_sigprc` | the driver a concurrent assignment | `0x118` still; `0x110` in the first region |
+| `t53_inst2_2drv__` | `t52_inst2_sigprc` | a `std_logic` with two driving processes | `0x1c8`; `0x140` in the first region |
+| `t53_inst2_port__` | `t52_inst2_empty_` | an input port connected to `s` | `0x68`, as a signal, sharing `0x768` |
+| `t53_inst2_portop` | `t53_inst2_port__` | the port left open | `0x68` |
+| `t53_inst2_nest__` | `t52_inst2_empty_` | an empty grandchild with a generic | `d0`, `d0.e`, `d1`, `d1.e` at `0x30` each |
+| `t53_ifgen_inst__` | `t52_inst2_empty_` | each child under an if generate | `0x28` per wrapper, both before the children |
+| `t53_blk_inst____` | `t52_inst2_empty_` | each child under a block | the same |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1668,7 +1691,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 802 cases through tier 52, and
+5. The reader now reproduces all 816 cases through tier 53, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
