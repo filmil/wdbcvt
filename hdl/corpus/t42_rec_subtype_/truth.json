@@ -1,0 +1,48 @@
+{
+  "case": "t42_rec_subtype_",
+  "axis": "type. subtype b8_t is bundle_t(bravo(7 downto 0)), the signal declared with the subtype.",
+  "differs_from": "t42_rec_uncons__",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 9,
+      "type": "b8_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 8,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.bravo",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.bravo",
+      "value": "10100101"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "case": "t42_gen_type____",
+  "axis": "generic. generic (type data_t; init, next_v : data_t) mapped to integer, 5 and 7.",
+  "differs_from": "t4_gen_explicit_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.u",
+      "name": "s",
+      "width": 4,
+      "type": "data_t",
+      "declared": "integer"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "5"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "7"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "u",
+      "name": "init",
+      "type": "data_t",
+      "value": "5"
+    },
+    {
+      "instance": "u",
+      "name": "next_v",
+      "type": "data_t",
+      "value": "7"
+    }
+  ]
+}

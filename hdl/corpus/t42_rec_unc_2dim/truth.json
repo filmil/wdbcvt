@@ -1,0 +1,48 @@
+{
+  "case": "t42_rec_unc_2dim",
+  "axis": "type. mat_t is array (natural range <>, natural range <>) of std_ulogic, the field m : mat_t, the signal rec_t(m(0 to 1, 0 to 2)).",
+  "differs_from": "t20_rec_2dim____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 7,
+      "type": "rec_t",
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "m",
+          "width": 6,
+          "type": "mat_t"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.m",
+      "value": "000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.m",
+      "value": "101011"
+    }
+  ]
+}

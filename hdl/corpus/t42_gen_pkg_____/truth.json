@@ -1,0 +1,27 @@
+{
+  "case": "t42_gen_pkg_____",
+  "axis": "generic. package gp8 is new work.gp generic map (n => 8) in its own file, the signal declared as work.gp8.word_t.",
+  "differs_from": "t1_vec8_________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "word_t",
+      "range": "7 downto 0"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "00011000"
+    }
+  ]
+}

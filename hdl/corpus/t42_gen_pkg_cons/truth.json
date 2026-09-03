@@ -1,0 +1,36 @@
+{
+  "case": "t42_gen_pkg_cons",
+  "axis": "generic. constant width : natural := n beside the subtype in gp, one instance gp8.",
+  "differs_from": "t42_gen_pkg_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "word_t",
+      "range": "7 downto 0"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "00011000"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "gp",
+      "name": "width",
+      "type": "natural",
+      "kind": "constant",
+      "logged": false
+    }
+  ]
+}

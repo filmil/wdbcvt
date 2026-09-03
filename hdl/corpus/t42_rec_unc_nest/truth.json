@@ -1,0 +1,54 @@
+{
+  "case": "t42_rec_unc_nest",
+  "axis": "type. inner_t has v : std_ulogic_vector, outer_t holds i : inner_t and b : std_ulogic, the signal outer_t(i(v(3 downto 0))).",
+  "differs_from": "t42_rec_uncons__",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 5,
+      "type": "outer_t",
+      "fields": [
+        {
+          "name": "i",
+          "type": "inner_t",
+          "fields": [
+            {
+              "name": "v",
+              "width": 4,
+              "type": "std_ulogic_vector"
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.i.v",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.i.v",
+      "value": "0101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.b",
+      "value": "1"
+    }
+  ]
+}

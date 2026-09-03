@@ -1,0 +1,86 @@
+{
+  "case": "t42_rec_two_cons",
+  "axis": "type. s is bundle_t(bravo(7 downto 0)) and t is bundle_t(bravo(3 downto 0)).",
+  "differs_from": "t42_rec_uncons__",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 9,
+      "type": "bundle_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 8,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    },
+    {
+      "scope": "tb",
+      "name": "t",
+      "width": 5,
+      "type": "bundle_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 4,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.bravo",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.bravo",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 0,
+      "signal": "t.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "t.bravo",
+      "value": "0000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "t.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "t.bravo",
+      "value": "0101"
+    }
+  ]
+}

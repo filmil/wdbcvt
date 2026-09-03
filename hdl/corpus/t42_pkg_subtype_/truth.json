@@ -1,0 +1,27 @@
+{
+  "case": "t42_pkg_subtype_",
+  "axis": "package. subtype word_t is std_ulogic_vector(7 downto 0) in a package without generics, against the generic package instance.",
+  "differs_from": "t42_gen_pkg_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "word_t",
+      "range": "7 downto 0"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "00011000"
+    }
+  ]
+}

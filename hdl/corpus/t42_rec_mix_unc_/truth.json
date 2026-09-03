@@ -1,0 +1,48 @@
+{
+  "case": "t42_rec_mix_unc_",
+  "axis": "type. alpha is std_ulogic_vector(3 downto 0) and bravo unconstrained, the signal bundle_t(bravo(7 downto 0)).",
+  "differs_from": "t42_rec_two_unc_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 12,
+      "type": "bundle_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 4,
+          "type": "std_ulogic_vector"
+        },
+        {
+          "name": "bravo",
+          "width": 8,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.alpha",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.bravo",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.alpha",
+      "value": "0101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s.bravo",
+      "value": "10100101"
+    }
+  ]
+}

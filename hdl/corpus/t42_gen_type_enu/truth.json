@@ -1,0 +1,41 @@
+{
+  "case": "t42_gen_type_enu",
+  "axis": "generic. The same child with data_t => std_ulogic, init '0' and next_v '1'.",
+  "differs_from": "t42_gen_type____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.u",
+      "name": "s",
+      "width": 1,
+      "type": "data_t",
+      "declared": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "u",
+      "name": "init",
+      "type": "data_t",
+      "value": "0"
+    },
+    {
+      "instance": "u",
+      "name": "next_v",
+      "type": "data_t",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "case": "t42_rec_unc_arr_",
+  "axis": "type. arr_t is array (0 to 1) of bundle_t, the signal arr_t(open)(bravo(3 downto 0)).",
+  "differs_from": "t42_rec_uncons__",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 10,
+      "type": "arr_t",
+      "elements": 2,
+      "element_type": "bundle_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": [
+        "(alpha => 0, bravo => 0000)",
+        "(alpha => 0, bravo => 0000)"
+      ]
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": [
+        "(alpha => 1, bravo => 0101)",
+        "(alpha => 0, bravo => 1010)"
+      ]
+    }
+  ]
+}
