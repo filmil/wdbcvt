@@ -1,0 +1,26 @@
+{
+  "case": "t20_arr_2d_uncon",
+  "axis": "array (natural range <>, natural range <>) of std_ulogic, constrained at the signal",
+  "differs_from": "t18_arr_2dim____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 6,
+      "type": "mat_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "101011"
+    }
+  ]
+}

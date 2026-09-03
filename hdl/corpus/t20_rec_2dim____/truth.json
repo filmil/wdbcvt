@@ -1,0 +1,47 @@
+{
+  "case": "t20_rec_2dim____",
+  "axis": "the (0 to 1, 0 to 2) array of t18_arr_2dim as a record field beside a std_ulogic",
+  "differs_from": "t18_arr_2dim____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "rec_t",
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "m",
+          "width": 6,
+          "type": "mat_t"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.m",
+      "value": "000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.m",
+      "value": "101011"
+    }
+  ]
+}

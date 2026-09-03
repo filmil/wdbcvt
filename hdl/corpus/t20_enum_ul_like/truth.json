@@ -1,0 +1,26 @@
+{
+  "case": "t20_enum_ul_like",
+  "axis": "the nine literals of STD_ULOGIC under another name",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "my9_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

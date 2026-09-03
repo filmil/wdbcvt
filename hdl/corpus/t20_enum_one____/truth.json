@@ -1,0 +1,21 @@
+{
+  "case": "t20_enum_one____",
+  "axis": "type one_t is (only)",
+  "differs_from": "t2_enum_________",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "one_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "only"
+    }
+  ]
+}

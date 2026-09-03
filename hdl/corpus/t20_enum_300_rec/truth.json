@@ -1,0 +1,47 @@
+{
+  "case": "t20_enum_300_rec",
+  "axis": "the wide_t of t20_enum_300 after a one byte field",
+  "differs_from": "t20_enum_300____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "rec_t",
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "w",
+          "width": 32,
+          "type": "wide_t"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.w",
+      "value": "e0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.w",
+      "value": "e299"
+    }
+  ]
+}

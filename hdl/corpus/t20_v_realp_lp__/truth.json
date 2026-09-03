@@ -1,0 +1,41 @@
+{
+  "case": "t20_v_realp_lp__",
+  "axis": "a real localparam",
+  "differs_from": "t12_v_params____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "dut",
+      "type": "real",
+      "name": "R",
+      "declared": "localparam real",
+      "value": "1.5"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "case": "t20_enum_two_id_",
+  "axis": "type flag_t is (no, yes), the shape of BOOLEAN under another name",
+  "differs_from": "t2_boolean______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "flag_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "no"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "yes"
+    }
+  ]
+}

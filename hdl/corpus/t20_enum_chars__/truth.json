@@ -1,0 +1,26 @@
+{
+  "case": "t20_enum_chars__",
+  "axis": "type sym_t is ('a', 'b', 'c'), character literals that are not BIT's",
+  "differs_from": "t2_enum_________",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "sym_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "a"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "c"
+    }
+  ]
+}
