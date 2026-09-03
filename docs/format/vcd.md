@@ -33,7 +33,7 @@ the files by eye.
 
 ## What the VCD carries
 
-All 341 cases pass, and every object of the database is either in its
+All 363 cases pass, and every object of the database is either in its
 VCD or covered by one line of this table.
 
 | Object | In the VCD |
@@ -49,6 +49,7 @@ VCD or covered by one line of this table.
 | SystemVerilog `bit`, `logic`, `byte`, `int`, `longint`, an enum, a typedef | yes |
 | SystemVerilog packed struct | yes, as `reg N` over the fields |
 | SystemVerilog unpacked struct | yes, as `reg N` over 32 bit slots, see below |
+| SystemVerilog packed union | yes, as `reg N` of its widest field, `t24_sv_union` |
 | Verilog memory or any unpacked array declared without a typedef, of vectors, reals or structs | no |
 | A typedef of an unpacked array, `t13_sv_tdef_ua` | yes, flattened to `reg 8` |
 | SystemVerilog `string` | no, and the database has no record either |

@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 341 of 341 cases decoding with the entry lengths chaining
+*Confirmed by* 363 of 363 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -338,11 +338,24 @@ A vector `reg [7:0]` is packed.
 A memory `reg [7:0] m [0:3]` is an unpacked array of a packed vector,
 and its entry says `2` while the vector's says `3`.
 A `struct packed` says `3` and a plain `struct` says `2`.
+A `union packed` says `6`.
 
 *Found by* `t11_sv_struct` against `t11_sv_ustruct`, the same two
 field struct packed and unpacked, which differ in this half word and
 in the declaration size.
 *Confirmed by* `t11_v_mem4`, whose two array entries carry both values.
+The union is `t24_sv_union`, whose `union packed { logic [7:0] b;
+logic [7:0] c; } u_t` is a record entry with an empty name, origin
+`1`, layout `6` and the fields `b` and `c`, each `(7 downto 0)` over
+the unnamed vector entry, under an alias `u_t`, exactly the shape of
+the struct of `t11_sv_struct` but for the layout word.
+The declaration says 8 bits, the width of one field, so the fields
+share the bits and the entry is as wide as its widest field, not the
+sum.
+The reader accepts `6` as `LayoutUnion` and decodes every field over
+the same bits.
+
+*Found by* `t24_sv_union` against `t11_sv_struct`.
 
 **Scalars.**
 `logic` and `bit` are enumerations of four literals, with a different
@@ -513,6 +526,9 @@ triple.
 **What does not reach the table.**
 A `string` variable, `t11_sv_str`, produces no type entry, no
 declaration and no object, though its `initial` scope is there.
+A queue, a dynamic array, an associative array and a class,
+`t24_sv_queue`, `t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class`,
+produce none either, and the `logic` entry is the only one in each.
 See [hierarchy.md](hierarchy.md).
 
 ## What the earlier size measurements meant

@@ -455,6 +455,10 @@ See [types.md](types.md).
 | signal of a package | none under `log_wave -recursive *`; as a signal under `log_wave -recursive /sig_pkg` |
 | parameter of a SystemVerilog package | none |
 | a `signal` parameter of a procedure | the change twice, on the signal's handle |
+| signal of a null range | none, marked not logged |
+| `std_logic` signal with two drivers | the initial value once per driver at time 0, then one per change |
+| signal read through an external name | its change twice at the same time |
+| the implicit signal of `'delayed`, `'stable`, `'quiet` or `'transaction` | none: there is no object |
 
 A signal that never changes has exactly one record, found by
 `t0_bit_const`.
@@ -543,6 +547,27 @@ Whether a wider `log_wave` records it is not tested.
 
 *Found by* `t9_port_rec` and `t9_pkg_sig` against `t2_record`, which
 uses a package type but declares no package object.
+
+A resolved signal writes its initial value once per driver.
+`t24_two_drivers` has `signal r : std_logic := 'Z'` driven by two
+processes, `p` writing `'1'` at 50 ns and `q` writing `'Z'` at time 0
+and `'0'` at 70 ns, and `r` holds four records: `Z` twice at time 0,
+`1` at 50 ns and `X` at 70 ns, the resolved value, where `s` with
+one driver in the same file holds its initial value once.
+So the count at time 0 is the driver count, as the Verilog net rule
+below counts objects, and the value is the resolved one, not each
+driver's.
+`t24_ext_name` reads `tb.dut.s` from `tb` through an external name,
+`a <= << signal .tb.dut.s : std_ulogic >>;`, and `tb.dut.s` holds
+its change at 10 ns twice, `03` and `03`, where `t24_config_spec`
+with the same child and no external name holds it once; `a` holds
+its own change at 10 ns once.
+A null range signal, `z : std_ulogic_vector(0 downto 1)` of
+`t24_null_range`, is an object marked not logged with no record.
+The `records` field of `truth.json` pins these counts.
+
+*Found by* `t24_two_drivers`, `r` against `s` in one file, and
+`t24_ext_name` against `t24_config_spec`.
 
 The initial value at time 0 is the declared default or the type's
 leftmost literal.
@@ -765,6 +790,11 @@ The declared size follows: 96 for `t11_sv_struct3` and
 fields unpacked, which grew from one pair to two and put `b` first.
 *Confirmed by* `t11_sv_struct3`, `t11_sv_struct40` and
 `t11_sv_struct_r`.
+A packed union records as one vector of its width: `t24_sv_union`
+stores `u.b = 8'ha5` as `a5` in one pair, 8 bits declared, and both
+fields read the same bits, `b` and `c` both `10100101`.
+The VCD writes it as one `reg 8`.
+*Found by* `t24_sv_union` against `t11_sv_struct`.
 
 **Enums.**
 A SystemVerilog enum records as its base type: `t11_sv_enum` stores

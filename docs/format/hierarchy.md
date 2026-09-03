@@ -72,15 +72,27 @@ The 17 header words are, in order:
 | 8 | 0 | |
 | 9 | number of files | |
 | 10 | number of files again | |
-| 11 | number of words in region 15 | `t2_flat3` 6 |
+| 11 | number of words in region 15, `0` without `-debug line` | `t2_flat3` 6; `t24_dbg_drv_only` 0 |
 | 12 | 0 | |
-| 13 | 1 when there are objects, 0 in `t0_nosig` | |
-| 14 | `0x101` | |
-| 15 | `0x101` | |
+| 13 | `0` without objects, `1` in 351 cases, `2` or `3` in ten Verilog cases | `t0_nosig`, `t11_sv_str` 0; `t12_v_params` 3 |
+| 14 | debug flags: byte 0 `1`, byte 1 `-debug drivers`, byte 2 `-debug readers` | `t24_dbg_drv_only`, `t24_dbg_readers` |
+| 15 | debug flags: byte 0 `1`, byte 1 `-debug line`, byte 2 `-debug subprogram`, both under `line` alone | `t24_dbg_line`, `t24_dbg_sub_only` |
 | 16 | `0x10000` | |
 
-The meaning of the last three is open.
-They are the same in all 341 cases.
+Words 14 and 15 are byte flags that record the `-debug` levels the
+design was elaborated with; the debug level section below has the
+table.
+Word 13 is `0` in the two cases without objects, `t0_nosig` and
+`t11_sv_str`, `1` in 351 cases, `2` in `t11_v_param`,
+`t12_v_param64`, `t13_v_str_param`, `t21_v_param_same`,
+`t21_v_param_diff`, `t13_sv_pkg`, `t15_sv_pkg_log`,
+`t13_sv_alwaysff` and `t19_sv_uwire`, and `3` in `t12_v_params`.
+It is not the page count, the arena count, the object count or the
+parameter count of those cases.
+What it counts is open.
+Word 16 is `0x10000` in every case.
+The reader keeps the 17 words as `Debug.Words` and the dump prints
+them as `header words`.
 
 
 ## Scope records
@@ -231,6 +243,15 @@ against the `port` field of each signal in `truth.json`.
 A port is otherwise an ordinary signal: kind `0x0e`, declared in the
 child entity's unit, and an object in the child's scope.
 Where its handle comes from is in the instance record section below.
+
+A null range declares 0 bytes.
+`t24_null_range` has `signal z : std_ulogic_vector(0 downto 1)`
+beside `s`, and `z` is a signal declaration of size 0 with the range
+record `(0 downto 1)` kept as written, and an object with its own
+handle that is marked not logged and holds no record.
+The type entry is the ordinary unconstrained `STD_ULOGIC_VECTOR`.
+
+*Found by* `t24_null_range` against `t1_bit_one_edge`.
 
 Word 10 was called noise because it differs between two runs of the
 same design.
@@ -583,6 +604,32 @@ That is what made `0x13` a constant kind rather than a loop index kind.
 *Found by* `t8_gen_if` against `t7_gen_for` and `t4_gen_explicit`.
 
 
+## Case generate
+
+`t24_case_gen` has `g: case k generate` over an architecture constant
+`k : integer := 1`, with the alternatives `when zero: 0 =>` declaring
+a signal `a` and `when one: others =>` declaring a signal `b`, each
+with one concurrent assignment.
+
+```
+[1]  tb              entity, 1 declaration: k
+[2]  tb.g            generate, 1 declaration: b
+[3]  tb.p            process
+[4]  tb.g.line__26   process, the assignment of the taken alternative
+```
+
+A `case` generate is one scope named by the generate label, unit kind
+`0x0c` like the other generates, holding the declarations of the
+alternative that was taken.
+The alternative label `one` is not a scope and is not in the name,
+and the alternative not taken leaves nothing, where an `if` generate
+keeps its false branch as an empty scope.
+`k` is a constant of `tb` with one record holding `1`, as `with_dut`
+of `t8_gen_if`.
+
+*Found by* `t24_case_gen` against `t8_gen_if`.
+
+
 ## Blocks
 
 A `block` statement is a scope of unit kind `0x0c`, the kind of a
@@ -642,6 +689,30 @@ of the statement, with a process unit pointing at the same line.
 both from one concurrent assignment in `child`.
 
 *Found by* `t8_port_open`, whose child has no labelled process.
+
+A concurrent assignment from a signal attribute is an implicit
+process too, and `'delayed` makes two of them.
+`t24_att_delayed` has `d <= s'delayed(2 ns);` at line 18, and the
+file has two scopes named `tb.line__18`, units 2 and 4, each a
+process unit pointing at line 18, beside `tb.p`.
+`t24_att_stable`, `t24_att_quiet` and `t24_att_transact` have
+`b <= s'stable(1 ns)`, `q <= s'quiet(1 ns)` and `t <= s'transaction`
+at the same line and one `tb.line__18` each.
+None of the four has a declaration or an object for the implicit
+signal the attribute denotes: the declarations are `s` and the
+target, and the target records the attribute's value.
+`d` changes at 52 ns for the change of `s` at 50 ns; `b` and `q` go
+false at 50 ns and true at 51 ns; `t` toggles at 50 and 70 ns, where
+the second assignment of `s` repeats its value and leaves no record
+on `s`.
+An external name has the same shape: the assignment
+`a <= << signal .tb.dut.s : std_ulogic >>;` at line 19 of
+`t24_ext_name` is the scope `tb.line__19`.
+
+*Found by* `t24_att_delayed` against `t24_att_stable`, two scopes
+against one for the same statement shape.
+*Confirmed by* `t24_att_quiet`, `t24_att_transact` and
+`t24_ext_name`.
 
 
 ## Variables
@@ -806,6 +877,18 @@ architecture `sim`, is the degenerate case.
 *Found by* `t23_arch_b` against `t4_gen_explicit`.
 *Confirmed by* `t23_arch_both`.
 
+A configuration specification chooses the architecture the same way.
+`t24_config_spec` declares `component child`, binds it with
+`for dut : child use entity work.child(a);` and instantiates the
+component, and the file has the unit `child(a)`, where `t23_arch_b`
+instantiates `entity work.child(b)` of the same child and has
+`child(b)`.
+The scope `tb.dut`, its process and its object `s` are the same in
+both, so the component and the binding leave no trace beyond the
+architecture name.
+
+*Found by* `t24_config_spec` against `t23_arch_b`.
+
 
 ## Library packages under `-debug all`
 
@@ -831,10 +914,21 @@ move.
 
 *Found by* `t22_dbg_all` against `t22_base`.
 
+`xlibs` alone brings the packages.
+`t24_dbg_xlibs` runs the two driver design of `t24_two_drivers` under
+`-debug wave -debug xlibs`, and the file has the same four packages
+as root children with the same 15 constants and variables, the file
+growing from 5229 bytes under `-debug wave -debug drivers` to 9772.
+It has no `resolved` scope and no `result` local, so those come from
+a level that `all` adds beyond `xlibs`.
+
+*Found by* `t24_dbg_xlibs` against `t24_dbg_drv_only`.
+
 
 ## Elaboration options that change nothing
 
-`--O0` and `--mt off` produce a file byte identical to the default
+`--O0`, `--mt off` and `-debug drivers` over `-debug typical`, which
+already includes it, produce a file byte identical to the default
 outside the noise mask.
 `--generic_top k=9` changes the value record of `k` from 7 to 9 and
 the record of `n`, which is computed from it, and nothing else: the
@@ -842,7 +936,53 @@ same unit, the same declaration and the same handles as the default of
 7.
 
 *Found by* `t22_o0`, `t22_mt_off` and `t22_gen_top`, each against
-`t22_base`.
+`t22_base`, and `t24_dbg_drivers` against `t24_two_drivers`.
+
+
+## Debug levels
+
+`xelab -debug` takes `line`, `wave`, `drivers`, `readers`, `xlibs`
+and `subprogram`, with `typical` for `line`, `wave` and `drivers`
+and `all` for everything but `subprogram`, according to its help.
+The corpus runs under `typical` unless a case says otherwise.
+Tier 24 elaborates the two driver design of `t24_two_drivers` under
+one level at a time, and the levels show in three places: header
+words 14 and 15, the statement regions 14 and 15, and the packages
+of `xlibs` above.
+
+| Case | `-debug` | Word 14 | Word 15 | Word 11 |
+| :--- | :--- | ---: | ---: | ---: |
+| `t24_dbg_drv_only` | `wave drivers` | `0x101` | `0x1` | 0 |
+| `t24_dbg_line` | `wave line` | `0x1` | `0x10101` | 9 |
+| `t24_dbg_sub_only` | `wave subprogram` | `0x1` | `0x10101` | 9 |
+| `t24_dbg_xlibs` | `wave xlibs` | `0x1` | `0x1` | 0 |
+| `t24_two_drivers` | `typical` | `0x101` | `0x101` | 9 |
+| `t24_dbg_drivers` | `typical drivers` | `0x101` | `0x101` | 9 |
+| `t24_dbg_readers` | `typical readers` | `0x10101` | `0x101` | 9 |
+
+`t22_dbg_wave` under `wave` alone has `0x1` in both words, and
+`t22_dbg_all` and the `typical subprogram` cases of tiers 22 and 23
+have `0x101` and `0x10101`.
+So byte 0 of each word is always `1`; byte 1 of word 14 is
+`drivers` and byte 2 is `readers`; byte 1 of word 15 is `line` and
+byte 2 is `subprogram`, which `line` alone also sets and `typical`
+does not, though `typical` includes `line`.
+Why `line` alone sets byte 2 of word 15 is open.
+`xlibs` sets no byte.
+The statement index and lines of regions 14 and 15 exist under
+`line`: word 11 counts 9 statement lines in every case that has it
+and 0 in the others, where regions 15 and 16 start at the same
+offset.
+`readers` over `typical` changes the one byte and nothing else
+outside the noise mask.
+Handles, records and the type table are the same under every level
+but `xlibs`.
+
+*Found by* `t24_dbg_readers` against `t24_two_drivers`, one byte at
+file offset `0x303`, and `t24_dbg_line` against `t24_dbg_drv_only`
+for the two words and region 15 moving together.
+*Confirmed by* `t24_dbg_sub_only`, `t24_dbg_xlibs`, `t24_dbg_drivers`
+and the `header words` line of the dump of every case.
 
 
 ## Verilog modules, processes and nets
@@ -929,6 +1069,7 @@ and a counter:
 | `always ... begin : blk` at line 12 | `blk` and `Always12_1`, both at line 12 | `t11_v_always` |
 | `always_ff` at line 13 | `Always13_1` | `t13_sv_alwaysff` |
 | `always_comb` at line 14 | `Always14_2` | `t13_sv_alwaysff` |
+| `fork` branch at line 13 | `Forked13_1` | `t24_sv_fork` |
 
 The counter after the underscore is per design.
 `always_ff` and `always_comb` are `Always` scopes with nothing to tell
@@ -951,6 +1092,19 @@ two child instances took two numbers, and both instances carry
 
 *Found by* `t12_v_proc_order` against `t11_v_port` and `t11_v_hier1`.
 *Confirmed by* `t11_v_gen_for`.
+
+A `fork ... join` gives each branch a process scope of its own.
+`t24_sv_fork` forks two statements at lines 13 and 14 inside the
+`initial` block at line 10, and the file has `tb.Initial10_0`,
+`tb.Forked13_1` and `tb.Forked14_2`, each a `vprocess` unit at its
+line, numbered on the same counter as the block that holds them.
+A clocking block leaves nothing.
+`t24_sv_clocking` has `clocking cb @(posedge clk)` with `input s` at
+line 10, and the file has `tb.Always9_0` and `tb.Initial14_1` and no
+scope, unit, declaration or object for `cb` or its input.
+
+*Found by* `t24_sv_fork` against `t11_v_always`, and
+`t24_sv_clocking` against `t11_sv_logic`.
 
 **Implicit initial scopes.**
 A module whose variables have initializers, `reg s = 1'b0;`, gets one
@@ -1141,5 +1295,18 @@ logged range count of 0.
 Its handle space is `0x9b4`, the same as `t11_v_bit_edge`, so the
 string appears to be given handle space and left out of the instance
 list.
+The dynamic objects of SystemVerilog go the same way.
+A queue `int q[$]`, a dynamic array `int d[]`, an associative array
+`int a[string]` and a class handle `c h` of a class with one `int`
+member, each written once from the `initial` block, leave no type
+entry, no declaration and no object: `t24_sv_queue`,
+`t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class` hold the one
+declaration `s` of `t11_sv_logic`.
+Their handle space is `0xa14` in all four, `0xf8` over the `0x91c`
+of `t11_sv_logic`, so each is given the same handle space whatever
+it holds, and the class member `x` is not there either.
+
+*Found by* `t24_sv_queue` against `t11_sv_logic`.
+*Confirmed by* `t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class`.
 The clock toggle due at the `$finish` time in `t11_v_always` is not
 recorded, so the last record of `clk` is at 75 ns in a 100 ns run.

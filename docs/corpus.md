@@ -661,6 +661,40 @@ The access case crashed the reader on an unseen type kind.
 | `t23_time_vector` | `time_vector(0 to 3)` | 32 bytes; the `TIME` entry |
 | `t23_bool_vector` | `boolean_vector(0 to 3)` | 4 bytes |
 
+Tier 24 goes after what the format does with things that have no
+object of their own: signal attributes, a null range, two drivers of
+one signal, an external name, a case generate, a configuration
+specification, and the dynamic types of SystemVerilog; and it
+elaborates one design under each `-debug` level in turn.
+The debug cases share the two driver design and pass
+`-debug wave -debug <level>`, or `-debug typical -debug <level>`.
+The union crashed the reader on an unseen layout word.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t24_att_delayed` | `d <= s'delayed(2 ns)` | two implicit processes at one line; no object for the attribute |
+| `t24_att_stable` | `s'stable(1 ns)` | one implicit process |
+| `t24_att_quiet` | `s'quiet(1 ns)` | the same |
+| `t24_att_transact` | `s'transaction` | the same; a repeated value leaves no record on `s` |
+| `t24_null_range` | `std_ulogic_vector(0 downto 1)` | a 0 byte declaration; an object marked not logged |
+| `t24_two_drivers` | two processes driving a `std_logic` | the initial value once per driver |
+| `t24_dbg_drivers` | `typical` and `drivers` | nothing |
+| `t24_dbg_readers` | `typical` and `readers` | header word 14 byte 2 |
+| `t24_dbg_line` | `wave` and `line` | word 15 bytes 1 and 2; the statement regions |
+| `t24_dbg_drv_only` | `wave` and `drivers` | word 14 byte 1; empty statement regions |
+| `t24_dbg_sub_only` | `wave` and `subprogram` | word 15 bytes 1 and 2, like `line` |
+| `t24_dbg_xlibs` | `wave` and `xlibs` | the four packages; no flag byte |
+| `t24_case_gen` | `case k generate` | one scope, the taken alternative's declarations |
+| `t24_ext_name` | `<< signal .tb.dut.s : std_ulogic >>` | an implicit process; the change recorded twice |
+| `t24_config_spec` | a component and a configuration specification | the unit `child(a)` |
+| `t24_sv_queue` | `int q[$]` | nothing but handle space |
+| `t24_sv_dynarr` | `int d[]` | the same |
+| `t24_sv_assoc` | `int a[string]` | the same |
+| `t24_sv_class` | a class with one member | the same |
+| `t24_sv_union` | `union packed` | layout `6`, the width of one field |
+| `t24_sv_fork` | `fork ... join` | a `vprocess` scope per branch |
+| `t24_sv_clocking` | `clocking cb @(posedge clk)` | nothing |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -718,7 +752,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 341 cases through tier 23, and
+5. The reader now reproduces all 363 cases through tier 24, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
