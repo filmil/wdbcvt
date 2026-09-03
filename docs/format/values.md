@@ -993,6 +993,40 @@ fields read the same bits, `b` and `c` both `10100101`.
 The VCD writes it as one `reg 8`.
 *Found by* `t24_sv_union` against `t11_sv_struct`.
 
+An unpacked array of unpacked structs gives each element a slot of
+the pairs the struct takes, and puts the last element lowest, as an
+unpacked array of `real` does: `rec_t m [0:1]` over
+`struct { logic a; logic [3:0] b; }` in `t35_sv_ust_arr__` declares
+128 bits, `m[1]` in pairs 0 and 1 with `b` in pair 0, `m[0]` in pairs
+2 and 3, and `m[1] = '{1, 4'ha}` at 50 ns is a 16 byte record of pairs
+0 and 1, `0a` then `01`.
+The same declaration over a packed struct, `t13_sv_struct_ar`, is one
+10 bit word, so the slot comes from the element being unpacked, not
+from the array.
+A write to one field of one element is one pair: `m[1].b = 4'ha` in
+`t35_sv_ust_fld__` is 8 bytes at pair 0, the element's slot plus the
+field's pair.
+A typedef of the array, `typedef rec_t arr_t [0:1]` in
+`t35_sv_ust_tdef_`, changes nothing in the records.
+An unpacked struct inside an unpacked struct flattens into the outer
+struct's slots: `struct { logic a; rec_t r; }` in `t35_sv_ust_nest_`
+declares 96 bits, `r.b` in pair 0, `r.a` in pair 1 and `a` in pair 2,
+and `s.r.b = 4'ha` is 8 bytes at pair 0.
+An unpacked array field packs into the field's own pairs like a
+standalone memory: `struct { logic a; logic [3:0] v [0:1]; }` in
+`t35_sv_st_uarr__` declares 64 bits, the 8 bits of `v` in pair 0
+with `v[1]` at the bottom, and `s.v[1] = 4'ha` rewrites pair 0 whole,
+`0a`, the way `t11_v_mem4` rewrites its one pair for one element.
+The time 0 records show the rounding: a 1 bit field's pair holds
+`ff ff ff ff` in both words before its first write, all 32 bits `X`,
+where a 4 bit field's pair holds `0f`.
+
+*Found by* `t35_sv_ust_arr__` against `t13_sv_struct_ar`, the same
+`m [0:1]` over the unpacked form of the struct, which grew from one
+pair to four and moved `m[1]` from the low 5 bits to pairs 0 and 1.
+*Confirmed by* `t35_sv_ust_fld__`, `t35_sv_ust_tdef_`,
+`t35_sv_pst_tdef_`, `t35_sv_ust_nest_` and `t35_sv_st_uarr__`.
+
 **Enums.**
 A SystemVerilog enum records as its base type: `t11_sv_enum` stores
 `DONE` as `02 00 00 00` in an `int`, and `t11_sv_enum4` stores `C`,

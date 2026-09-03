@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 597 of 597 cases decoding with the entry lengths chaining
+*Confirmed by* 603 of 603 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -475,9 +475,25 @@ layout `2` over the alias: `s_t m [0:1]` in `t13_sv_struct_ar` has
 the record, the alias `s_t` and the array in that order, and the
 declaration carries `(0 to 1)` with size 10.
 
+A typedef of that array, `typedef rec_t arr_t [0:1]` in
+`t35_sv_ust_tdef_` and `typedef s_t arr_t [0:1]` in
+`t35_sv_pst_tdef_`, adds a second alias `arr_t` over the array entry,
+carrying the `(0 to 1)` the declaration then drops, as
+`t13_sv_tdef_ua` does for a vector element.
+The unpacked struct itself is the same record entry of layout `2`
+whether it stands alone, `t11_sv_ustruct`, sits in an array,
+`t35_sv_ust_arr__`, or is a field of another unpacked struct,
+`t35_sv_ust_nest_`, whose outer record lists `r:[4]` with the alias
+`rec_t` as the field type.
+An unpacked array field, `logic [3:0] v [0:1]` in `t35_sv_st_uarr__`,
+is an unnamed array entry of layout `2` over the unnamed vector entry,
+with two `(0, 0, -2)` placeholders, and the field carries
+`(0 to 1)(3 downto 0)`.
+
 *Found by* `t12_sv_typedef` against `t11_v_vec8`, whose declaration
 carries `(7 downto 0)` and whose type has no alias.
-*Confirmed by* `t13_sv_pkg` and `t13_sv_struct_ar`.
+*Confirmed by* `t13_sv_pkg`, `t13_sv_struct_ar`, `t35_sv_ust_tdef_`,
+`t35_sv_pst_tdef_`, `t35_sv_ust_nest_` and `t35_sv_st_uarr__`.
 
 **Parameters.**
 A parameter's type follows its declaration: `parameter K = 5` and

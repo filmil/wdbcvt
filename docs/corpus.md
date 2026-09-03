@@ -1073,11 +1073,32 @@ with two or three drivers.
 | `t34_res_3drv____` | a third driver assigning `'Z'` at 80 ns | `Z` twice, `1`, `X`, `X` |
 
 A write through a port sits at the port's offset plus the part's, a
-write is per driver and the processes' records come in reverse source
-order, and the `t24_two_drivers` reading of one record per driver was
-wrong: a resolved signal with several drivers records each
+write is per driver and the processes' records come in the order the
+simulator ran the processes, which `//hdl/uart:sim` showed is not the
+source order, and the `t24_two_drivers` reading of one record per
+driver was wrong: a resolved signal with several drivers records each
 transaction, and the second `Z` was the assignment at time 0.
 The reader needed no change.
+
+Tier 35 puts SystemVerilog unpacked structs into arrays and arrays
+into unpacked structs, the typedef of an unpacked struct array that
+tier 34 left unwritten among them, and writes one element, one field
+of one element, or one element of a field.
+
+| Case | Shape | Records |
+| :--- | :--- | :--- |
+| `t35_sv_ust_arr__` | `rec_t m [0:1]`, `m[1]` written whole | 128 bits; 16 bytes at pair 0 |
+| `t35_sv_ust_tdef_` | `typedef rec_t arr_t [0:1]` | the same, under a second alias |
+| `t35_sv_pst_tdef_` | `typedef s_t arr_t [0:1]` over a packed struct | one 10 bit word, as `t13_sv_struct_ar` |
+| `t35_sv_ust_fld__` | `m[1].b` written alone | 8 bytes at pair 0 |
+| `t35_sv_st_uarr__` | `struct { logic a; logic [3:0] v [0:1]; }`, `s.v[1]` | 64 bits; pair 0 rewritten whole |
+| `t35_sv_ust_nest_` | `struct { logic a; rec_t r; }`, `s.r.b` | 96 bits; 8 bytes at pair 0 |
+
+An unpacked struct element takes a slot of its own pairs with the last
+element lowest, a nested unpacked struct flattens into the outer
+slots, and an unpacked array field packs into its own pairs.
+The reader's Verilog decoder gained the slot per element for an
+unpacked struct element, which it only had for `real`.
 
 `//hdl/uart:sim` is the realistic design after the counter: a UART
 transmitter looped back into a receiver whose characters fill a FIFO,
@@ -1094,8 +1115,7 @@ The design is not a corpus case: it has no `truth.json`, and the VCD
 and the bench's own check stand in for it.
 
 Not written yet: a `string` value, which has no object to hold one,
-see `t11_sv_str`; a typedef of an unpacked struct array; and a design
-from outside this repository.
+see `t11_sv_str`; and a design from outside this repository.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -1150,7 +1170,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 597 cases through tier 34, and
+5. The reader now reproduces all 603 cases through tier 35, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`
    and `//hdl/uart:sim`, where the VCD holds anything.
    The next cases are the ones listed as not written yet.
