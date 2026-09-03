@@ -375,7 +375,7 @@ variable that the simulator gave storage.
 | `16` | 4 | scope index |
 | `20` | 4 | offset into the value at the handle, 0 unless the object is a port bound to a slice: bytes for VHDL, bits for Verilog |
 | `24` | 4 | 0 |
-| `28` | 4 | 0 for a signal, 2 when the second handle is 0 |
+| `28` | 4 | storage class: 0 signal, 1 port on a language boundary, 2 generic, constant, variable or loop index, 3 scalar subprogram local, 4 composite subprogram local, 6 signal parameter |
 | `32` | 8 | declaration index |
 | `40` | 4 | position of a Verilog port in its module's port list, from 0; 0 for every VHDL object and every non port |
 | `44` | 4 | not written: `-1`, 0, or a value that differs between runs; see below |
@@ -443,6 +443,49 @@ stack address on the producing host, and the arbitrary values the
 shape of heap addresses, so the reading is memory the writer copied
 without setting.
 The reader masks it.
+
+The word at `28` was read as 0 for a signal and 2 for the rest through
+tier 48, the two values every case before the subprogram and mixed
+language tiers holds.
+The same sweep found 1, 3, 4 and 6 as well, and tier 49 fixes what
+each stands for.
+
+| Value | Objects | Cases |
+| ---: | :--- | :--- |
+| 0 | a signal, net or Verilog variable, ports included | every case |
+| 1 | a port on a language boundary, whichever side it is on | `t21_mix_v_in_vh_`, `t21_mix_vh_in_v_`, `t49_mix_2port___`, `t49_mix_deep____` |
+| 2 | a generic, constant, parameter, process variable or loop index; the objects with no second handle | `t7_gen_for______`, `t6_proc2________`, `t49_sub_var_prm_` |
+| 3 | a subprogram parameter or variable of a scalar type, `constant` and `variable` class alike | `t23_sub_sizes___`, `t49_sub_var_prm_` |
+| 4 | a subprogram parameter or variable of an array or record type | `t23_sub_sizes___`, `t49_sub_rec_loc_`, `t49_sub_int_arr_`, `t49_sub_vec_prm_` |
+| 6 | a signal parameter of a subprogram, in or out, scalar or vector | `t23_sub_sig_prm_`, `t49_sub_sig_in__`, `t49_sub_sig_vec_` |
+
+The boundary port holds 1 on the Verilog side and on the VHDL side:
+`t49_mix_deep____` puts a VHDL leaf under a Verilog child under a VHDL
+testbench, and the two ports of the child and the two of the leaf all
+hold 1.
+The scalar and composite locals differ by the type and not by the
+class or mode: `t49_sub_var_prm_` gives an `inout` `variable`
+parameter 3, and `t49_sub_vec_prm_` a `constant` vector parameter 4.
+5 has not been seen.
+The reader keeps the word as `Storage` and the dump prints it when it
+is not 0; `Generic` stays the test for 2.
+
+*Found by* the sweep over the corpus, then `t49_sub_rec_loc_` and
+`t49_sub_int_arr_` against `t23_sub_sizes___` for the composite
+reading of 4.
+*Confirmed by* `t49_sub_var_prm_`, `t49_sub_vec_prm_`,
+`t49_sub_sig_in__`, `t49_sub_sig_vec_`, `t49_mix_2port___` and
+`t49_mix_deep____`, and the `storage` field of `truth.json` on the
+tier 21, 22 and 23 cases named above.
+
+A subprogram parameter of an unconstrained type is not in the file.
+`t49_sub_str_prm_` declares `constant name : in string` beside a
+signal parameter, and the file holds the signal parameter's
+declaration and object and nothing for `name`: two declarations and
+two objects, the same handle space as `t23_sub_sig_prm_` with its
+scalar constant parameter.
+
+*Found by* `t49_sub_str_prm_` against `t23_sub_sig_prm_`.
 
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
@@ -672,6 +715,25 @@ A Verilog port under a VHDL testbench holds `X` then `0`, as a Verilog
 net with a driver does.
 *Found by* `t21_mix_vh_in_v` against `t11_v_port` and `t9_comp`.
 *Confirmed by* `t21_mix_v_in_vh` against `t9_comp`.
+
+Tier 49 adds an output at the boundary and a second boundary.
+`t49_mix_2port___` gives the Verilog child an `assign b = a` output
+into the VHDL signal `y`, and `y` holds `U`, `X`, `0`, `1`: the VHDL
+default, then the `X` the assign produced from the port's `X`, then
+the driven values.
+`t49_mix_deep____` puts a VHDL leaf under the Verilog child, so a
+VHDL signal crosses into Verilog and back.
+The leaf's input port holds `0` then `1` and no `U`, where the VHDL
+port of `t21_mix_vh_in_v` held `U` first: the Verilog net above it
+carries the VHDL `0` from elaboration, where the `reg` of
+`t21_mix_vh_in_v` gets its `0` from an `initial` at time 0.
+The leaf's output port holds `U`, `0`, `1`, and `y` above it the same,
+without the `X` of `t49_mix_2port___`, because no Verilog expression
+sits between them.
+Every boundary port has a handle of its own on both levels: `tb.x` at
+`0x768`, `tb.dut.a` at `0x960` and `tb.dut.u.a` at `0xb28`.
+
+*Found by* `t49_mix_deep____` against `t49_mix_2port___`.
 
 
 ## For generate
@@ -1771,10 +1833,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 749 of 749 cases, and the
+*Confirmed by* the region length check in 758 of 758 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 749 of 749 cases and
+and *confirmed by* the reader's range check in 758 of 758 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

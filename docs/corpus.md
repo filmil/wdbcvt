@@ -1505,9 +1505,9 @@ in them.
 **Tier 48: the port position word.**
 Verilog.
 A sweep of the two open words of the instance record over the corpus
-and `//hdl/serv:sim` found word 10 at 0 to 29 on the ports of `serv`,
-in the order of each module's port list, and word 12 holding values
-with the shape of addresses.
+and `//hdl/serv:sim` found the word at `40` at 0 to 29 on the ports
+of `serv`, in the order of each module's port list, and the word at
+`44` holding values with the shape of addresses.
 The tier separates the port list from the connection and from the
 declaration order.
 The `position` field of `truth.json` checks it.
@@ -1519,6 +1519,28 @@ The `position` field of `truth.json` checks it.
 | `t48_v_port_posit` | `t48_v_port_pos4_` | connected by position | 0, 1, 2, 3 |
 | `t48_v_port_nansi` | `t48_v_port_pos4_` | non ANSI header, declarations reversed | objects `d`, `c`, `b`, `a` with 3, 2, 1, 0 |
 | `t48_v_port_open_` | `t48_v_port_pos4_` | output `d` unconnected | 3 still; `d` gets its own handle |
+
+**Tier 49: the storage class word.**
+VHDL and mixed language.
+The sweep of tier 48 also found the word at `28` of the instance
+record at 1, 3, 4 and 6 on the mixed language and subprogram cases,
+beside the 0 and 2 the reader tested for.
+The tier varies the type, class and mode of subprogram objects under
+`-debug subprogram`, and puts an output and a second language
+boundary into the mixed design.
+The `storage` field of `truth.json` checks the word.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t49_sub_rec_loc_` | `t23_sub_sizes___` | a record local | 4 |
+| `t49_sub_int_arr_` | `t23_sub_sizes___` | an integer array local | 4 |
+| `t49_sub_str_prm_` | `t23_sub_sig_prm_` | an unconstrained `string` parameter | absent from the file |
+| `t49_sub_var_prm_` | `t23_sub_sig_prm_` | an `inout` `variable` parameter | 3 |
+| `t49_sub_sig_in__` | `t23_sub_sig_prm_` | an `in` signal parameter | 6 |
+| `t49_sub_vec_prm_` | `t49_sub_str_prm_` | a constrained vector `constant` parameter | 4 |
+| `t49_sub_sig_vec_` | `t23_sub_sig_prm_` | a vector signal parameter | 6 |
+| `t49_mix_2port___` | `t21_mix_v_in_vh_` | a Verilog child with an output | 1 on both ports; `U`, `X`, `0` on the driven VHDL signal |
+| `t49_mix_deep____` | `t49_mix_2port___` | a VHDL leaf under the Verilog child | 1 on the leaf's ports; no `U` on its input |
 
 
 ## Record which comparison produced which finding
@@ -1558,7 +1580,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 749 cases through tier 48, and
+5. The reader now reproduces all 758 cases through tier 49, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
