@@ -1,0 +1,74 @@
+{
+  "case": "t22_base________",
+  "axis": "xelab -debug typical, the default of every other case",
+  "differs_from": "t8_ps___________",
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "n",
+      "width": 32,
+      "type": "integer"
+    },
+    {
+      "scope": "tb",
+      "name": "t",
+      "width": 64,
+      "type": "time"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "n",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "t",
+      "value": "0 ps"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "n",
+      "value": "8"
+    },
+    {
+      "time_ns": 10,
+      "signal": "t",
+      "value": "1 ps"
+    },
+    {
+      "time_ns": 10,
+      "time_ps": 1,
+      "signal": "s",
+      "value": "0"
+    }
+  ],
+  "generics": [
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "k",
+      "type": "integer",
+      "value": "7"
+    }
+  ],
+  "end_time_ns": 20,
+  "end_time_ps": 1
+}

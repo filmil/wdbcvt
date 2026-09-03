@@ -8,7 +8,7 @@ load(
     "vivado_simulation",
 )
 
-def wdb_case(name, srcs, extra_deps = [], tcl = None):
+def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = []):
     """Declares one corpus case.
 
     Every case is held to the same shape on purpose, so that two cases
@@ -34,6 +34,10 @@ def wdb_case(name, srcs, extra_deps = [], tcl = None):
       tcl: an xsim batch script replacing the default one, for a case
         whose axis is what is logged. It gets the same `{{VCD_FILE}}`
         and `{{TOP}}` substitutions as the default template.
+      xelab_args: additional xelab options, for a case whose axis is the
+        elaboration itself: the debug level, the VHDL time precision or
+        a generic override. A `-debug` option here replaces the default
+        `-debug typical`.
     """
     native.filegroup(
         name = "srcs",
@@ -55,6 +59,7 @@ def wdb_case(name, srcs, extra_deps = [], tcl = None):
         library = ":lib",
         top = "tb",
         custom_tcl_script = tcl,
+        xelab_args = xelab_args,
     )
 
     native.filegroup(
