@@ -1053,6 +1053,32 @@ The memory rows of `t33_v_mem_row___` also showed a split chunk's
 rest sitting behind the other writes of its time in the next arena,
 so the reader chains chunks by address, not by position.
 
+Tier 34 moves a partial write out of the one process tier 32 used:
+into a child, through a port bound whole, to a field and to a slice;
+into a second process and a `for generate`; and onto a resolved type
+with two or three drivers.
+
+| Case | Moves | Records |
+| :--- | :--- | :--- |
+| `t34_port_fld_out` | `p.b <= '1'` in the child of `p : out trio_t` | 1 byte at `+1` on the shared handle |
+| `t34_pmap_field__` | `a : out std_ulogic` bound to `r.b` | offset 1; 1 byte at `+1` |
+| `t34_pmap_slice__` | `v(1 downto 0)` written in the child of `v => x(3 downto 0)` | 2 bytes at `+6` |
+| `t34_two_prc_adj_` | `r.b` from `p`, `r.c` from `q` | two records, `q`'s first |
+| `t34_two_prc_rev_` | `r.c` from `p`, `r.b` from `q` | two records, `q`'s first |
+| `t34_gen_elems___` | `v(i) <= s` under `for i in 0 to 2 generate` | three records, `g(2)` first |
+| `t34_res_two_fld_` | `t34_two_prc_adj_` on `std_logic` fields | the same two records |
+| `t34_res_same_fld` | both processes on `r.b`, `'Z'` at time 0 | the whole record and `Z` at `+1` at time 0 |
+| `t34_res_two_drv0` | `t24_two_drivers` without the time 0 assignment | `Z` once at time 0 |
+| `t34_res_txn_zero` | one driver assigning `'Z'` at time 0 | `Z` once |
+| `t34_res_3drv____` | a third driver assigning `'Z'` at 80 ns | `Z` twice, `1`, `X`, `X` |
+
+A write through a port sits at the port's offset plus the part's, a
+write is per driver and the processes' records come in reverse source
+order, and the `t24_two_drivers` reading of one record per driver was
+wrong: a resolved signal with several drivers records each
+transaction, and the second `Z` was the assignment at time 0.
+The reader needed no change.
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design beyond the counter.
@@ -1110,7 +1136,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 586 cases through tier 33, and
+5. The reader now reproduces all 597 cases through tier 34, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    where the VCD holds anything.
    The next cases are the ones listed as not written yet.

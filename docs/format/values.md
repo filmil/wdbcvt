@@ -535,7 +535,8 @@ behind it at its aligned offset 4.
 The reader overlays the records of an object on its value in file
 order and returns one value per write, so a time with two records
 gives two values, and the corpus test compares the last value at each
-time for the signals of `t32_rec_two_gap_` and `t32_vec_two_slc_`.
+time for the signals of `t32_rec_two_gap_`, `t32_vec_two_slc_` and
+`t34_gen_elems___`.
 
 *Found by* `//hdl/counter:sim` against the corpus: its `ctl` record of
 `clk`, `reset` and `enable` is driven one field at a time, and the
@@ -549,6 +550,34 @@ element type.
 `t32_rec_two_adj_` against `t32_rec_two_gap_` separated merging by
 adjacency from merging by delta, and `t32_rec_wthenf__` against
 `t32_rec_delta___` separated one delta from two.
+
+A write inside a child through a port lands on the actual's handle at
+the port's offset plus the part's offset.
+`t34_pmap_slice__` binds `v : out std_ulogic_vector(3 downto 0)` to
+`x(3 downto 0)` of an 8 byte `x`, offset 4, and the child's
+`v(1 downto 0) <= "11"` is a 2 byte record at `+6`.
+`t34_pmap_field__` binds `a : out std_ulogic` to the record field
+`r.b`, and the port carries `r`'s handle with offset 1, as a slice
+binding does; the child's `a <= '1'` is a 1 byte record at `+1`.
+`t34_port_fld_out` binds a record port `p : out trio_t` whole to `r`
+and writes `p.b` in the child: a 1 byte record at `+1`, the same as
+`r.b <= '1'` in `t32_rec_field___`.
+The shared handle still holds the time 0 value once per object.
+
+A write is per driver.
+`t34_two_prc_adj_` assigns `r.b` from process `p` and `r.c` from
+process `q` in one delta and holds two 1 byte records at 50 ns, where
+`t32_rec_two_adj_` with both from `p` holds one 2 byte record.
+The records of different processes at one time sit in the reverse
+order of the processes in the source: `q` before `p` whichever field
+each writes, `t34_two_prc_adj_` and `t34_two_prc_rev_`, and `g(2)`,
+`g(1)`, `g(0)` for the three concurrent assignments of
+`t34_gen_elems___`, which holds `0001`, `0011`, `0111` at 50 ns.
+
+*Found by* `t34_pmap_slice__` against `t9_port_slice2__`, and
+`t34_two_prc_adj_` against `t32_rec_two_adj_`.
+*Confirmed by* `t34_pmap_field__`, `t34_port_fld_out`,
+`t34_two_prc_rev_` and `t34_gen_elems___`.
 
 
 ## Which objects get records
@@ -571,7 +600,7 @@ adjacency from merging by delta, and `t32_rec_wthenf__` against
 | parameter of a SystemVerilog package | none |
 | a `signal` parameter of a procedure | the change twice, on the signal's handle |
 | signal of a null range | none, marked not logged |
-| `std_logic` signal with two drivers | the initial value once per driver at time 0, then one per change |
+| `std_logic` signal with two or more drivers | one at time 0, then one per transaction, changed or not |
 | signal read through an external name | its change twice at the same time |
 | the implicit signal of `'delayed`, `'stable`, `'quiet` or `'transaction` | none: there is no object |
 
@@ -637,10 +666,12 @@ The tier 9 slice cases bind a port to part of a signal:
 | `t9_port_slice` | `std_ulogic_vector(1 downto 0)` | `a => x(0)` | `std_ulogic` | 1 |
 | `t9_port_slice2` | `std_ulogic_vector(3 downto 0)` | `a => x(2 downto 1)` | `std_ulogic_vector(1 downto 0)` | 1 |
 | `t9_port_sliceto` | `std_ulogic_vector(0 to 1)` | `a => x(0)` | `std_ulogic` | 0 |
+| `t34_pmap_field__` | record of three `std_ulogic` | `a => r.b` | `std_ulogic` | 1 |
 
 The port carries the signal's handle and, in the instance record word
 at `+20`, the byte offset of its first element from the signal's left
-element, see [hierarchy.md](hierarchy.md).
+element, or of the field it is bound to, see
+[hierarchy.md](hierarchy.md).
 The offset counts bytes from the left, not index values: `x(0)` of
 `1 downto 0` is byte 1, and `x(0)` of `0 to 1` is byte 0.
 The port's value is the signal's record bytes `[offset, offset +
@@ -648,7 +679,8 @@ size)`, and the reader reads it out of the signal's records.
 
 *Found by* `t9_port_slice` against `t8_port_in`: the port's value came
 back as the whole vector until the word at `+20` was read.
-*Confirmed by* `t9_port_slice2` and `t9_port_sliceto`.
+*Confirmed by* `t9_port_slice2` and `t9_port_sliceto`, and by
+`t34_pmap_field__` for a record field.
 
 A package constant and a package signal are objects without records.
 `t9_port_rec` declares `constant zero : pair_t` in a package, and the
@@ -663,15 +695,31 @@ Whether a wider `log_wave` records it is not tested.
 *Found by* `t9_port_rec` and `t9_pkg_sig` against `t2_record`, which
 uses a package type but declares no package object.
 
-A resolved signal writes its initial value once per driver.
+A resolved signal with more than one driver records every
+transaction, changed or not.
 `t24_two_drivers` has `signal r : std_logic := 'Z'` driven by two
 processes, `p` writing `'1'` at 50 ns and `q` writing `'Z'` at time 0
 and `'0'` at 70 ns, and `r` holds four records: `Z` twice at time 0,
 `1` at 50 ns and `X` at 70 ns, the resolved value, where `s` with
 one driver in the same file holds its initial value once.
-So the count at time 0 is the driver count, as the Verilog net rule
-below counts objects, and the value is the resolved one, not each
-driver's.
+The second `Z` is `q`'s assignment at time 0, not the second driver:
+`t34_res_two_drv0` drives `r` from two processes with no assignment at
+time 0 and holds `Z` once, and `t34_res_3drv____` with three drivers,
+one of them assigning `'Z'` at time 0, holds `Z` twice, and then `X`
+at 70 ns and `X` again at 80 ns, when the third driver assigns `'Z'`
+and the resolved value stays `X`.
+A single driver's assignment of the value already held is not
+recorded, on a resolved type as on an unresolved one:
+`t34_res_txn_zero` assigns `'Z'` to `r` at time 0 from its one
+driver and holds `Z` once, as `t8_same` does.
+The same holds for a field: `t34_res_same_fld` drives `r.b` of a
+record of `std_logic` from two processes, one assigning `'Z'` at time
+0, and holds the whole record once and then a 1 byte `Z` at `+1`,
+where `t34_res_two_fld_`, with the two processes on different fields,
+holds the whole record once.
+So the count of a resolved signal's records at a time is its
+transactions when it has several drivers, and its changes when it has
+one.
 `t24_ext_name` reads `tb.dut.s` from `tb` through an external name,
 `a <= << signal .tb.dut.s : std_ulogic >>;`, and `tb.dut.s` holds
 its change at 10 ns twice, `03` and `03`, where `t24_config_spec`
@@ -683,6 +731,11 @@ The `records` field of `truth.json` pins these counts.
 
 *Found by* `t24_two_drivers`, `r` against `s` in one file, and
 `t24_ext_name` against `t24_config_spec`.
+The driver count reading of `t24_two_drivers` stood until
+`t34_res_two_drv0` against `t24_two_drivers` removed the time 0
+assignment and the second record with it.
+*Confirmed by* `t34_res_3drv____`, `t34_res_txn_zero`,
+`t34_res_same_fld` and `t34_res_two_fld_`.
 
 The initial value at time 0 is the declared default or the type's
 leftmost literal.
