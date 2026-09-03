@@ -1,0 +1,27 @@
+{
+  "case": "t41_arr_subtype_",
+  "axis": "type. subtype byte_t is vec_t(3 downto -4), the signal declared with the subtype.",
+  "differs_from": "t41_neg_vec_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "byte_t",
+      "range": "3 downto -4"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "00011000"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "case": "t41_sfixed______",
+  "axis": "type. The IEEE fixed point package: a signed fixed point vector with a negative right bound.",
+  "differs_from": "t41_neg_vec_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "sfixed",
+      "range": "3 downto -4"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00011000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "11011100"
+    }
+  ]
+}

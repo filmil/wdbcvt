@@ -1,0 +1,27 @@
+{
+  "case": "t41_neg_vec_____",
+  "axis": "index range. array (integer range <>) constrained with a right bound below zero.",
+  "differs_from": "t41_uvec________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "vec_t",
+      "range": "3 downto -4"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "00011000"
+    }
+  ]
+}

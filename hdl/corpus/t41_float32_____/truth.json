@@ -1,0 +1,27 @@
+{
+  "case": "t41_float32_____",
+  "axis": "type. The IEEE floating point package: float32 is float(8 downto -23).",
+  "differs_from": "t41_sfixed______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "float32",
+      "range": "8 downto -23"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00111111110000000000000000000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "11000000000100000000000000000000"
+    }
+  ]
+}

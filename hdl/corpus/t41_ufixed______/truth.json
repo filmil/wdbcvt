@@ -1,0 +1,27 @@
+{
+  "case": "t41_ufixed______",
+  "axis": "type. The unsigned fixed point vector, against sfixed.",
+  "differs_from": "t41_sfixed______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "ufixed",
+      "range": "3 downto -4"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00011000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "10101100"
+    }
+  ]
+}

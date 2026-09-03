@@ -1,0 +1,26 @@
+{
+  "case": "t41_neg_int_sub_",
+  "axis": "integer bounds. A subtype whose lower bound is below zero, against 0 to 7.",
+  "differs_from": "t21_int_sub_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "small_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "-3"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "7"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "case": "t41_neg_arr_type",
+  "axis": "index range. The range below zero in the type declaration, not the signal.",
+  "differs_from": "t5_int_arr______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "int_array_t",
+      "elements": 4,
+      "element_width": 32,
+      "element_type": "integer"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": [
+        "1",
+        "-2",
+        "300",
+        "-40000"
+      ]
+    }
+  ]
+}

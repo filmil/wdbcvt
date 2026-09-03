@@ -1,0 +1,27 @@
+{
+  "case": "t41_neg_asc_____",
+  "axis": "index range. An ascending range from below zero.",
+  "differs_from": "t41_neg_vec_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "vec_t",
+      "range": "-4 to 3"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "00011000"
+    }
+  ]
+}
