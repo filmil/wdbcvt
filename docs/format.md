@@ -71,6 +71,7 @@ See [provenance.md](provenance.md) for what guards these claims.
 | `0x18` | 17 | ASCII `Xilinx Simulator`, NUL terminated | Same hex dump. |
 | `0x30` | 8 | `uint64` little endian, value `0x40` | Constant across all ten databases. |
 | `0x38` | 4 | `uint32` little endian, Unix epoch seconds, the time the database was written | Decoded `1788417066` as `2026-09-03 08:31:06 CEST`, equal to the file's own mtime to the second. Differs between two runs of one design, which is how it was found. |
+| `0xe0` | 4 | `uint32` little endian, the simulation end time in **picoseconds** | Checked against all ten cases with a known end time, from 20 ns to 1010 ns. Ten of ten exact. `dd if=sim.wdb bs=1 skip=224 count=4 \| od -An -tu4`. |
 | `0x158` | 26 | ASCII `Xilinx ISim TYPE FILE 001`, NUL terminated | A nested section with its own magic. |
 
 Whole file properties, also measured:
@@ -170,6 +171,51 @@ where the other predefined scalar types cost about +400. `character` is
 an enumeration of 256 literals. The extra 1059 bytes over the others,
 spread across 254 extra literals, is about 4 bytes each, which matches
 the 4 byte spacing measured in the `std_ulogic` literal table.
+
+
+## Values over time
+
+A value change costs about 14 to 15 bytes, and the cost does not grow
+with the time value.
+
+| Case | Transitions | Bytes | Per extra transition |
+| :--- | ---: | ---: | ---: |
+| `t3_tr1` | 1 | 3678 | |
+| `t3_tr2` | 2 | 3693 | 15 |
+| `t3_tr4` | 4 | 3723 | 15 |
+| `t3_tr8` | 8 | 3782 | 14.75 |
+| `t3_tr16` | 16 | 3893 | 13.87 |
+
+**Time is fixed width, not variable length.** `t3_late` moves the single
+transition from 10 ns to 1000 ns and the file size does not change at
+all. A variable length integer would have grown. So would a decimal
+text encoding.
+
+**A value is an index, not a symbol.** `t3_valz` changes the logged
+value from `'1'` to `'Z'` and the file size does not change either.
+Together with the type table holding the nine `std_ulogic` literals in
+order, that says a logged value is a small fixed width index into the
+type's literal list.
+
+Those two cases are the same size as the baseline and differ from it in
+exactly one thing each, so a masked diff points straight at the fields.
+Both land in the same place:
+
+| Region | What the diff shows |
+| :--- | :--- |
+| `0xe0` | the end time, confirmed separately and now in the findings table |
+| `0x414` | the case directory name inside the embedded source path |
+| `0xdff` to about `0xe60` | the value change data itself |
+
+The value change region is **high entropy and does not read as plain
+records**. Changing one logged value rewrites about 37 bytes of it, far
+more than the 14 to 15 bytes a transition costs. Interleaved with that
+is a repeating ramp, `01 02 04 08 10 20 40 80 00` over and over, whose
+phase shifts by one position between two files that differ by one value.
+
+So the value change block is packed or compressed rather than a simple
+array of structures. That is the next thing to work out, and it is
+recorded in the open questions rather than guessed at here.
 
 
 ## VCD cannot hold what the database holds
@@ -366,7 +412,12 @@ several pairs and take the union before trusting it.
 2. Is the payload compressed, and with what?
    Check the entropy profile first, then look for `zlib` and `zstd`
    frame headers at the block boundaries the entropy profile suggests.
-3. How are array elements represented in the type table, once with a
+3. How is the value change block at `0xdff` onward packed? One logged
+   value changes about 37 bytes of it, and it contains a repeating
+   `01 02 04 08 10 20 40 80 00` ramp whose phase shifts between files.
+4. Where is a value change bound to its signal, and where is its
+   timestamp?
+5. How are array elements represented in the type table, once with a
    count or once each?
 4. Are the values of a record's fields stored as one blob per record or
    one per field?
