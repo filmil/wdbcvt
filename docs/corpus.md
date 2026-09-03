@@ -1758,6 +1758,39 @@ Three process variable cases without initialisers check that the tier
 | `t56_sub_rec_4int` | a record local of four integers | `t56_sub_rec_3int` |
 | `t56_sub_rec_2rl_` | a record local of two reals | `t56_sub_rec_2int` |
 
+**Tier 57: what `log_wave` can name.**
+VHDL, under `-debug typical` unless noted.
+One design holds a scalar, a vector, a record, a constant and a shared
+variable in the top, a `for generate` with a signal, and a process with
+a variable and a `for` loop, and every case runs it under a script that
+names one object or scope with `log_wave`, and nothing else.
+The truth marks everything the script did not reach `logged: false`.
+Two observations of xsim shaped the scripts: `log_vcd {/tb/v[3]}`
+writes the whole vector to the VCD while `log_wave {/tb/v[3]}` logs
+nothing, so `t57_log_bit_____` writes no VCD at all, and a Tcl brace
+list cannot end in the closing backslash of `\g(1)\`, so
+`t57_log_gen_it__` quotes the path with doubled backslashes instead.
+
+| Case | `log_wave` | Differs from |
+| :--- | :--- | :--- |
+| `t57_log_all_____` | `-recursive *` | `t7_gen_for______` |
+| `t57_log_none____` | none | `t57_log_all_____` |
+| `t57_log_var_____` | `/tb/p/w`, a process variable | `t57_log_all_____` |
+| `t57_log_var_all_` | the same under `-debug all` | `t57_log_all_____` |
+| `t57_log_shv_____` | `/tb/sv`, a shared variable | `t57_log_all_____` |
+| `t57_log_con_____` | `/tb/c`, a constant | `t57_log_all_____` |
+| `t57_log_loop____` | `/tb/p/k`, a loop index | `t57_log_all_____` |
+| `t57_log_slice___` | `{/tb/v[2:1]}`, a slice | `t57_log_all_____` |
+| `t57_log_bit_____` | `{/tb/v[3]}`, one bit | `t57_log_all_____` |
+| `t57_log_rec_fld_` | `/tb/r.n`, a record field | `t57_log_all_____` |
+| `t57_log_rec_____` | `/tb/r`, the record | `t57_log_all_____` |
+| `t57_log_gen_sig_` | `{/tb/\g(1)\/gs}`, a signal of one iteration | `t57_log_all_____` |
+| `t57_log_gen_idx_` | `{/tb/\g(1)\/i}`, the index of one iteration | `t57_log_all_____` |
+| `t57_log_gen_it__` | `"/tb/\\g(1)\\"`, one iteration | `t57_log_all_____` |
+| `t57_log_gen_____` | `/tb/g`, the generate statement | `t57_log_all_____` |
+| `t57_log_proc____` | `/tb/p`, the process | `t57_log_all_____` |
+| `t57_log_top_____` | `/tb`, the top without `-recursive` | `t57_log_all_____` |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1795,7 +1828,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 880 cases through tier 56, and
+5. The reader now reproduces all 897 cases through tier 57, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

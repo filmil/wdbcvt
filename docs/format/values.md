@@ -843,6 +843,49 @@ A child scope logged late, `t45_log_dut_late`, starts its records at
 *Confirmed by* `t45_log_twice`, `t45_run_steps`, `t45_log_one`,
 `t45_log_dut` and `t45_log_dut_late`, each against `truth.json`.
 
+**What the script can name.**
+Tier 57 runs one design, a scalar, a vector, a record, a constant and
+a shared variable in the top, a `for generate` with a signal, and a
+process with a variable and a `for` loop, under a script that names
+one thing with `log_wave` and nothing else.
+`get_objects -r /tb/*` lists every object, the variables included,
+but `log_wave` accepts only some of them:
+
+| `log_wave` | Logged | Case |
+| :--- | :--- | :--- |
+| `-recursive *` | everything but the two variables | `t57_log_all_____` |
+| nothing | nothing | `t57_log_none____` |
+| `/tb/p/w`, a process variable | nothing, "No matching HDL object" | `t57_log_var_____`, `t57_log_var_all_` |
+| `/tb/sv`, a shared variable | nothing, the same warning | `t57_log_shv_____` |
+| `/tb/c`, a constant | `c`, one record at 0 | `t57_log_con_____` |
+| `/tb/p/k`, a loop index | `k`, one record at 0 | `t57_log_loop____` |
+| `/tb/v[2:1]`, a slice | the whole of `v` | `t57_log_slice___` |
+| `/tb/v[3]`, one bit | nothing, the warning | `t57_log_bit_____` |
+| `/tb/r.n`, a record field | nothing, the warning | `t57_log_rec_fld_` |
+| `/tb/r`, the record | `r` | `t57_log_rec_____` |
+| `/tb/\g(1)\/gs`, a signal of one iteration | that signal | `t57_log_gen_sig_` |
+| `/tb/\g(1)\/i`, the index of one iteration | that index | `t57_log_gen_idx_` |
+| `/tb/\g(1)\`, one iteration | its signal and its index | `t57_log_gen_it__` |
+| `/tb/g`, the generate statement | nothing, "No object found for the given pattern" | `t57_log_gen_____` |
+| `/tb/p`, the process | `k` | `t57_log_proc____` |
+| `/tb`, the top without `-recursive` | `s`, `v`, `r` and `c` | `t57_log_top_____` |
+
+So a variable is never logged, under `-debug all` as under `typical`,
+though the simulator reads it: `get_value /tb/p/v` answers.
+A constant and a loop index are logged when named, as they are under
+`-recursive *`, and an element or a slice of a signal is not a thing
+the database logs: a slice names the whole signal and an element or a
+field names nothing.
+Naming a scope logs the data objects directly in it, without its
+variables, and the scope of a generate statement holds none, its
+iterations do.
+Each case declares the same eleven objects on the same handles, with
+handle space `0x18dc` throughout, and marks the unnamed ones not
+logged; only the logged ranges, the arena table and the pages differ.
+*Found by* `t57_log_var_____` against `t57_log_con_____`, and
+`t57_log_slice___` against `t57_log_bit_____`.
+*Confirmed by* the rest of tier 57, each against `truth.json`.
+
 
 ## Verilog values
 
