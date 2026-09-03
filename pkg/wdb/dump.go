@@ -132,7 +132,7 @@ func (f *File) Dump(w io.Writer) error {
 		if f.verilog(dc.Type) {
 			unit = "bits"
 		}
-		p("  [%d] %s %s : [%d] %s, %d %s, file %d line %d", i, dc.Kind, dc.Name, dc.Type, f.Types[dc.Type].Name, dc.Size, unit, dc.File, dc.Line)
+		p("  [%d] %s %s : [%d] %s, %d %s, file %d line %d, class %d", i, dc.Kind, dc.Name, dc.Type, f.Types[dc.Type].Name, dc.Size, unit, dc.File, dc.Line, f.ValueClass(dc))
 		if dc.Mode != PortNone {
 			p(" port %s", dc.Mode)
 		}

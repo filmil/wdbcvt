@@ -3,10 +3,8 @@
 package wdb
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -88,12 +86,6 @@ type truthGeneric struct {
 	// Logged is false for a parameter that has no record at all: the
 	// package parameter of t13_sv_pkg.
 	Logged *bool `json:"logged"`
-	// Stored names how the record holds a value the declared type
-	// does not spell. The one value seen is "float64": an untyped
-	// parameter with a time literal, t28_sv_prm_time, declares a 64
-	// bit vector and holds the float64 of Value in the first eight
-	// bytes of its record.
-	Stored string `json:"stored"`
 }
 
 // truthVariable is a process variable: Kind is "variable" for a declared
@@ -576,18 +568,6 @@ func TestCorpus(t *testing.T) {
 				}
 				if len(ch) != 1 || ch[0].Time != 0 {
 					t.Errorf("%s: %d changes, want one at time zero", path, len(ch))
-					continue
-				}
-				if g.Stored == "float64" {
-					want, err := strconv.ParseFloat(value, 64)
-					if err != nil {
-						t.Fatal(err)
-					}
-					if len(ch[0].Data) < 8 {
-						t.Errorf("%s: %d byte record, want a float64", path, len(ch[0].Data))
-					} else if got := math.Float64frombits(binary.LittleEndian.Uint64(ch[0].Data)); got != want {
-						t.Errorf("%s = %g as a float64, truth says %g", path, got, want)
-					}
 					continue
 				}
 				v, err := f.Decode(dc, ch[0].Data)

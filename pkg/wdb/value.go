@@ -133,6 +133,13 @@ func (f *File) Size(dc Decl) (int, error) {
 // declaration's type and index constraints.
 func (f *File) Decode(dc Decl, data []byte) (Value, error) {
 	rs := dc.Ranges
+	if f.timeParam(dc) {
+		// The float64 of the time in the file's unit; see timeParam.
+		if len(data) < 8 {
+			return Value{Type: dc.Type}, fmt.Errorf("%s: need 8 bytes, have %d", dc.Name, len(data))
+		}
+		return Value{Type: dc.Type, Scalar: strconv.FormatFloat(math.Float64frombits(binary.LittleEndian.Uint64(data)), 'g', -1, 64)}, nil
+	}
 	if f.verilog(dc.Type) {
 		v, err := f.decodeVerilog(dc.Type, data, &rs)
 		if err != nil {

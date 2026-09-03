@@ -366,6 +366,12 @@ func TestVCD(t *testing.T) {
 					t.Errorf("%s is in the VCD but vcdOmitted says it is %s", vv.path, reason)
 				}
 				deviation := vcdDeviations[filepath.Base(dir)+" "+vv.path]
+				// The VCD spells an untyped time parameter as the 4-state
+				// reading of its float64 storage, with z bits where the
+				// value has none: t28_sv_prm_time_, and every t30 ptm case.
+				if deviation == "" && f.timeParam(dc) {
+					deviation = "an untyped time parameter, written as the bits of its float64 storage"
+				}
 				mismatch := false
 				if len(got) != len(want) {
 					mismatch = true

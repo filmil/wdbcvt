@@ -32,8 +32,7 @@
       "type": "",
       "declared": "parameter, a realtime",
       "value": "10",
-      "width": 64,
-      "stored": "float64"
+      "width": 64
     }
   ]
 }

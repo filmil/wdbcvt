@@ -128,10 +128,37 @@ func (f *File) bitsOf(t int, rs *[]Range) (int, error) {
 	return 0, fmt.Errorf("type %q has kind %s", ty.Name, ty.Kind)
 }
 
+// ValueClass is the value class code of the declaration's objects:
+// the first word of the Debug.Classes entry Decl.Class indexes, or 0
+// for a file without objects. What the codes stand for is open; see
+// docs/format/hierarchy.md.
+func (f *File) ValueClass(dc Decl) uint32 {
+	if dc.Class < len(f.Debug.Classes) {
+		return f.Debug.Classes[dc.Class][0]
+	}
+	return 0
+}
+
+// timeParam reports whether the declaration is an untyped parameter
+// holding a time literal: parameter T = 10ns. Its declaration is an
+// unnamed 64 bit vector of value class 4, where every other unnamed
+// vector parameter is class 1 or 3, and its storage is the float64 of
+// the value in the time unit, 8 bytes, with the record written 16
+// bytes long as a 64 bit vector's would be: the second 8 bytes are
+// whatever follows, the next parameter's value in t30_sv_ptm_two.
+// Tier 28, t28_sv_prm_time against t28_sv_prm_tmtyp; tier 30.
+func (f *File) timeParam(dc Decl) bool {
+	return dc.Kind == DeclParam && f.verilog(dc.Type) && f.Types[dc.Type].Name == "" && dc.Size == 64 && f.ValueClass(dc) == 4
+}
+
 // recordBytes is the number of bytes the value of the declaration takes
-// in a page record: its byte size for a VHDL object, and 8 bytes per
-// 32 bits of its declared size for a Verilog one.
+// in a page record: its byte size for a VHDL object, 8 bytes per
+// 32 bits of its declared size for a Verilog one, and 8 for the
+// float64 of an untyped time parameter.
 func (f *File) recordBytes(dc Decl) (int, error) {
+	if f.timeParam(dc) {
+		return 8, nil
+	}
 	n, err := f.Size(dc)
 	if err != nil {
 		return 0, err
@@ -192,6 +219,10 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 	}
 	var recs []rec
 	first, last := int(start/arenaSpan), int((end-1)/arenaSpan)
+	// The 16 byte record of an untyped time parameter runs into the
+	// next object, so only the record at its own address is its own,
+	// and only the first 8 bytes of it: t30_sv_ptm_two.
+	timeParam := f.timeParam(f.Decls[o.Decl])
 	for k := first; k <= last; k++ {
 		if f.Arenas[k].Offset == 0 {
 			return nil, fmt.Errorf("object handle %#x with %d bytes spans arena %d, which was never written", o.Handle, size, k)
@@ -200,6 +231,13 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 			for _, r := range pg.Records {
 				addr := uint64(k)*arenaSpan + uint64(r.Key)
 				if addr >= end || addr+uint64(len(r.Data)) <= start {
+					continue
+				}
+				if timeParam {
+					if addr != start || len(r.Data) < 8 {
+						continue
+					}
+					recs = append(recs, rec{r.Time, addr, r.Data[:8], k, 0})
 					continue
 				}
 				piece := -1

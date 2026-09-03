@@ -276,6 +276,13 @@ type Decl struct {
 	// Ranges are the object's index constraints from the range table.
 	Ranges []Range
 	Kind   DeclKind
+	// Class indexes Debug.Classes: the entry holding the value class of
+	// the declaration's objects. Word 1 of the record; tier 31,
+	// t31_sv_w1_swap against t31_sv_w1_i5, where swapping two
+	// declarations swapped the word, and t12_v_params, whose six
+	// declarations index the three entries [0 0 0] [3 0 0] [1 0 0] as
+	// 0, 1, 2, 1, 0, 1.
+	Class int
 	// Mode is the port mode; PortNone for a signal that is not a port.
 	// A port connected to a parent signal shares that signal's handle,
 	// so the two objects read the same records: t8_port_in.
@@ -552,16 +559,22 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 			return fmt.Errorf("declaration %d: %w", i, err)
 		}
 		dc := Decl{
-			Name: name,
-			File: int(r[2]),
-			Line: int(r[3]),
-			Size: int(r[4]),
-			Type: int(r[5]),
-			Kind: DeclKind(r[8]),
-			Mode: PortMode(r[9]),
+			Name:  name,
+			File:  int(r[2]),
+			Line:  int(r[3]),
+			Size:  int(r[4]),
+			Type:  int(r[5]),
+			Kind:  DeclKind(r[8]),
+			Mode:  PortMode(r[9]),
+			Class: int(r[1]),
 		}
 		if dc.Type < 0 || dc.Type >= len(f.Types) {
 			return fmt.Errorf("declaration %q has type index %d of %d", name, dc.Type, len(f.Types))
+		}
+		// A file without objects has no entries, and its declarations
+		// hold 0: t0_nosig.
+		if dc.Class < 0 || dc.Class >= len(f.Debug.Classes) && !(dc.Class == 0 && len(f.Debug.Classes) == 0) {
+			return fmt.Errorf("declaration %q has value class index %d of %d", name, dc.Class, len(f.Debug.Classes))
 		}
 		nr, first := int(r[6]), int(r[7])
 		if nr > 0 {
