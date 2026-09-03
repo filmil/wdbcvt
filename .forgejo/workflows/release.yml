@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Publishes a rolling `nightly` release holding the wdbcvt binary and a
+# reference waveform database. The .wdb is the sample every format decoding
+# experiment starts from, so it is worth having a stable download for it.
+name: Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Monthly, on the first.
+    - cron: '0 3 1 * *'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: vivado
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build the release artifacts
+        run: bazelisk build -c opt //cmd/wdbcvt //hdl/counter:sim
+
+      - name: Gather them
+        run: |
+          set -euo pipefail
+          bin="$(bazelisk info -c opt bazel-bin)"
+          rm -rf dist/release
+          mkdir -p dist/release
+          cp "${bin}/cmd/wdbcvt/wdbcvt_/wdbcvt" dist/release/wdbcvt-linux-amd64
+          cp "${bin}/hdl/counter/sim.wdb" dist/release/counter-sim.wdb
+          cp "${bin}/hdl/counter/sim.vcd" dist/release/counter-sim.vcd
+          chmod +w dist/release/*
+          ls -l dist/release
+
+      - name: Publish
+        uses: https://code.forgejo.org/actions/forgejo-release@v2.13.4
+        with:
+          direction: upload
+          url: ${{ github.server_url }}
+          repo: ${{ github.repository }}
+          tag: nightly
+          release-dir: dist/release
+          override: true
+          token: ${{ secrets.FORGEJO_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}

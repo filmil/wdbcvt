@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Runs the test suite. Same runner requirements as build.yml.
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '47 4 * * 1'
+
+jobs:
+  test:
+    runs-on: vivado
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Run the tests
+        run: bazelisk test --test_output=errors //...
+
+      - name: Check that the simulation produced a waveform database
+        run: |
+          set -euo pipefail
+          bazelisk build //hdl/counter:sim
+          wdb="$(bazelisk info bazel-bin)/hdl/counter/sim.wdb"
+          test -s "${wdb}" || { echo "missing or empty: ${wdb}"; exit 1; }
+          ls -l "${wdb}"

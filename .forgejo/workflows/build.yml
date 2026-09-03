@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Builds everything, including the Vivado simulation. It needs the `vivado`
+# runner: that host holds the AMD installer archive and the shared Vivado
+# install cache that MODULE.bazel points at.
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    # Once a week, so a build that only rots on the shelf still gets caught.
+    - cron: '17 4 * * 1'
+
+jobs:
+  build:
+    runs-on: vivado
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Show the toolchain
+        run: |
+          set -euo pipefail
+          bazelisk --version
+          cat .bazelversion
+
+      - name: Build everything
+        run: bazelisk build //...

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "srcs",
+    # Compilation order matters to xvhdl; do not sort.
+    # do not sort
+    srcs = [
+        "counter.pkg.vhdl",
+        "counter.ent.vhdl",
+        "tb.ent.vhdl",
+    ],
+    tags = [
+        "vhdl_ls",
+        "vhdl_ls_lib_counter",
+    ],
+)
+
+vivado_library(
+    name = "lib",
+    srcs = [":srcs"],
+    library_name = "counter",
+)
+
+# bazel build //hdl/counter:sim
+#
+# Elaborates and runs the testbench under xsim and writes the waveform
+# database to bazel-bin/hdl/counter/sim.wdb, next to sim.vcd. That .wdb
+# file is the input the //cmd/wdbcvt decoder work starts from.
+vivado_simulation(
+    name = "sim",
+    library = ":lib",
+    top = "tb",
+)

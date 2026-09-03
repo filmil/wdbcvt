@@ -1,0 +1,19 @@
+# My registry first, then the BCR. rules_vivado, rules_bid, gotopt2 and
+# fshlib live only in my registry; everything else comes from the BCR.
+common --registry=https://raw.githubusercontent.com/filmil/bazel-registry/main
+common --registry=https://bcr.bazel.build
+
+# Run Vivado from a Bazel-managed installation instead of the Docker
+# container. The installation itself is configured by the `vivado.install`
+# tag in MODULE.bazel, and it is placed in the shared install cache named
+# there, so it is provisioned once per machine and never per workspace.
+build --@rules_vivado//:vivado_mode=hermetic
+
+# Shared content-addressed caches on the hdlfactory hosts and on the
+# `vivado` runner: --disk_cache=/data/cache/bazel/disk and
+# --repository_cache=/data/cache/bazel/repo. The file is absent on other
+# machines, where try-import makes this a no-op.
+try-import /data/cache/ci.bazelrc
+
+# Add your local settings to user.bazelrc. It is not checked in.
+try-import %workspace%/user.bazelrc

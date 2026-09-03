@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@buildifier_prebuilt//:rules.bzl", "buildifier")
+load("@gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary")
+
+# bazel run //:gazelle
+# gazelle:prefix git.hdlfactory.com/HDL/wdbcvt
+gazelle(
+    name = "gazelle",
+    gazelle = ":gazelle_bin",
+)
+
+gazelle_binary(
+    name = "gazelle_bin",
+    languages = DEFAULT_LANGUAGES + [
+        "@bazel_skylib_gazelle_plugin//bzl",
+    ],
+)
+
+# bazel run //:buildifier
+buildifier(
+    name = "buildifier",
+)
