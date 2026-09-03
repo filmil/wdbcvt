@@ -35,5 +35,5 @@ Only 2025.2 has been observed.
 A second version is a new experiment, not a confirmation.
 
 As `format.md` grows past what one document holds comfortably, split it
-into `doc/format/` with one file per area of the container, and leave
+into `docs/format/` with one file per area of the container, and leave
 `format.md` as the index and the findings table.

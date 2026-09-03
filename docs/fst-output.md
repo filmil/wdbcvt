@@ -23,7 +23,7 @@ That is what makes seeking cheap, and it is the property VCD lacks.
 GTKWave reads it, and so do Verilator, CVC, GHDL, nvc and Surfer.
 
 There is no standard.
-The nearest thing to a specification is `doc/block_format.txt` in the
+The nearest thing to a specification is `docs/block_format.txt` in the
 libfst sources, plus an unofficial write-up by Tim Hutt.
 
 

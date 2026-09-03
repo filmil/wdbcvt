@@ -28,7 +28,7 @@
 # Usage:
 #     tools/noise_mask.sh //hdl/corpus/t1_bit_one_edge:sim [outdir]
 #
-# See doc/corpus.md.
+# See docs/corpus.md.
 
 set -euo pipefail
 
@@ -67,7 +67,7 @@ echo >&2
 if cmp -s "${outdir}/run1.wdb" "${outdir}/run2.wdb"; then
     echo "The two runs are byte for byte identical."
     echo "The database is deterministic for this design, so no mask is needed."
-    echo "That is a strong property. Record it in doc/format.md."
+    echo "That is a strong property. Record it in docs/format.md."
     exit 0
 fi
 

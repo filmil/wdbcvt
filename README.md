@@ -11,7 +11,7 @@ Tools for reading the Vivado `xsim` waveform database (`.wdb`).
 AMD does not document that format.
 This repository builds a known-good sample of one, and the tooling used to
 take it apart.
-See [doc/format.md](doc/format.md) for what has been measured so
+See [docs/format.md](docs/format.md) for what has been measured so
 far and how the work proceeds.
 
 
@@ -39,7 +39,7 @@ references whose content is known before a `.wdb` is opened:
 * GHDL and nvc, simulators that share no code with Vivado,
 * `libfst`, the reference implementation, for checking FST output.
 
-Read [doc/provenance.md](doc/provenance.md) before relying on
+Read [docs/provenance.md](docs/provenance.md) before relying on
 `dewdb` for anything. It states what the guards do and do not cover, and
 where the tool should not be used.
 
@@ -54,11 +54,11 @@ where the tool should not be used.
   converter as the format becomes known.
   The first output format is VCD, written through
   `github.com/filmil/go-vcd-parser`.
-  FST comes later; [doc/fst-output.md](doc/fst-output.md) records how.
+  FST comes later; [docs/fst-output.md](docs/fst-output.md) records how.
 * `pkg/wdb/` holds the library the tool is built on.
-* `doc/` holds everything known about the format, written down as it is
-  discovered. [doc/README.md](doc/README.md) is the index;
-  [doc/format.md](doc/format.md) is the findings table.
+* `docs/` holds everything known about the format, written down as it is
+  discovered. [docs/README.md](docs/README.md) is the index;
+  [docs/format.md](docs/format.md) is the findings table.
 
 
 ## Building

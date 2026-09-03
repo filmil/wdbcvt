@@ -13,7 +13,7 @@ import (
 // of the same simulation: a timestamp, a host name, a path, a build id.
 // Those offsets differ for reasons unrelated to the design, and comparing
 // two different designs without excluding them produces confident and
-// wrong conclusions. See doc/corpus.md.
+// wrong conclusions. See docs/corpus.md.
 type Mask struct {
 	off map[int64]bool
 }
