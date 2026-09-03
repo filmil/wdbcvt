@@ -1555,6 +1555,33 @@ The reader now rejects a file whose counts do not fit, and a unit test
 raises word 0 of a corpus database by one to see the rejection.
 The [hierarchy](format/hierarchy.md) file has the table.
 
+**Tier 50: storage classes by class and mode, and declaration order.**
+VHDL.
+The tier holds the storage class against the class and the mode of a
+subprogram object, looking for the unseen 5, and measures the frame
+offsets around a signal parameter and an absent parameter.
+Three cases then move a constant above a signal, a constant above a
+process variable, and put two signals out of name order, to fix what
+orders the declarations of a unit.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t50_sub_var_vec_` | `t49_sub_var_prm_` | an `inout` `variable` vector parameter | 4 |
+| `t50_sub_var_rec_` | `t50_sub_var_vec_` | an `inout` `variable` record parameter | 4 |
+| `t50_sub_in_var__` | `t49_sub_var_prm_` | an `in` `variable` scalar parameter beside a signal parameter | 3; the signal parameter on `0xd8`, listed first |
+| `t50_sub_acc_loc_` | `t23_sub_sig_prm_` | an access type local | 3, on `0x110` after the signal parameter |
+| `t50_sub_str_loc_` | `t49_sub_int_arr_` | a `string(1 to 4)` local | 4, on `0x110` |
+| `t50_sub_sig_rec_` | `t49_sub_sig_vec_` | a record signal parameter | 6 |
+| `t50_sub_ivec_prm` | `t49_sub_str_prm_` | an unconstrained `integer_vector` parameter | absent; 24 bytes of frame |
+| `t50_sub_func_prm` | `t49_sub_vec_prm_` | a vector parameter of a function | 4 on `0x40`; the scalar local on `0x58` |
+| `t50_ord_const1st` | `t5_tr1000_______` | a constant declared above the signal | the signal listed first |
+| `t50_ord_proc_con` | `t6_var_int______` | a constant above a variable in a process | source order; the constant has a record at 0 |
+| `t50_ord_two_sig_` | `t5_tr1000_______` | signals `z`, `a`, `s` | source order, and the handles follow it |
+
+5 was not seen.
+Signals first, then the data objects, each in source order, is the
+rule, and a subprogram's signal parameters count as signals.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1592,7 +1619,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 758 cases through tier 49, and
+5. The reader now reproduces all 769 cases through tier 50, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

@@ -211,6 +211,30 @@ The declarations of a unit are the next `count` records after the
 previous unit's, in unit order.
 `t6_proc2` has `a`, `b` for `tb`, then `v` for `p`, then `w` for `q`.
 
+Within a unit the signals come first, in source order, and then the
+generics, constants and variables, in source order.
+`t50_ord_const1st` declares `constant i` above `signal s` in the
+architecture and the file lists `s` before `i`, where `t5_tr1000`
+with the constant below the signal lists the same order.
+`t50_ord_proc_con` declares `constant c` above `variable v` in a
+process and the file lists `c` then `v`, the source order, though the
+variable kind `0x0f` is the lower number.
+`t4_gen_default__` lists the generic of the entity after the signal of
+the architecture, and `t22_dbg_sub_proc` lists three signals, then the
+generic.
+`t50_ord_two_sig_` declares `z`, `a`, `s` and lists them so, with the
+handles `0x768`, `0x828`, `0x8e8` in that order, so the signal order
+is neither by name nor by anything but the source.
+A subprogram unit follows the same rule with its signal parameters
+as the signals: `drive(constant a : ...; signal q : ...)` in
+`t49_sub_vec_prm_` and `show(variable v : ...; signal q : ...)` in
+`t50_sub_in_var__` both list `q` first, though `v` holds the lower
+frame offset.
+*Found by* `t50_ord_const1st` against `t5_tr1000_______` and
+`t50_ord_proc_con` against `t6_var_int______`.
+*Confirmed by* `t50_ord_two_sig_`, `t4_gen_default__`,
+`t22_dbg_sub_proc`, `t49_sub_vec_prm_` and `t50_sub_in_var__`.
+
 Names are shared with scopes through one pool.
 The `tb(sim)` unit in `t2_flat3` names `tb` at offset 5 and `sim` at
 offset 8, and the `tb` scope names the same offset 5.
@@ -468,9 +492,9 @@ each stands for.
 | 0 | a signal, net or Verilog variable, ports included | every case |
 | 1 | a port on a language boundary, whichever side it is on | `t21_mix_v_in_vh_`, `t21_mix_vh_in_v_`, `t49_mix_2port___`, `t49_mix_deep____` |
 | 2 | a generic, constant, parameter, process variable or loop index; the objects with no second handle | `t7_gen_for______`, `t6_proc2________`, `t49_sub_var_prm_` |
-| 3 | a subprogram parameter or variable of a scalar type, `constant` and `variable` class alike | `t23_sub_sizes___`, `t49_sub_var_prm_` |
-| 4 | a subprogram parameter or variable of an array or record type | `t23_sub_sizes___`, `t49_sub_rec_loc_`, `t49_sub_int_arr_`, `t49_sub_vec_prm_` |
-| 6 | a signal parameter of a subprogram, in or out, scalar or vector | `t23_sub_sig_prm_`, `t49_sub_sig_in__`, `t49_sub_sig_vec_` |
+| 3 | a subprogram parameter or variable of a scalar or access type, `constant` and `variable` class alike, `in` or `inout` | `t23_sub_sizes___`, `t49_sub_var_prm_`, `t50_sub_in_var__`, `t50_sub_acc_loc_` |
+| 4 | a subprogram parameter or variable of an array, string or record type, whatever its class | `t23_sub_sizes___`, `t49_sub_rec_loc_`, `t49_sub_int_arr_`, `t49_sub_vec_prm_`, `t50_sub_var_vec_`, `t50_sub_var_rec_`, `t50_sub_str_loc_`, `t50_sub_func_prm` |
+| 6 | a signal parameter of a subprogram, in or out, scalar, vector or record | `t23_sub_sig_prm_`, `t49_sub_sig_in__`, `t49_sub_sig_vec_`, `t50_sub_sig_rec_` |
 
 The boundary port holds 1 on the Verilog side and on the VHDL side:
 `t49_mix_deep____` puts a VHDL leaf under a Verilog child under a VHDL
@@ -479,7 +503,18 @@ hold 1.
 The scalar and composite locals differ by the type and not by the
 class or mode: `t49_sub_var_prm_` gives an `inout` `variable`
 parameter 3, and `t49_sub_vec_prm_` a `constant` vector parameter 4.
-5 has not been seen.
+Tier 50 holds that against the class and mode: an `inout` `variable`
+vector parameter and an `inout` `variable` record parameter are 4 in
+`t50_sub_var_vec_` and `t50_sub_var_rec_`, an `in` `variable` scalar
+parameter is 3 in `t50_sub_in_var__`, a local of an access type is 3
+in `t50_sub_acc_loc_`, a local `string(1 to 4)` is 4 in
+`t50_sub_str_loc_`, and a function's vector parameter and scalar local
+are 4 and 3 in `t50_sub_func_prm` as a procedure's are.
+A signal parameter of a record type is 6 in `t50_sub_sig_rec_`.
+So 3 is a value the frame holds in place, a scalar or a pointer, 4 a
+value the frame holds through a descriptor, and 6 a reference to a
+signal, and none of the three depends on the class or the mode.
+5 has not been seen, in the 19 subprogram cases through tier 50.
 The reader keeps the word as `Storage` and the dump prints it when it
 is not 0; `Generic` stays the test for 2.
 
@@ -488,8 +523,8 @@ is not 0; `Generic` stays the test for 2.
 reading of 4.
 *Confirmed by* `t49_sub_var_prm_`, `t49_sub_vec_prm_`,
 `t49_sub_sig_in__`, `t49_sub_sig_vec_`, `t49_mix_2port___` and
-`t49_mix_deep____`, and the `storage` field of `truth.json` on the
-tier 21, 22 and 23 cases named above.
+`t49_mix_deep____`, the eight `t50_sub_` cases, and the `storage`
+field of `truth.json` on the tier 21, 22 and 23 cases named above.
 
 A subprogram parameter of an unconstrained type is not in the file.
 `t49_sub_str_prm_` declares `constant name : in string` beside a
@@ -497,8 +532,16 @@ signal parameter, and the file holds the signal parameter's
 declaration and object and nothing for `name`: two declarations and
 two objects, the same handle space as `t23_sub_sig_prm_` with its
 scalar constant parameter.
+`t50_sub_ivec_prm` does the same with `constant v : in integer_vector`
+and holds the signal parameter alone, so the absence is about the
+unconstrained bound and not about `string`.
+The absent parameter still takes room in the frame: the signal
+parameter after it is on `0xe8` in both cases, 24 bytes past the
+procedure base `0xd0` it is on when it comes first, the size of a
+vector descriptor, see the frame section below.
 
 *Found by* `t49_sub_str_prm_` against `t23_sub_sig_prm_`.
+*Confirmed by* `t50_sub_ivec_prm`.
 
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
@@ -1154,6 +1197,21 @@ the frame where a `std_ulogic` value takes one.
 The object has both handles and no record, and the signal `s` passed
 to `q` keeps its own handle and records.
 *Found by* `t23_sub_sig_prm` against `t22_dbg_sub_proc`.
+
+The 64 bytes of a signal parameter start on a multiple of 8:
+`procedure show(variable v : in integer; signal q : out std_ulogic)`
+in `t50_sub_in_var__` puts `v` on `0xd0` and `q` on `0xd8`, and
+`t50_sub_acc_loc_` and `t50_sub_str_loc_` put a local after a signal
+parameter on `0x110`.
+A vector parameter is the 24 byte descriptor a vector local is: `a`
+of `function low(a : std_ulogic_vector(3 downto 0))` in
+`t50_sub_func_prm` is on the function base `0x40` and the scalar local
+after it on `0x58`.
+An `inout` `variable` parameter of a vector or record type is on the
+procedure base `0xd0` in `t50_sub_var_vec_` and `t50_sub_var_rec_`,
+and nothing follows it to show its size.
+*Found by* `t50_sub_in_var__` against `t23_sub_sig_prm_`, and
+`t50_sub_func_prm` against `t49_sub_vec_prm_`.
 
 A procedure declared inside a process, the shape of `t9_proc_local`,
 gets two scopes: `t23_sub_in_proc` declares `flip` in process `p` and
@@ -1846,10 +1904,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 758 of 758 cases, and the
+*Confirmed by* the region length check in 769 of 769 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 758 of 758 cases and
+and *confirmed by* the reader's range check in 769 of 769 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
