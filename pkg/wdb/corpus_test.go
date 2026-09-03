@@ -54,6 +54,11 @@ type truthSignal struct {
 	// reads it back as an unsigned number of Width bits before the
 	// comparison: t27_sv_int_uns against t11_sv_int.
 	Unsigned bool `json:"unsigned"`
+	// Count, when set, makes the entry stand for Count signals, whose
+	// Scope and Name format the index 0 to Count-1 with %d:
+	// t46_sig_1000 lists s0 to s999 as one entry. loadTruth
+	// expands it.
+	Count int `json:"count"`
 }
 
 // truthRun is a long train of transitions written as a rule rather than
@@ -73,6 +78,8 @@ type truthTransition struct {
 	TimeFS int64           `json:"time_fs"`
 	Signal string          `json:"signal"`
 	Value  json.RawMessage `json:"value"`
+	// Count expands the entry as it does a signal's, over Signal.
+	Count int `json:"count"`
 }
 
 // truthGeneric is one generic of one instance. The early cases name it
@@ -117,6 +124,9 @@ type truthVariable struct {
 	// Logged is false for a constant that gets no record at all: one
 	// declared in a package, t9_port_rec and t9_mark_gap.
 	Logged *bool `json:"logged"`
+	// Count expands the entry as it does a signal's, over Scope, Name
+	// and Value: the 70000 generate indexes of t46_gen_70000.
+	Count int `json:"count"`
 }
 
 // plainPath strips the extended identifier bars the database puts
@@ -194,7 +204,62 @@ func loadTruth(t *testing.T, dir string) truth {
 	if err := json.Unmarshal(b, &tr); err != nil {
 		t.Fatalf("%s: %v", dir, err)
 	}
+	var signals []truthSignal
+	for _, s := range tr.Signals {
+		if s.Count == 0 {
+			signals = append(signals, s)
+			continue
+		}
+		for i := 0; i < s.Count; i++ {
+			e := s
+			e.Count = 0
+			e.Scope = expandIndex(s.Scope, i)
+			e.Name = expandIndex(s.Name, i)
+			signals = append(signals, e)
+		}
+	}
+	tr.Signals = signals
+	var changes []truthTransition
+	for _, x := range tr.Transitions {
+		if x.Count == 0 {
+			changes = append(changes, x)
+			continue
+		}
+		for i := 0; i < x.Count; i++ {
+			e := x
+			e.Count = 0
+			e.Signal = expandIndex(x.Signal, i)
+			changes = append(changes, e)
+		}
+	}
+	tr.Transitions = changes
+	var vars []truthVariable
+	for _, v := range tr.Variables {
+		if v.Count == 0 {
+			vars = append(vars, v)
+			continue
+		}
+		for i := 0; i < v.Count; i++ {
+			e := v
+			e.Count = 0
+			e.Scope = expandIndex(v.Scope, i)
+			e.Name = expandIndex(v.Name, i)
+			e.Value = expandIndex(v.Value, i)
+			vars = append(vars, e)
+		}
+	}
+	tr.Variables = vars
 	return tr
+}
+
+// expandIndex formats i into s when s holds a %d, and returns s as it
+// is otherwise: the scope of a counted entry may carry the index, as
+// tb.g[%d] does, or not.
+func expandIndex(s string, i int) string {
+	if strings.Contains(s, "%d") {
+		return fmt.Sprintf(s, i)
+	}
+	return s
 }
 
 // truthValue normalises a truth.json value to the decoder's rendering:

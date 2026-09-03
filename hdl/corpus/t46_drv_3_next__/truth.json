@@ -1,0 +1,43 @@
+{
+  "case": "t46_drv_3_next__",
+  "axis": "handles. A std_logic signal with 3 drivers declared before a second signal, to read the driver cost off the second handle.",
+  "differs_from": "t46_drv_2_next__",
+  "end_time_ns": 15,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 1,
+      "type": "std_logic",
+      "records": 4
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "Z"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 5,
+      "signal": "r",
+      "value": "1"
+    }
+  ]
+}

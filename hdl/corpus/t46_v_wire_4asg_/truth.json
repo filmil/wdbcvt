@@ -1,0 +1,54 @@
+{
+  "case": "t46_v_wire_4asg_",
+  "axis": "handles. A wire with four continuous assignments declared before a reg, to read the cost of a fourth driver off the reg's handle.",
+  "differs_from": "t19_v_wire_3drv_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "w",
+      "value": "1"
+    }
+  ]
+}

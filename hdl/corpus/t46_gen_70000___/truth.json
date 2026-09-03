@@ -1,0 +1,43 @@
+{
+  "case": "t46_gen_70000___",
+  "axis": "scale. A for generate of 70000 iterations each declaring a signal, to see whether a scope count or index above 65535 is stored whole.",
+  "differs_from": "t46_sig_1000____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.g(%d)",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "count": 70000
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.g(%d).s",
+      "value": "0",
+      "count": 70000
+    },
+    {
+      "time_ns": 5,
+      "signal": "tb.g(0).s",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "tb.g(69999).s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.g(%d)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "%d",
+      "count": 70000
+    }
+  ]
+}
