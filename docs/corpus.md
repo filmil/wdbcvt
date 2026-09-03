@@ -326,7 +326,7 @@ after the first wide value came back in pieces.
 | `t9_int73` | 73 integers, the 292 bytes of `t9_vec292` | chunks split bytes, not elements |
 | `t9_tr70000` | 70000 transitions | arena records continue past 100 pages |
 
-The `t9_vec*` sizes were chosen after the first three: 200, 256 and
+The `t9_vec*` sizes were chosen after the first three: 200, 261 and
 257 stayed whole, 292 split, and the rest walk the powers of two, the
 multiples of 146 and a few odd sizes between to find the rule.
 The rule was not found; the table is the result.
@@ -500,6 +500,18 @@ holds the object to it.
 | `t16_v_wire_rdp` | an `always` process reading the wire | one more |
 | `t16_v_wire_rdi` | an input port that nothing inside reads | none more |
 
+Tier 17 asks whether a Verilog write of the value already held
+leaves a record, as tier 8 asked for VHDL, and whether a nonblocking
+write differs from a blocking one.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t17_v_reg_same` | `s = 1'b0` to a `reg` holding 0 | no record |
+| `t17_v_net_same` | a wire held at 0 by `assign w = s & 1'b0` while `s` toggles | no record |
+| `t17_v_mem_same` | `m[2] = 8'h00` to an element holding 0 | no record |
+| `t17_v_reg_nb` | `s <= 1'b1` | the same records as `s = 1'b1` |
+| `t17_v_nb_swap` | `a <= b; b <= a;` | one record each, swapped |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -557,7 +569,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 256 cases through tier 16, and
+5. The reader now reproduces all 261 cases through tier 17, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

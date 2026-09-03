@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 256 of 256 cases decoding with the entry lengths chaining
+*Confirmed by* 261 of 261 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -67,7 +67,7 @@ The class word is `2` for `BIT`, `3` for `STD_ULOGIC`, and `5` for
 It is an ordinary enumeration whose nine literals are written out as
 `'U' 'X' '0' '1' 'Z' 'W' 'L' 'H' '-'`, and a user type
 `(crimson, viridian, cobalt)` is written the same way.
-`CHARACTER` is an enumeration of 256 literals, which is why `t2_character`
+`CHARACTER` is an enumeration of 261 literals, which is why `t2_character`
 is 1461 bytes larger than the one bit baseline where the other scalar
 types cost about 400.
 

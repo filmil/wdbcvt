@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 256 cases.
+They are the same in all 261 cases.
 
 
 ## Scope records

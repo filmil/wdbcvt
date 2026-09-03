@@ -33,7 +33,7 @@ the files by eye.
 
 ## What the VCD carries
 
-All 256 cases pass, and every object of the database is either in its
+All 261 cases pass, and every object of the database is either in its
 VCD or covered by one line of this table.
 
 | Object | In the VCD |

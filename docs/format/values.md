@@ -832,6 +832,29 @@ the signal, and `TestCorpus` holds the object to it.
 `t11_v_wire`, `t12_v_port_wire` and `t13_v_hier3_net` pinned in
 their truths.
 
+**Writes of the value held.**
+A Verilog write of the value already held produces no record, as a
+VHDL one does not, see `t8_same` above.
+`t17_v_reg_same` writes `s = 1'b0` at 50 ns to a `reg s = 1'b0` and
+holds `X`, `0` and nothing at 50 ns.
+`t17_v_net_same` drives `wire w` from `assign w = s & 1'b0` and
+toggles `s` at 50 ns; `w` holds `X`, `0` and nothing at 50 ns, and
+nothing more at time 0 either, though the assignment is evaluated
+again when `s` takes its initial value.
+`t17_v_mem_same` writes `m[2] = 8'h00` at 50 ns to an element that
+holds `8'h00`, and the memory holds its five time 0 records and
+nothing at 50 ns.
+A nonblocking write records as a blocking one: `t17_v_reg_nb`, with
+`s <= 1'b1`, holds the three records of `t11_v_bit_edge`, and
+`t17_v_nb_swap`, with `a <= b; b <= a;` at 50 ns, holds one record
+per `reg` at 50 ns with the swapped values.
+
+*Found by* `t17_v_reg_same` against `t11_v_bit_edge`, two records
+where the edge case holds three.
+*Confirmed by* `t17_v_net_same` against `t11_v_wire`, and
+`t17_v_mem_same` against `t11_v_mem4`; `t17_v_reg_nb` and
+`t17_v_nb_swap` for the nonblocking form.
+
 **What is not recorded.**
 The `always #25 clk = ~clk` of `t11_v_always` is due at 100 ns, the
 `$finish` time, and that toggle is not in the pages; the last `clk`
