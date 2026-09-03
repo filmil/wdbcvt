@@ -414,11 +414,19 @@ and the marks, not the layout.
 `get_objects /sig_pkg/*` lists `/sig_pkg/g`, so the default script
 never sees the package.
 The package parameter `p.W` of `t13_sv_pkg` is an object marked not
-logged with no record under the default script, and no case has
-tried to log it.
+logged with no record under the default script.
+`t15_sv_pkg_log` runs the same design with `log_wave -recursive /p`
+added, and `W` is marked logged and holds one record at time 0,
+`08 00 00 00 00 00 00 00`, the value 8 in the pair encoding of an
+`int`, in arena 1 at its handle `0x890`; the logged range table holds
+`[0 1]` where `t13_sv_pkg` holds `[0 0]`.
+So a package parameter records like a module parameter once the
+package is logged.
 
 *Found by* `t13_pkg_log_all` against `t9_pkg_sig`, the same design
 under two scripts.
+*Confirmed by* `t15_sv_pkg_log` against `t13_sv_pkg`, the same for a
+SystemVerilog package parameter.
 `t3_late` puts its only change at 1000 ns, and the page holds two
 records, at 0 and 1000000.
 `t7_gen_for` has one object `i` per generate iteration, and their

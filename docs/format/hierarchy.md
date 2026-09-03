@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 249 cases.
+They are the same in all 252 cases.
 
 
 ## Scope records
@@ -677,12 +677,18 @@ package, with its parameters as declarations: `p` of `t13_sv_pkg`
 declares `W`.
 Both point their four file and line words at the `interface` or
 `package` line, as a module does.
+A modport is a unit of kind `0x02`, named `bus_if.slave` after the
+interface and the modport, with one declaration per modport signal
+carrying the port mode: `modport slave(input d)` of `t15_sv_iface_mp`
+declares `d` as `port in` at the `modport` line.
+Its two entity words are 0, as for a process.
 The kinds seen so far are:
 
 | Kind | Unit |
 | ---: | :--- |
 | `0x00` | module |
 | `0x01` | interface |
+| `0x02` | modport |
 | `0x03` | task |
 | `0x04` | function |
 | `0x05` | named block |
@@ -693,8 +699,9 @@ The kinds seen so far are:
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`.
 *Confirmed by* `t11_v_always`, which adds the block, `t12_v_task`
 and `t12_v_func`, which add the two subprogram kinds, `t13_v_blk_var`,
-which puts a declaration in a block, and `t13_sv_iface` and
-`t13_sv_pkg`, which add the interface and package kinds.
+which puts a declaration in a block, `t13_sv_iface` and
+`t13_sv_pkg`, which add the interface and package kinds, and
+`t15_sv_iface_mp`, which adds the modport.
 
 **Process scopes.**
 Every `initial`, every `always` and every continuous assignment is a
@@ -794,13 +801,24 @@ its own, `tb.dut.p`, whose object `tb.dut.p.d` shares the handle
 `0x768` of `tb.b.d`.
 So an interface port is a scope that stands for the instance, as a
 port of a net stands for the net, and the records are written once.
+`t15_sv_iface_vec` adds `logic [7:0] v` to the interface, and the
+vector is a second declaration of the interface unit and a second
+object in each of the two scopes, `tb.b.v` and `tb.dut.p.v`, both at
+`0x828`, so the sharing holds per object.
+A modport adds a scope: `child dut(b.slave)` in `t15_sv_iface_mp`
+gives the instance a child `tb.b.slave` of the modport unit, and the
+child's port `tb.dut.p` is a second scope of that same modport unit,
+not of the interface.
+Both hold `d` as an object at `0x768`, the handle of `tb.b.d`, with
+port mode `in` from the modport's declaration.
 The child's `always_comb` is `tb.dut.Always8_0` and the counter runs
 on as for any child.
 
 *Found by* `t11_v_gen_for` against `t7_gen_for`.
 *Confirmed by* `t12_v_gen_reg`, the loop with a variable and no
-instance, `t13_v_gen_if_reg`, the `if` generate, and `t13_sv_iface`,
-the interface.
+instance, `t13_v_gen_if_reg`, the `if` generate, `t13_sv_iface`,
+the interface, and `t15_sv_iface_vec` and `t15_sv_iface_mp`, the
+vector and the modport.
 
 **Declarations.**
 A `reg` or any other variable is kind `0x00`, a `wire` is kind `0x03`,

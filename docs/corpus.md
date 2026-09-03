@@ -477,9 +477,17 @@ time, and the `X` record was lost that way, sharing time 0 with the
 initial value.
 The last page of an arena, written at the close, keeps every delta.
 
-Not written yet, in order: a `log_wave` on a SystemVerilog package
-parameter; interface modports and an interface carrying a vector; and
-a `string` value.
+Tier 15 takes the rest of that list.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t15_sv_pkg_log` | `log_wave -recursive /p` added to the script of `t13_sv_pkg` | the package parameter is logged, one record at time 0 |
+| `t15_sv_iface_vec` | `logic [7:0] v` added to the interface | one more declaration and one more shared object per scope |
+| `t15_sv_iface_mp` | the child takes `bus_if.slave` | unit kind `0x02`, named `bus_if.slave`; a modport scope under the instance; the port scope is of the modport unit; port mode `in` |
+
+Not written yet: a `string` value, which has no object to hold one,
+see `t11_sv_str`; a typedef of an unpacked struct array; and a
+realistic design.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -534,7 +542,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 249 cases through tier 14, and
+5. The reader now reproduces all 252 cases through tier 15, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
