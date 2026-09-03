@@ -29,13 +29,13 @@ const (
 
 	dirEntryLen  = 48 // [24 byte name][uint64 count][uint64 offset][uint64 length]
 	dirNameLen   = 24
-	pageDirStart = 0x30  // arena records start this far into the Xilinx DBG entry
-	arenaRecLen  = 0x4c0 // one arena record
-	arenaOffsets = 0x8   // uint64 page offsets, one per page
-	arenaLens    = 0x328 // uint32 compressed lengths, one per page
-	arenaCount   = 0x4b8 // uint64 number of pages
-	arenaMax     = 100   // pages one arena record can name
-	pageLen      = 10240 // every value page inflates to this many bytes
+	pageDirStart = dirEntryLen // arena records follow the Xilinx DBG entry
+	arenaRecLen  = 0x4c0       // one arena record
+	arenaOffsets = 0x8         // uint64 page offsets, one per page
+	arenaLens    = 0x328       // uint32 compressed lengths, one per page
+	arenaCount   = 0x4b8       // uint64 number of pages
+	arenaMax     = 100         // pages one arena record can name
+	pageLen      = 10240       // every value page inflates to this many bytes
 	markerLen    = 16
 )
 
@@ -178,12 +178,12 @@ func (h *Header) Dir(name string) (DirEntry, bool) {
 	return DirEntry{}, false
 }
 
-// readPageDir decodes the page directory. It starts pageDirStart bytes
-// into the Xilinx DBG directory entry, which itself sits at the end of
-// the section it describes, and holds one arenaRecLen byte record per
-// arena. The header's arena table names the records, and every record
-// has been at pageDirStart plus a multiple of arenaRecLen in every corpus
-// case. A record lists its pages as uint64 offsets from arenaOffsets and
+// readPageDir decodes the page directory. Every directory entry sits
+// right after the section it describes, so the Xilinx DBG entry is at
+// offset+length, and the arena records follow that entry: one
+// arenaRecLen byte record per arena. The header's arena table names the
+// records, and every record has been at pageDirStart plus a multiple of
+// arenaRecLen in every corpus case. A record lists its pages as uint64 offsets from arenaOffsets and
 // uint32 compressed lengths from arenaLens, with the page count at
 // arenaCount.
 func readPageDir(d []byte, h *Header, dbg DirEntry) ([]Arena, error) {
