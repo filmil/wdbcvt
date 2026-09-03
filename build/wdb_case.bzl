@@ -8,7 +8,7 @@ load(
     "vivado_simulation",
 )
 
-def wdb_case(name, srcs, extra_deps = []):
+def wdb_case(name, srcs, extra_deps = [], tcl = None):
     """Declares one corpus case.
 
     Every case is held to the same shape on purpose, so that two cases
@@ -31,6 +31,9 @@ def wdb_case(name, srcs, extra_deps = []):
       name: the case name. Matches the directory name.
       srcs: the VHDL sources, in compilation order.
       extra_deps: additional vivado_library targets to compile against.
+      tcl: an xsim batch script replacing the default one, for a case
+        whose axis is what is logged. It gets the same `{{VCD_FILE}}`
+        and `{{TOP}}` substitutions as the default template.
     """
     native.filegroup(
         name = "srcs",
@@ -51,6 +54,7 @@ def wdb_case(name, srcs, extra_deps = []):
         name = "sim",
         library = ":lib",
         top = "tb",
+        custom_tcl_script = tcl,
     )
 
     native.filegroup(
