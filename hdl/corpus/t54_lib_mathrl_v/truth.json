@@ -1,0 +1,34 @@
+{
+  "case": "t54_lib_mathrl_v",
+  "axis": "math_real used as well",
+  "differs_from": "t52_var_int_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    }
+  ]
+}

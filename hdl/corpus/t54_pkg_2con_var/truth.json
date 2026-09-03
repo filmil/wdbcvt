@@ -1,0 +1,50 @@
+{
+  "case": "t54_pkg_2con_var",
+  "axis": "a package with two integer constants, one read",
+  "differs_from": "t54_pkg_con_var_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "pk",
+      "name": "c",
+      "type": "integer",
+      "kind": "constant",
+      "value": "3",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "d",
+      "type": "integer",
+      "kind": "constant",
+      "value": "4",
+      "logged": false
+    }
+  ]
+}

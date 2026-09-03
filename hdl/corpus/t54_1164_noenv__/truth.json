@@ -1,0 +1,34 @@
+{
+  "case": "t54_1164_noenv__",
+  "axis": "no std.env.stop",
+  "differs_from": "t52_var_int_____",
+  "end_time_ns": 50,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    }
+  ]
+}

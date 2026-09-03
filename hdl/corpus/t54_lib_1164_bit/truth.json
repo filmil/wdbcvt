@@ -1,0 +1,35 @@
+{
+  "case": "t54_lib_1164_bit",
+  "axis": "a bit signal under std_logic_1164",
+  "differs_from": "t54_lib_none_var",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "bit",
+      "declared": "bit"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    }
+  ]
+}

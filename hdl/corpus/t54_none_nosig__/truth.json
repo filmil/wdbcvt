@@ -1,0 +1,16 @@
+{
+  "case": "t54_none_nosig__",
+  "axis": "no library clause and no signal",
+  "differs_from": "t54_nosig_var___",
+  "end_time_ns": 100,
+  "signals": [],
+  "transitions": [],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    }
+  ]
+}

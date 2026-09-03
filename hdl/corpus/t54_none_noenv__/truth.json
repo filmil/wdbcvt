@@ -1,0 +1,16 @@
+{
+  "case": "t54_none_noenv__",
+  "axis": "no library clause, no signal and no std.env.stop",
+  "differs_from": "t54_none_nosig__",
+  "end_time_ns": 50,
+  "signals": [],
+  "transitions": [],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    }
+  ]
+}
