@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("//build:wdb_case.bzl", "wdb_case")
+
+package(default_visibility = ["//visibility:public"])
+
+wdb_case(
+    name = "t53_inst2_nest__",
+    # Compilation order matters to xvhdl; do not sort.
+    # do not sort
+    srcs = [
+        "leaf.ent.vhdl",
+        "child.ent.vhdl",
+        "tb.ent.vhdl",
+    ],
+)

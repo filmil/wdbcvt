@@ -1,0 +1,36 @@
+{
+  "case": "t53_ifgen_inst__",
+  "axis": "each child under an if generate",
+  "differs_from": "t52_inst2_empty_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "g0.d0",
+      "k": 0
+    },
+    {
+      "instance": "g1.d1",
+      "k": 1
+    }
+  ]
+}
