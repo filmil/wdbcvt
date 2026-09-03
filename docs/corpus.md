@@ -150,7 +150,9 @@ them all.
 A signal or a variable can say `"logged": false`, and the test then
 expects an object with no records and outside every logged range.
 A generic can carry `name`, `type`, `value` and `width`, and the test
-checks the declaration and the recorded value against them.
+checks the declaration and the recorded value against them; a `scope`
+puts it outside `tb`, as the package parameter of `t13_sv_pkg` is, and
+`"logged": false` expects no record of it.
 `transition_runs` lists a signal, a start, a step, a count and the
 values the run cycles through, and the test expands it into
 transitions.
@@ -417,10 +419,44 @@ transitions in order, because the file does not hold the order; it
 sets `final_per_time` and the test compares the value at the end of
 each time step.
 
-Not written yet, in order: a `log_wave` that covers a package, to see
-a package signal logged; SystemVerilog interfaces, packages,
-`always_ff` and `inout` ports; a typedef of an unpacked array; and a
-VCD cross-check of every case through `go-vcd-parser`.
+Tier 13 takes the cases listed as not written after tier 12, and adds
+the ones the tier 12 findings asked for: a script that logs a package,
+the SystemVerilog constructs that had not been seen, arrays of `real`
+and of structs, a string parameter, three levels of nets, and long
+runs that spill a page.
+`t13_pkg_log_all` is the one case with a script of its own; the
+`tcl` attribute of `wdb_case` replaces the default `xsim.tcl` with a
+file of the case directory, which gets the same `{{VCD_FILE}}` and
+`{{TOP}}` substitutions.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t13_pkg_log_all` | `log_wave -recursive /sig_pkg` added to the script of `t9_pkg_sig` | the package signal records like a signal of `tb`; the logged range count grows |
+| `t13_sv_iface` | an interface instance passed to a child | unit kind `0x01`; the interface port is a scope sharing the instance's handles |
+| `t13_sv_pkg` | a package with a typedef and a parameter | unit kind `0x08` beside `tb`; the parameter is an object with no record |
+| `t13_sv_alwaysff` | `always_ff` and `always_comb` | `Always` scopes |
+| `t13_v_inout` | an `inout` port driven `Z` then `1` | port mode `0`; the port shares the wire; `Z` as one record |
+| `t13_sv_tdef_ua` | a typedef of an unpacked array | the alias carries both ranges |
+| `t13_sv_real_arr` | `real r [0:1]` | one pair per element, last lowest; an unchanged value writes nothing |
+| `t13_sv_struct_ar` | an unpacked array of a packed struct | one contiguous value, element 0 at the top |
+| `t13_v_str_param` | `parameter P = "hello"` | a 40 bit vector, `h` at the top |
+| `t13_v_same_t` | three writes at one time | three records in write order |
+| `t13_v_hier3_net` | a net through three modules | nets pre order over three levels; ports share upward |
+| `t13_v_gen_if_reg` | a `reg` in an `if` generate | `\g.r `; one implicit scope |
+| `t13_v_blk_var` | a `reg` declared in a named `initial` block | the block unit holds the declaration; the block scope holds the object |
+| `t13_v_tr2000` | two thousand toggles | five Verilog pages; no `X` record at time 0 |
+| `t13_v_tr420`, `t13_v_tr430`, `t13_v_tr430_2` | 421 records, 430, and 430 beside a second arena | the `X` record goes with the arena that spills into a second page |
+| `t13_tr430` | the 430 ns clock in VHDL | one page of 431 records; the toggle at `std.env.stop` is recorded |
+
+The long runs list their toggles as a `transition_runs` entry in
+`truth.json`, a start time, a step and a count, rather than two
+thousand transitions.
+
+Not written yet, in order: a VCD cross-check of every case through
+`go-vcd-parser`; a variable first written in the second page of its
+arena, to separate the two readings of the missing `X` record; a
+`log_wave` on a SystemVerilog package parameter; interface modports
+and an interface carrying a vector; and a `string` value.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -475,7 +511,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 221 cases through tier 12.
+5. The reader now reproduces all 241 cases through tier 13.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

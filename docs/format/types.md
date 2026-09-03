@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 197 of 197 cases decoding with the entry lengths chaining
+*Confirmed by* 241 of 241 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -273,8 +273,18 @@ bounds.
 The value is contiguous bits with `m[0][0]` at the top; see
 [values.md](values.md).
 
+A typedef of an unpacked array, `typedef logic [3:0] arr_t [0:1]` in
+`t13_sv_tdef_ua`, is the alias of the outer entry, and the alias holds
+every bound, the unpacked one first: `(0 to 1) (3 downto 0)`.
+The declaration of an `arr_t` variable has size 8 and no ranges, as
+the declaration of a `byte_t` variable has none below.
+So the rule of the next section holds for any typedef: the bounds go
+with the name.
+
 *Found by* `t12_sv_unp2d` against `t11_v_mem4`, which has one unpacked
 dimension and two entries.
+*Confirmed by* `t13_sv_tdef_ua` against `t12_sv_unp2d`, which moved
+the bounds from the declaration into the alias.
 
 **A typedef of a vector.**
 `typedef logic [7:0] byte_t` in `t12_sv_typedef` is an alias entry
@@ -290,8 +300,18 @@ declaration has none.
 The aliases of `t11_sv_struct` and `t11_sv_enum` count 0 ranges,
 which is what the earlier reading, `[1][target][0]`, saw.
 
+A typedef declared in a package is the same entry: `byte_t` of the
+package `p` in `t13_sv_pkg` is an alias with `(7 downto 0)`, and the
+variable of `tb` that uses it declares 8 bits and no ranges.
+A typedef of a struct is an alias with no ranges wrapping the record
+entry, and an unpacked array of that typedef is an array entry of
+layout `2` over the alias: `s_t m [0:1]` in `t13_sv_struct_ar` has
+the record, the alias `s_t` and the array in that order, and the
+declaration carries `(0 to 1)` with size 10.
+
 *Found by* `t12_sv_typedef` against `t11_v_vec8`, whose declaration
 carries `(7 downto 0)` and whose type has no alias.
+*Confirmed by* `t13_sv_pkg` and `t13_sv_struct_ar`.
 
 **Parameters.**
 A parameter's type follows its declaration: `parameter K = 5` and
@@ -306,6 +326,12 @@ A `localparam` is a parameter with no difference in the table.
 a signed word, and the record is that of `reg [0:7]`.
 A `shortreal` has no entry of its own; `t12_sv_shortreal` uses the
 `real` entry.
+A string parameter, `parameter P = "hello"` in `t13_v_str_param`,
+uses the unnamed vector entry with 8 bits per character, 40 bits and
+`(39 downto 0)`, so the string is a vector to the database.
+A package parameter, `parameter int W = 8` in `t13_sv_pkg`, uses the
+`int` entry with 32 bits and no range, and is a declaration of the
+package unit.
 
 *Found by* `t12_v_params` against `t11_v_param`, and `t12_v_neg_range`
 against `t11_v_vec8_asc`.

@@ -366,11 +366,31 @@ See [types.md](types.md).
 | signal of a block | as a signal |
 | variable declared in a process | none |
 | constant of a package | none |
-| signal of a package | none, under `log_wave -r /tb` |
+| signal of a package | none under `log_wave -recursive *`; as a signal under `log_wave -recursive /sig_pkg` |
+| parameter of a SystemVerilog package | none |
 | a `signal` parameter of a procedure | the change twice, on the signal's handle |
 
 A signal that never changes has exactly one record, found by
 `t0_bit_const`.
+The package signal row depends on the xsim script.
+`t9_pkg_sig` runs the default script, `log_wave -recursive *`, and
+its `sig_pkg.g` is an object marked not logged, with no records, and
+arena 0 is unused.
+`t13_pkg_log_all` runs the same design with
+`log_wave -recursive /sig_pkg` added, and `g` is marked logged, holds
+`0` at time 0 and `1` at 10 ns in arena 0 at its handle `0x768`, and
+the logged range table holds `[0 1]` where `t9_pkg_sig` holds `[0 0]`.
+The handle space is `0x1430` in both, so logging changes the records
+and the marks, not the layout.
+`get_objects -r /*` in that script lists `/tb/x` only, and
+`get_objects /sig_pkg/*` lists `/sig_pkg/g`, so the default script
+never sees the package.
+The package parameter `p.W` of `t13_sv_pkg` is an object marked not
+logged with no record under the default script, and no case has
+tried to log it.
+
+*Found by* `t13_pkg_log_all` against `t9_pkg_sig`, the same design
+under two scripts.
 `t3_late` puts its only change at 1000 ns, and the page holds two
 records, at 0 and 1000000.
 `t7_gen_for` has one object `i` per generate iteration, and their
@@ -551,6 +571,9 @@ against `t12_v_vec4800`, and the split rest ambiguity by
 `0x800` against one at the other chunk addresses.
 
 **Order within a time.**
+Three writes to one variable in one time step are three records in
+write order: `t13_v_same_t` writes `1`, `2` and `3` to an 8 bit `reg`
+at time 0 and the arena holds `X`, `01`, `02`, `03`.
 An arena's records are in write order, and a time step's writes that
 land in two arenas come back in arena order, not write order.
 `t12_v_mem40_t0` writes `m[0]` to `m[39]` at time 0 after the whole
@@ -590,12 +613,28 @@ and `reg [39:0] m [0:1]` is 80 bits in three pairs with `m[1]`
 straddling pairs 0 and 1.
 A two dimensional packed array, `logic [1:0][3:0]`, is 8 bits with
 element `[1]` at the top.
+An unpacked array of packed structs is contiguous the same way:
+`s_t m [0:1]` over `struct packed { logic a; logic [3:0] b; }` in
+`t13_sv_struct_ar` is 10 bits, `m[0]` in bits 9 to 5, and records
+`ff 03` for all `X`, then `1a` for `m[1] = '{1, 4'b1010}`.
+A typedef of an unpacked array, `t13_sv_tdef_ua`, changes nothing in
+the records: `arr_t m` over `typedef logic [3:0] arr_t [0:1]` is the
+8 bits of `logic [3:0] m [0:1]`.
+An unpacked array of `real` is the exception: `real r [0:1]` in
+`t13_sv_real_arr` declares 64 bits and takes one pair per element with
+the last element lowest, as an unpacked struct does with its fields,
+so `r[1] = 1.5` at 50 ns is an 8 byte record of pair 0 holding the
+`float64`.
+Its record at time 0 is 16 zero bytes, one for the whole array, and
+the implicit process that sets `r[0] = 0.0` writes nothing, because
+the value is already held.
 
 *Found by* `t11_v_mem4` against `t11_v_mem4_desc`, the same four
 writes under `[0:3]` and `[3:0]`, which moved the written byte from
 the top to the bottom.
 *Confirmed by* `t11_v_mem4w5`, `t11_v_mem3w5` and the `t11_v_mem2w*`
-sweep from 9 to 64 bits per element.
+sweep from 9 to 64 bits per element, and by `t13_sv_struct_ar`,
+`t13_sv_tdef_ua` and `t13_sv_real_arr` for the array forms above.
 
 **Integral types and real.**
 `integer`, `int`, `byte`, `longint` and `time` are vectors of their
@@ -665,6 +704,26 @@ A parameter holds one record at time 0 with its value:
 `t12_v_params` records `K = 7`, `P = 8'h5a`, `Q = 9`, `R = 1.5` and
 `L = 8`, and `t12_v_param64` a 64 bit value in two pairs, low word
 first.
+`t13_v_str_param` records `parameter P = "hello"` as 40 bits in two
+pairs, `6f 6c 6c 65` low and `68` high, so the first character is at
+the top and the last at bit 0.
+
+The `X` record is absent when the variable's arena spills into a
+second page.
+`t13_v_tr420`, a `reg clk = 1'b0` toggled every nanosecond for 420 ns,
+holds 421 records in one page, `X`, `0` and 419 toggles.
+`t13_v_tr430` holds 430 records over two pages, `0` and 429 toggles,
+with no `X`, and `t13_v_tr2000` holds 2000 over five pages the same
+way.
+`t13_v_tr430_2` adds a `reg d` written once at 5 ns beside that clock;
+`d` sits in an arena of its own, holds one page, and keeps its `X`,
+`0`, `1`.
+So the loss goes with the arena that spills, not with the design, and
+the reader takes the records as they are.
+The same clock in VHDL, `t13_tr430`, holds 431 one byte records in one
+page, because a VHDL record is 13 bytes and a Verilog one 24; see the
+page table above.
+
 
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, three records
 where two were expected.
@@ -688,11 +747,28 @@ An `output reg` port, `t12_v_port_reg`, keeps its own handle and holds
 then the value, and the input port holds `X`, `X`, `0`.
 So the count is one `X` per object on the handle plus one for an
 input port, and what writes the extra one is open.
+`t13_v_hier3_net` runs a net through three levels and holds three `X`
+records on `w0`, a wire and the input port of `mid` at `0x768`, three
+on `w1`, a wire of `mid` and the input port of `leaf` at `0x8e8`, two
+on `w2`, a wire of `leaf` alone at `0x9a8`, and three on `y`, a wire
+of `tb` and the output ports of `mid` and `leaf` at `0x828`.
+Each of the four nets is driven by one `assign`.
+An `inout` port, `t13_v_inout`, shares the wire's handle as an input
+port does, with mode `0` in its declaration, and the net holds `X`,
+`X`, then `Z` when the driver is `1'bz`, then `1`; the `reg` driver
+holds `X`, `Z`, `1`.
+An interface signal, `t13_sv_iface`, is on one handle under the
+instance, `tb.b.d`, and under the child's interface port,
+`tb.dut.p.d`, and holds `X`, `X`, `0`, `1`: one `X` per object and
+nothing more, as a variable rather than a net.
 
 **What is not recorded.**
 The `always #25 clk = ~clk` of `t11_v_always` is due at 100 ns, the
 `$finish` time, and that toggle is not in the pages; the last `clk`
 record is at 75 ns.
+`t13_v_tr430` ends at 430 ns and its last record is at 429 ns, where
+`t13_tr430`, the same clock in VHDL ended by `std.env.stop` at 430 ns,
+records the toggle at 430 ns.
 A `string` variable has no records, because it has no object; see
 [hierarchy.md](hierarchy.md).
 Vivado's VCD for a Verilog design is fuller than for VHDL: `real`,

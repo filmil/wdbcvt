@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 221 cases.
+They are the same in all 241 cases.
 
 
 ## Scope records
@@ -565,8 +565,17 @@ and `t9_pkg_sig` has a package signal as an object with the first
 handle `0x768` and no records; see [values.md](values.md).
 A package with only a type in it, as in `t2_record`, gets no scope.
 
+A SystemVerilog package takes the same place: `p` of `t13_sv_pkg`,
+imported into `tb` for a typedef and a parameter, is the second child
+of the root beside `tb`, with a unit of kind `0x08` and the parameter
+`W` as its object.
+The typedef is a type entry and not an object, as in VHDL.
+Its scope and object cost handle space: `t13_sv_pkg` has `0xafc`
+where `t12_sv_typedef`, the same typedef inside `tb`, has `0x91c`.
+
 *Found by* `t9_port_rec` against `t2_record`, where the extra scope
 sat between `tb` and `tb.dut` in the scope list.
+*Confirmed by* `t13_sv_pkg` against `t12_sv_typedef`.
 
 
 ## Implicit processes
@@ -653,9 +662,39 @@ and their values at the call.
 `tmp`, and the call writes `v`, `tmp` and then `inc`.
 The subprogram scope has no unit name and no process scope of its own.
 
+A named block with a declaration of its own, `initial begin : blk reg
+t;` in `t13_v_blk_var`, is a block unit with one declaration, the
+next after the module's one, and the block scope `tb.blk` holds the
+object `tb.blk.t` at `0x828` after `tb.s` at `0x768`.
+The block sits at the `initial` line beside the process scope
+`tb.Initial9_0` of the same line.
+
+A SystemVerilog interface is a unit of kind `0x01`, named after the
+interface, with its signals as declarations: `bus_if` of
+`t13_sv_iface` declares `d`.
+A SystemVerilog package is a unit of kind `0x08`, named after the
+package, with its parameters as declarations: `p` of `t13_sv_pkg`
+declares `W`.
+Both point their four file and line words at the `interface` or
+`package` line, as a module does.
+The kinds seen so far are:
+
+| Kind | Unit |
+| ---: | :--- |
+| `0x00` | module |
+| `0x01` | interface |
+| `0x03` | task |
+| `0x04` | function |
+| `0x05` | named block |
+| `0x07` | process |
+| `0x08` | SystemVerilog package |
+| `0x13` | root |
+
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`.
-*Confirmed by* `t11_v_always`, which adds the block, and `t12_v_task`
-and `t12_v_func`, which add the two subprogram kinds.
+*Confirmed by* `t11_v_always`, which adds the block, `t12_v_task`
+and `t12_v_func`, which add the two subprogram kinds, `t13_v_blk_var`,
+which puts a declaration in a block, and `t13_sv_iface` and
+`t13_sv_pkg`, which add the interface and package kinds.
 
 **Process scopes.**
 Every `initial`, every `always` and every continuous assignment is a
@@ -668,8 +707,12 @@ and a counter:
 | `always` at line 10 | `Always10_0` | `t11_v_always` |
 | `assign` at line 10 | `NetRegassign10_2` | `t11_v_wire` |
 | `always ... begin : blk` at line 12 | `blk` and `Always12_1`, both at line 12 | `t11_v_always` |
+| `always_ff` at line 13 | `Always13_1` | `t13_sv_alwaysff` |
+| `always_comb` at line 14 | `Always14_2` | `t13_sv_alwaysff` |
 
 The counter after the underscore is per design.
+`always_ff` and `always_comb` are `Always` scopes with nothing to tell
+them from `always`.
 `t12_v_proc_order` gives a child and its parent one `initial` block,
 one initializer and one `assign` each, and numbers them
 `child.Initial12_0`, `child.Initial7_1`, `tb.Initial14_2`,
@@ -737,15 +780,33 @@ of `t12_v_gen_reg` is declared in `tb` as `\g[0].r ` and `\g[1].r `,
 with the backslash and the trailing space of a Verilog escaped
 identifier, and the objects are `tb.\g[0].r ` and `tb.\g[1].r `.
 There is no `g[0]` scope.
+An `if` generate does the same without the index: `reg r` in
+`if (1) begin : g` of `t13_v_gen_if_reg` is `tb.\g.r `, with one
+implicit `Initial9_1` for its initializer, and the handle space is
+`0x9b4`, that of `t11_v_bit_edge` with a plain `reg`.
+
+An interface instance is a scope named after the instance with the
+interface's unit: `bus_if b();` in `t13_sv_iface` is `tb.b`, with the
+object `tb.b.d`.
+The child that takes the interface as a port, `child dut(b)` with
+`module child(bus_if p)`, gets a second scope of the same unit under
+its own, `tb.dut.p`, whose object `tb.dut.p.d` shares the handle
+`0x768` of `tb.b.d`.
+So an interface port is a scope that stands for the instance, as a
+port of a net stands for the net, and the records are written once.
+The child's `always_comb` is `tb.dut.Always8_0` and the counter runs
+on as for any child.
 
 *Found by* `t11_v_gen_for` against `t7_gen_for`.
 *Confirmed by* `t12_v_gen_reg`, the loop with a variable and no
-instance.
+instance, `t13_v_gen_if_reg`, the `if` generate, and `t13_sv_iface`,
+the interface.
 
 **Declarations.**
 A `reg` or any other variable is kind `0x00`, a `wire` is kind `0x03`,
 and a port is kind `0x03` with the port mode in word 9, `1` for
-`input` and `2` for `output`, whether or not the port has a net type.
+`input`, `2` for `output` and `0` for `inout`, whether or not the
+port has a net type.
 A `parameter` is kind `0x01`, with the size 32, the unnamed vector type
 and a range `(31 downto 0)`.
 Word 4 is the value size in bits, not bytes: 1 for a `reg`, 8 for
@@ -755,6 +816,7 @@ sum of the element sizes for a memory, and for a struct the rule in
 
 *Found by* `t11_v_wire` against `t11_v_bit_edge`, and `t11_v_port`
 against `t8_port_in`.
+*Confirmed by* `t13_v_inout` for the `inout` mode.
 
 **Objects and handles.**
 Nets are given handles before variables.
@@ -777,6 +839,17 @@ and a variable, and the shared handle is the net's.
 Nets come first in the whole design, in pre order: `t12_v_proc_order`
 has the child's wire `u` at `0x768`, `tb`'s wire `w` at `0x828`, then
 the child's `reg` `t` at `0x8e8` and `tb`'s `reg` `s` at `0x9a8`.
+`t13_v_hier3_net` runs a net through `tb`, `mid` and `leaf`, each
+with a wire and a `reg`, and holds `tb.w0` at `0x768`, `tb.y` at
+`0x828`, `mid.w1` at `0x8e8` and `leaf.w2` at `0x9a8`, then `tb.r0`
+at `0xa68`, `mid.r1` at `0xb28` and `leaf.r2` at `0xbe8`.
+The input port of `mid` shares `w0`, the input port of `leaf` shares
+`w1`, and the output ports of both share `y`, so a port shares the
+handle of the net it is connected to in the parent, however many
+levels the net runs through, and the wire that is a port's own
+declaration in the parent is the one that holds the handle.
+An `inout` port shares as an input port does: `tb.dut.w` of
+`t13_v_inout` holds `0x768` with `tb.w`.
 The second handle of a variable is the handle plus the record size,
 8 bytes per 32 bits of value, and the next object's handle is the
 second handle plus `0xb8`.
@@ -799,12 +872,20 @@ and `L`, at `0x8c0`, `0x8c8`, `0x8d0`, `0x8d8`, `0x8e0`, and in
 `t12_v_param64` the 64 bit `W` at `0x8c0` and the 8 bit `P` at
 `0x8d0`.
 A `localparam` is a parameter like any other, in source order.
+A package parameter is an object of the package scope with the same
+shape, `p.W` of `t13_sv_pkg` at `0x890` in arena 1 with no second
+handle, and it is marked not logged and has no record; see
+[values.md](values.md).
+A string parameter is a parameter of 40 bits, `P` of `t13_v_str_param`
+at `0x8c0`, whose record is two pairs.
 
 *Found by* `t11_v_two_w64` against `t11_v_vec8`, and `t11_v_port`
 against `t8_port_in`.
 *Confirmed by* `t12_v_port_wire`, `t12_v_port_vec8`, `t12_v_port_reg`
-and `t12_v_proc_order` for the sharing and the order, and
-`t12_v_params` and `t12_v_param64` for the parameters.
+and `t12_v_proc_order` for the sharing and the order, `t13_v_hier3_net`
+and `t13_v_inout` for three levels and the third port mode, and
+`t12_v_params`, `t12_v_param64`, `t13_sv_pkg` and `t13_v_str_param`
+for the parameters.
 
 **What is missing.**
 A `string` variable, `t11_sv_str`, has its implicit `initial` scope
