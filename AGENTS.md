@@ -48,6 +48,18 @@ Without it, every workspace redoes an installation that takes hours.
 `rules_vivado` must stay at 3.10.0 or later.
 Hermetic mode does not exist in earlier releases.
 
+Bazel must stay at **9.2.0 or later**, and `.bazelversion` pins it.
+Bazel 9.1.0 crashes while fetching the hermetic installation, because
+the installer archive is named by a `file://` URL and
+`ProgressInputStream.reportProgress` calls `String.equals` on
+`URI.getHost()`, which is `null` for a `file://` URL. The crash arrives
+on the first progress report, tens of megabytes into a hundred gigabyte
+download, as
+`java.lang.NullPointerException: Cannot invoke "String.equals(Object)"
+because the return value of "java.net.URI.getHost()" is null`.
+Do not lower `.bazelversion` below 9.2.0 while the archive is served
+from a `file://` URL.
+
 
 # VHDL rules
 

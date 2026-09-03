@@ -80,6 +80,10 @@ build:
   the CI runner as well.
   On a machine without that file the `try-import` does nothing.
 
+Bazel 9.2.0 or later is required, and `.bazelversion` pins it.
+Earlier versions crash on the `file://` URL that names the installer
+archive; see `AGENTS.md` for the detail.
+
 A host that has never built this repository needs:
 
 * the installer archive at
