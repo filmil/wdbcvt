@@ -1,0 +1,60 @@
+{
+  "case": "t56_typ_arr_2typ",
+  "axis": "a two array types declared in the architecture, one local of each under -debug subprogram",
+  "differs_from": "t56_typ_arr_2loc",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f",
+      "name": "a",
+      "type": "arr_t",
+      "kind": "local",
+      "port": "",
+      "storage": 4
+    },
+    {
+      "scope": "tb.f",
+      "name": "a2",
+      "type": "arr2_t",
+      "kind": "local",
+      "port": "",
+      "storage": 4
+    },
+    {
+      "scope": "tb.f",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    }
+  ]
+}

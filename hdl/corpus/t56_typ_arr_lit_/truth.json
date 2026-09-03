@@ -1,0 +1,52 @@
+{
+  "case": "t56_typ_arr_lit_",
+  "axis": "a array local of four integers, not initialised, assigned a literal aggregate under -debug subprogram",
+  "differs_from": "t56_typ_arr_noin",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f",
+      "name": "a",
+      "type": "arr_t",
+      "kind": "local",
+      "port": "",
+      "storage": 4
+    },
+    {
+      "scope": "tb.f",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    }
+  ]
+}

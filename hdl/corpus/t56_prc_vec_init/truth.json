@@ -1,0 +1,44 @@
+{
+  "case": "t56_prc_vec_init",
+  "axis": "a process variable of std_ulogic_vector(3 downto 0) initialised from a literal, before an integer one under -debug subprogram",
+  "differs_from": "t52_var_vec4____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "std_ulogic_vector",
+      "kind": "variable",
+      "port": "",
+      "storage": 2
+    },
+    {
+      "scope": "tb.p",
+      "name": "b",
+      "type": "integer",
+      "kind": "variable",
+      "port": "",
+      "storage": 2
+    }
+  ]
+}
