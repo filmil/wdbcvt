@@ -20,7 +20,7 @@ go_library(
 
 go_test(
     name = "wdb_test",
-    size = "small",
+    size = "medium",
     srcs = [
         "corpus_test.go",
         "debug_test.go",
