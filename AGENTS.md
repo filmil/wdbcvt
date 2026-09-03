@@ -172,6 +172,7 @@ Rules that follow from it, and that apply to every change here:
 
 # Writing style
 
-Short declarative sentences.
-No em-dashes or en-dashes anywhere.
-In markdown, start every sentence on its own line and wrap at 80 columns.
+* Short declarative sentences.
+* No em-dashes or en-dashes anywhere.
+* In markdown, start every sentence on its own line and wrap at 80 columns.
+* No mannered phrases.
