@@ -1,0 +1,78 @@
+{
+  "case": "t8_port_open3___",
+  "axis": "ports. Three unconnected ports between two ordinary signals, to see the handle stride of a port that owns its handle.",
+  "differs_from": "t8_port_open____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "b",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "c",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.c",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    }
+  ]
+}

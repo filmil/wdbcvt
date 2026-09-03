@@ -1,0 +1,39 @@
+{
+  "case": "t8_port_open____",
+  "axis": "ports. Both ports open, to see what an unconnected port costs and records.",
+  "differs_from": "t8_port_in______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "q",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "out"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "1"
+    }
+  ]
+}

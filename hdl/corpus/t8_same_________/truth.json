@@ -1,0 +1,21 @@
+{
+  "case": "t8_same_________",
+  "axis": "no change. One assignment of the current value, to see whether an assignment without a change of value leaves a record.",
+  "differs_from": "t7_delta________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

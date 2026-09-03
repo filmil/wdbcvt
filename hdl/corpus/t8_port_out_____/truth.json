@@ -1,0 +1,53 @@
+{
+  "case": "t8_port_out_____",
+  "axis": "ports. One output port driven inside the child, to see whether the port and the parent signal are one object or two.",
+  "differs_from": "t8_port_in______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "y",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "q",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "out"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "y",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.q",
+      "value": "1"
+    }
+  ]
+}

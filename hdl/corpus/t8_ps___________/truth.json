@@ -1,0 +1,37 @@
+{
+  "case": "t8_ps___________",
+  "axis": "time resolution. Changes at 1 ps, 999 ps and 1000.5 ps, to see the unit and the rounding of record times.",
+  "differs_from": "t3_tr1__________",
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ps": 1,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ps": 999,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ps": 1000,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "end_time_ps": 11000,
+  "note": "times are in picoseconds where time_ps is given; the 1500 fs wait truncates to 1 ps under the 1 ps resolution, as sim.vcd shows"
+}

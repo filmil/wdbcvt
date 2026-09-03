@@ -1,0 +1,38 @@
+{
+  "case": "t8_port_vec8____",
+  "axis": "ports. An eight byte port value, to see whether a port's handle cost grows with its size the way a signal's does.",
+  "differs_from": "t8_port_open3___",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "port": "in"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "1"
+    }
+  ]
+}

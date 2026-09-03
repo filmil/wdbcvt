@@ -1,0 +1,26 @@
+{
+  "case": "t8_delta_same___",
+  "axis": "delta cycles. The second delta assigns the value the signal already has, to see whether a record needs a change of value.",
+  "differs_from": "t7_delta________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "case": "t8_port_inout___",
+  "axis": "ports. The port mode is inout, to fill in the mode word of the declaration record. The child drives Z so the parent's driver wins.",
+  "differs_from": "t8_port_in______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_logic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "std_logic",
+      "port": "inout"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "1"
+    }
+  ]
+}

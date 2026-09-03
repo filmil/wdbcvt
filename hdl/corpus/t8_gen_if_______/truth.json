@@ -1,0 +1,41 @@
+{
+  "case": "t8_gen_if_______",
+  "axis": "if generate. A true and a false condition, to see how an if generate scope is named and whether the false one leaves anything.",
+  "differs_from": "t7_gen_for______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.g.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.g.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.g.dut.s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "with_dut",
+      "type": "boolean",
+      "kind": "constant",
+      "value": "TRUE"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "g.dut",
+      "k": 1
+    }
+  ]
+}

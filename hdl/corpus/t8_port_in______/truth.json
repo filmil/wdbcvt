@@ -1,0 +1,43 @@
+{
+  "case": "t8_port_in______",
+  "axis": "ports. One input port driven by a parent signal, to see whether a port is an object of its own, with its own handle and records.",
+  "differs_from": "t1_hier1________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "1"
+    }
+  ]
+}

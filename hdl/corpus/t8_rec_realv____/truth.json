@@ -1,0 +1,67 @@
+{
+  "case": "t8_rec_realv____",
+  "axis": "nested record constraint. A real beside a vector, to see what range a real field contributes.",
+  "differs_from": "t7_rec_intv_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "outer_t",
+      "fields": [
+        {
+          "name": "delta_f",
+          "type": "inner_t",
+          "fields": [
+            {
+              "name": "alpha",
+              "type": "real"
+            },
+            {
+              "name": "bravo",
+              "width": 4,
+              "type": "std_ulogic_vector"
+            }
+          ]
+        },
+        {
+          "name": "echo_f",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.alpha",
+      "value": "0.0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.bravo",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.echo_f",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.alpha",
+      "value": "1.5"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.bravo",
+      "value": "1010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.echo_f",
+      "value": "1"
+    }
+  ]
+}

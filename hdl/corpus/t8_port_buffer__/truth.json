@@ -1,0 +1,53 @@
+{
+  "case": "t8_port_buffer__",
+  "axis": "ports. The port mode is buffer, to fill in the mode word of the declaration record.",
+  "differs_from": "t8_port_out_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "y",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "q",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "buffer"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "y",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.q",
+      "value": "1"
+    }
+  ]
+}

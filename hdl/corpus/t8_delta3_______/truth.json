@@ -1,0 +1,36 @@
+{
+  "case": "t8_delta3_______",
+  "axis": "delta cycles. Three changes at one time, to see whether every delta is recorded.",
+  "differs_from": "t7_delta________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}
