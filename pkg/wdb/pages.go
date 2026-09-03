@@ -5,6 +5,7 @@ package wdb
 import (
 	"bytes"
 	"compress/zlib"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"sort"
@@ -141,14 +142,28 @@ func (f *File) Changes(o Object) ([]Change, error) {
 		size = 1
 	}
 	// The object's bytes are [start, end) of the value recorded at its
-	// handle; Offset is nonzero for a port bound to a slice.
+	// handle; Offset is nonzero for a port bound to a slice. A VHDL
+	// offset counts bytes. A Verilog offset counts bits from the low
+	// end of the actual, //hdl/serv:sim, so the object takes the word
+	// pairs its bits fall in and shifts them down afterwards.
+	verilog := f.verilog(dc.Type)
 	start := o.Handle + uint64(o.Offset)
+	shift, nbits := 0, 0
+	if verilog && o.Offset != 0 {
+		nbits, err = f.Size(dc)
+		if err != nil {
+			return nil, err
+		}
+		pa, pb := uint64(o.Offset)/32, (uint64(o.Offset)+uint64(nbits)-1)/32
+		start = o.Handle + 8*pa
+		size = 8 * (pb - pa + 1)
+		shift = int(uint64(o.Offset) - 32*pa)
+	}
 	end := start + size
 	first, last := int(start/arenaSpan), int((end-1)/arenaSpan)
 	if last >= len(f.Arenas) {
 		return nil, fmt.Errorf("object handle %#x with %d bytes reaches arena %d of %d", o.Handle, size, last, len(f.Arenas))
 	}
-	verilog := f.verilog(dc.Type)
 	// The 16 byte record of an untyped time parameter runs into the
 	// next object, so only the record at its own address is its own,
 	// and only the first 8 bytes of it: t30_sv_ptm_two.
@@ -293,11 +308,34 @@ func (f *File) Changes(o Object) ([]Change, error) {
 				used[j] = true
 				apply(group[j])
 			}
-			out = append(out, Change{Time: group[i].time, Data: append([]byte(nil), cur...)})
+			data := append([]byte(nil), cur...)
+			if shift != 0 {
+				data = shiftPairs(data, shift, nbits)
+			}
+			out = append(out, Change{Time: group[i].time, Data: data})
 		}
 		lo = hi
 	}
 	return out, nil
+}
+
+// shiftPairs takes nbits bits of the Verilog word pairs in data, from
+// bit shift up, and returns them as word pairs of their own, bit 0 at
+// bit 0: the value of a port bound to a slice of its actual.
+func shiftPairs(data []byte, shift, nbits int) []byte {
+	out := make([]byte, 8*((nbits+31)/32))
+	for i := 0; i < nbits; i++ {
+		s, d := i+shift, i
+		a := binary.LittleEndian.Uint32(data[8*(s/32):])
+		b := binary.LittleEndian.Uint32(data[8*(s/32)+4:])
+		oa := binary.LittleEndian.Uint32(out[8*(d/32):])
+		ob := binary.LittleEndian.Uint32(out[8*(d/32)+4:])
+		oa |= (a >> (s % 32) & 1) << (d % 32)
+		ob |= (b >> (s % 32) & 1) << (d % 32)
+		binary.LittleEndian.PutUint32(out[8*(d/32):], oa)
+		binary.LittleEndian.PutUint32(out[8*(d/32)+4:], ob)
+	}
+	return out
 }
 
 // chunkWhole is the smallest value size that is written as chunks.

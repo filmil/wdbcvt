@@ -94,7 +94,7 @@ func Read(d []byte) (*File, error) {
 	for i, o := range f.Objects {
 		ch, err := f.Changes(o)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("object %d (%s): %w", i, f.ObjectPath(o), err)
 		}
 		if (len(ch) > 0) != o.Logged {
 			return nil, fmt.Errorf("object %d (%s) has %d records, the logged ranges say logged=%v", i, f.ObjectPath(o), len(ch), o.Logged)
