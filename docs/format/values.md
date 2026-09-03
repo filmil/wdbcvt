@@ -256,14 +256,24 @@ file.
 A reader joins the pieces by address: it collects every record whose
 key range overlaps the object's `[handle, handle + size)` from every
 arena the range crosses, keeps them in file order within a time, and
-takes the longest run of records of one time that start where the
-previous one ends and sit at the addresses the rule predicts for the
-run's length as one write.
-A record that starts no such run is a write of its own, and the reader
-refuses one of 275 bytes or more, which is how the rule is checked on
-every case.
-The first write of an object covers it, and the reader checks that
-too.
+reads the writes of a time in that order.
+A record at the value's first chunk address with that chunk's length
+starts a whole write, whose other chunks are the first unused records
+of the time at the other chunk addresses.
+Any other record starts a partial write, see the partial writes
+sections: the longest chain of unused records of the time, each the
+first at the address where the previous one ends, whose addresses are
+the ones the rule predicts for the chain's length, or the record
+alone.
+The reader refuses a lone record of 275 bytes or more, which is how
+the rule is checked on every case, and checks that the first write of
+an object covers it.
+The chain is found by address rather than by position because the
+rest of a chunk split at an arena boundary sits behind the other
+writes of its time in the next arena: `t33_v_mem_row___` writes four
+rows at time zero, and arena 1 holds the rows in the order they were
+written, which is the last slot first, with the split rest of the
+first slot's write after them all.
 
 The split is in bytes and does not respect elements.
 `t9_int73`, an array of 73 `integer`, 292 bytes, is chunked exactly as
@@ -728,9 +738,14 @@ An assignment to part of a variable writes only the pairs it touched:
 `s[40] = 1'bx` in `t11_v_vec64x` writes one pair at handle plus 8,
 and each `m[i] = 8'h00` in `t11_v_mem8` writes the one pair its
 element lives in.
-So a Verilog record is one change, of the pairs it holds, and the
-reader overlays each record on the value the earlier records built.
-A value wider than 275 bytes of record is chunked; see below.
+So a Verilog record is one write of the pairs it holds, the same
+rule as the VHDL partial write above with the pair as the unit, and
+the reader overlays each record on the value the earlier records
+built.
+A write covers whole pairs: `s[2415:16]` of a 4800 bit reg,
+`t33_v_wsl_mid___`, writes 608 bytes from the handle, pairs 0 to 75,
+where `s[2399:0]`, `t33_v_wsl_lo____`, writes 600.
+A write of 275 bytes or more is chunked; see below.
 
 *Found by* `t11_v_mem8`, whose `initial` block writes eight elements
 and produces nine records at time 0, eight of them 8 bytes long, four
@@ -766,24 +781,33 @@ top.
 and 24 bytes of the next, and arena 2 the remaining 112, four of 136,
 and the last of 144.
 
-A pair write into a chunked value is one record, below the 275 byte
-threshold that a write is chunked at.
-It is the 8 byte pair record of the partial records rule, at the
-handle plus 8 times the pair index, wherever that address falls:
+A partial write is chunked by the same rule from its own address when
+its pairs make 275 bytes or more, and is one record below that.
 `t12_v_vec4800x` sets bit 2400 at 75 ns and writes one 8 byte record
 at the handle plus 600, in arena 1.
 `t12_v_mem40w32`, `reg [31:0] m [0:39]`, 320 bytes in four chunks of
 80, writes `m[i]` one element per ns after its whole `X` write, and
 each is an 8 byte record.
-So a record on a chunked value is either a chunk piece, at a piece
-address with a piece length, or some whole pairs, and the reader
-classifies each record by address and length.
-The two shapes meet at an arena boundary: the 8 byte rest of the
-chunk split at `0x800` in `t12_v_mem40w32` has the address and length
-of a write of `m[21]`.
-The reader counts the records at each piece address in a time and
-takes the smallest count as the number of whole writes, so a surplus
-record at the split address is read as a pair write.
+The tier 33 cases write 2400 bits at once:
+
+| Case | Write | Record bytes | Records at 50 ns |
+| :--- | :--- | ---: | :--- |
+| `t33_v_wsl_4b____` | `s[3:0]` of a 4800 bit reg | 8 | one at the handle |
+| `t33_v_wsl_272___` | `s[2175:1088]` of a 2176 bit reg | 272 | one at `+272` |
+| `t33_v_wsl_280___` | `s[2177:1089]` of a 2178 bit reg | 280 | four of 70 at `+272` |
+| `t33_v_wsl_hi____` | `s[4799:2400]` of a 4800 bit reg | 600 | six of 100 at `+600` |
+| `t33_v_wsl_lo____` | `s[2399:0]` | 600 | six of 100 at the handle, the second split at `0x800` |
+| `t33_v_wsl_mid___` | `s[2415:16]` | 608 | six of 101, the last 103, at the handle |
+| `t33_sv_wsl_hi___` | `s[4799:2400]` in a `.sv` file | 600 | six of 100 at `+600` |
+| `t33_v_mem_row___` | `m[1]` of `reg [2399:0] m [0:3]` | 600 | six of 100 at `+1200`, the pairs of slot 2 |
+| `t33_sv_st_wide__` | `s.v` of `struct { logic [2399:0] v; logic a; }` | 600 | six of 100 at `+8`, above the pair of `a` |
+
+So a record on a chunked value is a chunk of a whole write, a chunk
+of a partial write, or some whole pairs, and the reader reads them
+as the chunk section above says.
+The 8 byte rest of a chunk split at `0x800` in `t12_v_mem40w32` has
+the address and length of a write of `m[21]`, and the reader gives
+the whole write the first unused record there.
 
 *Found by* `t12_v_vec1089` against `t12_v_vec1088`, 280 bytes of
 record in four records of 70 where 272 bytes were two records of 152
@@ -794,6 +818,14 @@ The pair write inside a chunked value was found by `t12_v_vec4800x`
 against `t12_v_vec4800`, and the split rest ambiguity by
 `t12_v_mem40w32`, which the first reader refused with two records at
 `0x800` against one at the other chunk addresses.
+The chunked partial write was found by `t33_v_wsl_hi____` against
+`t12_v_vec4800x`, a 2400 bit slice for one bit of the same reg, six
+records of 100 where the bit gave one of 8, after tier 32 had found
+it in VHDL.
+*Confirmed by* the other eight tier 33 cases; `t33_v_wsl_272___`
+against `t33_v_wsl_280___` puts the threshold of a partial write at
+the same 275 bytes, and `t33_v_wsl_mid___` against `t33_v_wsl_lo____`
+shows the write rounded out to whole pairs before it is chunked.
 
 **Order within a time.**
 Three writes to one variable in one time step are three records in

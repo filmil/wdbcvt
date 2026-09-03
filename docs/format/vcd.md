@@ -33,7 +33,7 @@ the files by eye.
 
 ## What the VCD carries
 
-All 577 cases and `//hdl/counter:sim` pass, and every object of the
+All 586 cases and `//hdl/counter:sim` pass, and every object of the
 database is either in its VCD or covered by one line of this table.
 
 | Object | In the VCD |

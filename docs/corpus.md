@@ -1026,10 +1026,36 @@ The reader overlays writes, and the counter design decodes.
 Its VCD is now part of `TestVCD`, the first check against a database
 the corpus did not produce.
 
+Tier 33 asks the Verilog question tier 32 left: every Verilog partial
+write seen was one word pair.
+Nine cases write 2400 bits of a 4800 bit reg at once, as the high
+half, the low half, a slice off the pair grid, four bits, 1088 and
+1089 bits either side of the threshold, the same in a `.sv` file, a
+memory row, and a struct field.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t33_v_wsl_hi____` | `s[4799:2400]` | six chunks of 100 at `+600` |
+| `t33_v_wsl_lo____` | `s[2399:0]` | six chunks at the handle, split at `0x800` |
+| `t33_v_wsl_mid___` | `s[2415:16]` | 608 bytes, pairs 0 to 75, in six chunks |
+| `t33_v_wsl_4b____` | `s[3:0]` | one pair |
+| `t33_v_wsl_272___`, `t33_v_wsl_280___` | 1088 and 1089 bits from pair 34 | one record of 272; four of 70 |
+| `t33_sv_wsl_hi___` | the high half in a `.sv` file | the same six chunks |
+| `t33_v_mem_row___` | `m[1]` of four 2400 bit rows | six chunks at `+1200` |
+| `t33_sv_st_wide__` | a 2400 bit struct field | six chunks at `+8` |
+
+A Verilog partial write is whole pairs, and is chunked from its own
+address by the rule of the VHDL one.
+The two readers, one per language, became one: a whole write is the
+first unused record at each chunk address of the value, and any
+other record starts a partial write, chunked or alone.
+The memory rows of `t33_v_mem_row___` also showed a split chunk's
+rest sitting behind the other writes of its time in the next arena,
+so the reader chains chunks by address, not by position.
+
 Not written yet: a `string` value, which has no object to hold one,
-see `t11_sv_str`; a typedef of an unpacked struct array; a Verilog
-partial write of 275 bytes or more; and a realistic design beyond the
-counter.
+see `t11_sv_str`; a typedef of an unpacked struct array; and a
+realistic design beyond the counter.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -1084,7 +1110,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 577 cases through tier 32, and
+5. The reader now reproduces all 586 cases through tier 33, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    where the VCD holds anything.
    The next cases are the ones listed as not written yet.
