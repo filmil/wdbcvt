@@ -47,7 +47,7 @@ exactly to the word at `36`.
 | `0x04` | named values | `[u32 origin][u32 base][u32 n][u32 8]` then `n` times `name NUL [u64 value]`, then `[u32 nranges]` and that many triples, no `-99` |
 | `0x05` | integer | `[u32 origin][i32 low][i32 high][u32 1]` |
 | `0x06` | real | `[u32 origin][u32 variant][f64 low][f64 high][u32 1]` for VHDL, `[u32 0]` for Verilog |
-| `0x07` | alias | `[u32 origin][u32 target][u32 0]` |
+| `0x07` | alias | `[u32 origin][u32 target][u32 nranges]` then that many range triples |
 | `0x0d` | physical | `[u32 origin][u32 n]` then `n` times `name NUL [u64 scale]` |
 | `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims][u32 index][u32 nranges]` then that many range triples, then `-99` |
 | `0x11` | record | `[u32 origin][u16 layout][u16 0xb][u32 n]` then `n` fields, then `-99` |
@@ -258,6 +258,57 @@ outer entry has `dims` `1`, element the inner vector entry, and two
 (3 downto 0)` and size 8.
 A memory `reg [7:0] m [0:3]` is the same shape with layout `2` on the
 outer entry.
+
+**Unpacked dimensions.**
+Each unpacked dimension is an array entry of its own, layout `2`,
+whose element is the entry for the dimensions inside it.
+`logic [3:0] m [0:1][0:2]` in `t12_sv_unp2d` has three entries: the
+shared vector entry, an entry of layout `2` over it with two
+`(0, 0, -2)` triples, and an entry of layout `2` over that with three.
+The declaration points at the outermost and carries every bound,
+`(0 to 1) (0 to 2) (3 downto 0)`, with size 24.
+An entry's triple count is one more than the entry it wraps, so the
+count says how deep the entry is, and the triples themselves hold no
+bounds.
+The value is contiguous bits with `m[0][0]` at the top; see
+[values.md](values.md).
+
+*Found by* `t12_sv_unp2d` against `t11_v_mem4`, which has one unpacked
+dimension and two entries.
+
+**A typedef of a vector.**
+`typedef logic [7:0] byte_t` in `t12_sv_typedef` is an alias entry
+whose third word is `1` and which is followed by one triple,
+`(7, 0, -1)`.
+The vector entry it names is the shared unnamed one, and the
+declaration of a `byte_t` variable has no ranges of its own and size
+8.
+So the bounds of a named vector type live in the alias, where the
+bounds of an anonymous vector live in the declaration, and the reader
+takes the ranges from the innermost alias that has any when the
+declaration has none.
+The aliases of `t11_sv_struct` and `t11_sv_enum` count 0 ranges,
+which is what the earlier reading, `[1][target][0]`, saw.
+
+*Found by* `t12_sv_typedef` against `t11_v_vec8`, whose declaration
+carries `(7 downto 0)` and whose type has no alias.
+
+**Parameters.**
+A parameter's type follows its declaration: `parameter K = 5` and
+`parameter [7:0] P` use the unnamed vector entry, with 32 and 8 bits
+and a declaration range, `parameter integer Q` uses the `integer`
+entry with 32 bits and no range, and `parameter real R` uses the
+`real` entry.
+The `real` parameter declares 16 bits, where a `real` variable
+declares 32; both record one `float64` pair, and the 16 is open.
+A `localparam` is a parameter with no difference in the table.
+`reg [-4:3]` in `t12_v_neg_range` declares `(-4 to 3)`, so a bound is
+a signed word, and the record is that of `reg [0:7]`.
+A `shortreal` has no entry of its own; `t12_sv_shortreal` uses the
+`real` entry.
+
+*Found by* `t12_v_params` against `t11_v_param`, and `t12_v_neg_range`
+against `t11_v_vec8_asc`.
 
 **Structs.**
 A `struct` is a record entry with an empty name, origin `1`, layout

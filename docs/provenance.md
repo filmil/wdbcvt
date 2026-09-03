@@ -85,7 +85,7 @@ quirks. Every Tier 0 and Tier 1 case was checked this way before any
 
 This guard inherits the same limit as guard 1, because it is read
 through VCD. GHDL emits nothing for the same types Vivado's VCD drops.
-The Verilog and SystemVerilog cases of tier 11 have no independent
+The Verilog and SystemVerilog cases of tiers 11 and 12 have no independent
 simulator yet; their guards are the truth file and Vivado's own VCD,
 which for Verilog also carries `integer`, `real`, `time`, structs and
 enums, but not memories or strings.

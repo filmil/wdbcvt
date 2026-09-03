@@ -486,8 +486,7 @@ and each `m[i] = 8'h00` in `t11_v_mem8` writes the one pair its
 element lives in.
 So a Verilog record is one change, of the pairs it holds, and the
 reader overlays each record on the value the earlier records built.
-No Verilog value in the corpus is wide enough to test the chunk rule
-above; the widest is `t11_v_vec100`, 32 bytes.
+A value wider than 275 bytes of record is chunked; see below.
 
 *Found by* `t11_v_mem8`, whose `initial` block writes eight elements
 and produces nine records at time 0, eight of them 8 bytes long, four
@@ -495,6 +494,89 @@ at the handle and four at the handle plus 8.
 *Confirmed by* `t11_v_vec64x`, and by `t11_v_mem2w40`, whose write of
 `m[0]` lands on pairs 1 and 2 and whose write of `m[1]` on pairs 0
 and 1.
+
+**Chunks.**
+The chunk rule above applies to a Verilog value's record bytes,
+`8 * ceil(bits / 32)`, with the same constants as for VHDL: a value
+over 275 bytes is split into `2 * ceil((size + 24) / 299)` chunks, and
+a chunk that crosses an arena boundary is split there.
+
+| Case | Bits | Record bytes | Chunks | Found |
+| :--- | ---: | ---: | :--- | :--- |
+| `t12_v_vec1088` | 1088 | 272 | one, split at `0x800` into 152 and 120 | the last whole record |
+| `t12_v_vec1089` | 1089 | 280 | 4 of 70 | the threshold is the same 275 |
+| `t12_v_vec2272` | 2272 | 568 | 4 of 142 | one byte under the next step |
+| `t12_v_vec2304` | 2304 | 576 | 6 of 96 | the step |
+| `t12_v_vec4800` | 4800 | 1200 | 10 of 120 | ten chunks |
+| `t12_v_vec12000` | 12000 | 3000 | 22 of 136, the last 144 | the same chunks as `t9_vec3000` |
+
+A chunk boundary falls inside a word pair when the chunk size is not a
+multiple of 8: 70 and 142 both split a pair between two chunks, and
+the reader joins the chunks of a time before it reads the pairs.
+A chunk holds the value's bytes in order, pair 0 first, so a whole
+write of a chunked value is its chunks at the chunk addresses of the
+VHDL rule, `handle + chunk * chunk_size`, with the arena splits on
+top.
+`t12_v_vec12000` spans three arenas: arena 0 holds a chunk of 136 and
+16 bytes of the next, arena 1 the remaining 120 then fourteen of 136
+and 24 bytes of the next, and arena 2 the remaining 112, four of 136,
+and the last of 144.
+
+A partial write into a chunked value is not chunked.
+It is the 8 byte pair record of the partial records rule, at the
+handle plus 8 times the pair index, wherever that address falls:
+`t12_v_vec4800x` sets bit 2400 at 75 ns and writes one 8 byte record
+at the handle plus 600, in arena 1.
+`t12_v_mem40w32`, `reg [31:0] m [0:39]`, 320 bytes in four chunks of
+80, writes `m[i]` one element per ns after its whole `X` write, and
+each is an 8 byte record.
+So a record on a chunked value is either a chunk piece, at a piece
+address with a piece length, or some whole pairs, and the reader
+classifies each record by address and length.
+The two shapes meet at an arena boundary: the 8 byte rest of the
+chunk split at `0x800` in `t12_v_mem40w32` has the address and length
+of a write of `m[21]`.
+The reader counts the records at each piece address in a time and
+takes the smallest count as the number of whole writes, so a surplus
+record at the split address is read as a pair write.
+
+*Found by* `t12_v_vec1089` against `t12_v_vec1088`, 280 bytes of
+record in four records of 70 where 272 bytes were two records of 152
+and 120.
+*Confirmed by* the other four wide cases, and by `t12_v_vec12000`
+chunking as `t9_vec3000`, the same 3000 bytes in VHDL.
+The pair write inside a chunked value was found by `t12_v_vec4800x`
+against `t12_v_vec4800`, and the split rest ambiguity by
+`t12_v_mem40w32`, which the first reader refused with two records at
+`0x800` against one at the other chunk addresses.
+
+**Order within a time.**
+An arena's records are in write order, and a time step's writes that
+land in two arenas come back in arena order, not write order.
+`t12_v_mem40_t0` writes `m[0]` to `m[39]` at time 0 after the whole
+`X` write; `m[0]` is the top pair, at the handle plus 312, in arena 1,
+and `m[21]` to `m[39]` are in arena 0.
+The file holds the arena 0 records first, so a reader that replays
+the arenas in file order sees `m[21]` to `m[39]` written before `m[0]`
+to `m[20]`.
+The values are unaffected, because no pair is written twice, but a
+design that writes one pair twice in one time step across an arena
+boundary would be read wrongly, and nothing in the file says which
+write came first.
+The test for the case compares the final value of each time rather
+than the sequence.
+
+*Found by* `t12_v_mem40_t0` against `t12_v_mem40w32`, the same forty
+writes at one time and at forty times.
+
+**Z and X.**
+`t12_v_vec8_z` writes `8'bz0z1xx01` and records `1d 00 00 00 ac 00 00
+00`: `a` is `0001 1101` and `b` is `1010 1100`, so a `Z` bit is `b`
+alone, an `X` bit is both, and each bit is independent of its
+neighbours.
+
+*Found by* `t12_v_vec8_z` against `t11_v_vec8`.
+*Confirmed by* `t11_v_vec64x`, one `X` bit.
 
 **Where the elements go.**
 A vector's leftmost bit is its most significant, whatever the declared
@@ -522,6 +604,9 @@ width and record as such; `t11_v_integer` stores 165 as
 signed except for `time`.
 A `real` takes one pair holding the `float64`: `t11_v_real` stores 1.5
 as `0x3ff8000000000000` and its declared size is 32.
+A `shortreal` is the same: `t12_sv_shortreal` declares 32 bits with
+the predefined `real` entry and stores 1.5 as the same `float64`, so
+the 32 bit width of the source does not reach the database.
 A `bit` type is two state and its `b` words are 0 throughout.
 
 **Structs.**
@@ -571,6 +656,15 @@ records once too.
 `XXXX` and then `A`, while `t11_sv_enum` over `int` records `IDLE`
 once, because the implicit process writes the value it already holds.
 A `real` records `0` once for the same reason.
+Without an initializer there is no implicit process: `t12_v_noinit`,
+a `reg` first written at 50 ns, and `t12_sv_noinit`, the same with
+`logic`, each hold one `X` record at time 0 and the write.
+`t12_sv_enum_noin`, an enum over `int` without an initializer, holds
+`IDLE` at time 0, the first literal, and no `X`.
+A parameter holds one record at time 0 with its value:
+`t12_v_params` records `K = 7`, `P = 8'h5a`, `Q = 9`, `R = 1.5` and
+`L = 8`, and `t12_v_param64` a 64 bit value in two pairs, low word
+first.
 
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, three records
 where two were expected.
@@ -585,7 +679,15 @@ time 0 per object on it, then the value, as a VHDL net does: `y` and
 `tb.dut.b` in `t11_v_port` share `0x768` and hold `X`, `X`, `1`, `0`.
 The input port `a`, on its own handle, also holds two `X` records
 before its `0`, though one object is on it.
-Why is open.
+When the input port is driven by a `wire`, `t12_v_port_wire`, the
+port shares the wire's handle and the net holds three `X` records
+before its `0`; the output side, `y` and `b`, holds two.
+`t12_v_port_vec8` does the same with 8 bit ports.
+An `output reg` port, `t12_v_port_reg`, keeps its own handle and holds
+`X` then its value, while the wire it drives in the parent holds `X`
+then the value, and the input port holds `X`, `X`, `0`.
+So the count is one `X` per object on the handle plus one for an
+input port, and what writes the extra one is open.
 
 **What is not recorded.**
 The `always #25 clk = ~clk` of `t11_v_always` is due at 100 ns, the
@@ -597,6 +699,12 @@ Vivado's VCD for a Verilog design is fuller than for VHDL: `real`,
 `integer`, `time`, a struct and an enum all get a `$var`.
 A memory and a `string` do not, so the `t11_v_mem*` cases have no VCD
 guard and their `truth.json` is the only check.
+A task's and a function's arguments and locals are recorded:
+`t12_v_task` holds `v` and `tmp` of `task inc` as objects under
+`tb.inc`, all `X` at time 0 and their values at the call, and
+`t12_v_func` holds the return variable `inc` as well, written after
+the locals.
+See [hierarchy.md](hierarchy.md).
 
 
 ## What VCD cannot hold

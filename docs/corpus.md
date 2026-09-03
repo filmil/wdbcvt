@@ -154,6 +154,9 @@ checks the declaration and the recorded value against them.
 `transition_runs` lists a signal, a start, a step, a count and the
 values the run cycles through, and the test expands it into
 transitions.
+`final_per_time` names the signals whose writes within one time step
+the file cannot order, and the test compares the last value of each
+time step for them instead of the sequence; see the tier 12 notes.
 
 
 ## The ladder
@@ -383,10 +386,41 @@ struct, because that is what the type table holds.
 Every `.v` case with an initializer lists the `X` record before its
 value, and the memory cases list one state per element write.
 
-Not written yet, in order: Verilog values wide enough to reach the
-chunk rule; a `log_wave` that covers a package, to see a package
-signal logged; and a VCD cross-check of every case through
-`go-vcd-parser`.
+Tier 12 perturbs tier 11 where its findings left gaps: wide Verilog
+values, the process counter, ports on wires, subprograms, parameters,
+generate blocks with variables, and SystemVerilog typedefs and
+unpacked arrays.
+Each case is one axis against a tier 11 case, and the transition and
+`$finish` times are as in tier 11.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t12_v_vec1088`, `t12_v_vec1089` | 272 and 280 bytes of record | the chunk threshold is 275 for Verilog too; chunks split inside a pair |
+| `t12_v_vec2272`, `t12_v_vec2304` | one byte under a chunk step, and on it | 4 chunks of 142, 6 of 96 |
+| `t12_v_vec4800`, `t12_v_vec4800x` | ten chunks; one bit of it set later | a pair write into a chunked value is an 8 byte record |
+| `t12_v_vec12000` | 3000 bytes over three arenas | the chunks of `t9_vec3000` |
+| `t12_v_mem40w32`, `t12_v_mem40_t0` | forty element writes at forty times, and at one | the split rest ambiguity; the cross arena order loss |
+| `t12_v_vec8_z` | `8'bz0z1xx01` | `Z` is the `b` word alone |
+| `t12_v_neg_range` | `reg [-4:3]` | signed bounds, the record unchanged |
+| `t12_v_noinit`, `t12_sv_noinit`, `t12_sv_enum_noin` | no initializer | no implicit scope; one `X` record, or the first literal for an enum |
+| `t12_sv_shortreal` | `shortreal` | the `real` entry and record |
+| `t12_sv_typedef` | `typedef logic [7:0]` | the alias carries the bounds |
+| `t12_sv_unp2d` | `logic [3:0] m [0:1][0:2]` | one array entry per unpacked dimension |
+| `t12_v_params`, `t12_v_param64` | five parameter declarations; a 64 bit one | parameter types; 16 bits for a `real`; consecutive handles by record size |
+| `t12_v_task`, `t12_v_func` | a `task` and a `function` | unit kinds `0x03` and `0x04`; arguments and locals are objects; the return variable first |
+| `t12_v_gen_reg` | a `reg` in a generate loop | the escaped name `\g[0].r `; one implicit scope per iteration |
+| `t12_v_proc_order` | a child and a parent with three processes each | the process counter order; nets before variables in pre order |
+| `t12_v_port_wire`, `t12_v_port_vec8`, `t12_v_port_reg` | an input port on a wire, 8 bits wide, an `output reg` | an input port shares a wire's handle and not a reg's; three `X` records on the shared net |
+
+`t12_v_mem40_t0` is the one case whose `truth.json` cannot list its
+transitions in order, because the file does not hold the order; it
+sets `final_per_time` and the test compares the value at the end of
+each time step.
+
+Not written yet, in order: a `log_wave` that covers a package, to see
+a package signal logged; SystemVerilog interfaces, packages,
+`always_ff` and `inout` ports; a typedef of an unpacked array; and a
+VCD cross-check of every case through `go-vcd-parser`.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -441,7 +475,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 197 cases through tier 11.
+5. The reader now reproduces all 221 cases through tier 12.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

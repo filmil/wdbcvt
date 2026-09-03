@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 197 cases.
+They are the same in all 221 cases.
 
 
 ## Scope records
@@ -135,7 +135,7 @@ The record has 9 words:
 | ---: | :--- |
 | 0 | entity name, offset into the scope name pool, `-1` if none |
 | 1 | architecture name, same pool, `-1` if none |
-| 2 | kind: `0x13` the root, `0x09` an entity, `0x0a` a package, `0x0c` a generate or a block, `0x0d` a process; for Verilog `0x00` a module, `0x05` a named block, `0x07` a process |
+| 2 | kind: `0x13` the root, `0x09` an entity, `0x0a` a package, `0x0c` a generate or a block, `0x0d` a process; for Verilog `0x00` a module, `0x03` a task, `0x04` a function, `0x05` a named block, `0x07` a process |
 | 3 | number of declarations |
 | 4 | 0, see below |
 | 5 | file index of the architecture |
@@ -642,8 +642,20 @@ A process is a unit of kind `0x07` with words 7 and 8 zero, as a VHDL
 process, and a named block, `begin : blk`, is a unit of kind `0x05`.
 The root is `0x13`, as for VHDL.
 
+A `task` is a unit of kind `0x03` and a `function` one of kind `0x04`,
+each with a scope named after it under the module, `tb.inc` at the
+`task` or `function` line, and the arguments and locals of the
+subprogram are declarations of that unit and objects of that scope.
+`t12_v_task` declares `v`, an `input` argument with port mode `1` and
+`(7 downto 0)`, then the local `tmp`; both hold `X` records at time 0
+and their values at the call.
+`t12_v_func` declares the return variable `inc` first, then `v` and
+`tmp`, and the call writes `v`, `tmp` and then `inc`.
+The subprogram scope has no unit name and no process scope of its own.
+
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`.
-*Confirmed by* `t11_v_always`, which adds the block.
+*Confirmed by* `t11_v_always`, which adds the block, and `t12_v_task`
+and `t12_v_func`, which add the two subprogram kinds.
 
 **Process scopes.**
 Every `initial`, every `always` and every continuous assignment is a
@@ -657,10 +669,25 @@ and a counter:
 | `assign` at line 10 | `NetRegassign10_2` | `t11_v_wire` |
 | `always ... begin : blk` at line 12 | `blk` and `Always12_1`, both at line 12 | `t11_v_always` |
 
-The counter after the underscore is per design, and its order is open:
-in `t11_v_port` the two processes of `tb` are `_0` and `_1` and the
-child's assignment is `_2`, while in `t11_v_hier1` the child's two are
-`_0` and `_1` and `tb`'s is `_2`.
+The counter after the underscore is per design.
+`t12_v_proc_order` gives a child and its parent one `initial` block,
+one initializer and one `assign` each, and numbers them
+`child.Initial12_0`, `child.Initial7_1`, `tb.Initial14_2`,
+`tb.Initial7_3`, `tb.NetRegassign10_4`, `child.NetRegassign10_5`.
+So the procedural processes of a design are numbered module by module
+in post order, children before their parent, and within a module in
+source order with the implicit `Initial` last; the continuous
+assignments follow all of them, parent first.
+That is the order `t11_v_port` and `t11_v_hier1` showed in part: in
+`t11_v_port` `tb` has the procedural processes and the child has the
+assignment, and in `t11_v_hier1` the child has the processes.
+The counter runs over elaborated instances and the name is fixed at
+the first: `t11_v_gen_for` has `tb.Initial14_4`, because each of the
+two child instances took two numbers, and both instances carry
+`Initial9_0` and `Initial7_1`.
+
+*Found by* `t12_v_proc_order` against `t11_v_port` and `t11_v_hier1`.
+*Confirmed by* `t11_v_gen_for`.
 
 **Implicit initial scopes.**
 A module whose variables have initializers, `reg s = 1'b0;`, gets one
@@ -679,6 +706,14 @@ The scope adds `0x98` bytes of handle space: `t11_v_bit_edge` has
 `0x9b4` where `t11_sv_logic`, the same design with `logic` instead of
 `reg`, has `0x91c`.
 It also changes the records at time 0; see [values.md](values.md).
+Without an initializer the scope is absent: `t12_v_noinit`, a `reg`
+first written at 50 ns, has `0x91c` of handle space, as
+`t11_sv_logic` does, and `t12_sv_enum_noin`, an enum without an
+initializer, has `0x934` where `t11_sv_enum` has `0x9cc`.
+A `reg` declared inside a generate loop gets one implicit scope per
+iteration: `t12_v_gen_reg` has `tb.Initial11_0` and `tb.Initial11_1`
+for two iterations, beside `tb.Initial10_3` for the module's own
+initializer and `tb.Initial17_2` for its `initial` block.
 
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`, four scopes
 where three were expected.
@@ -696,7 +731,16 @@ The `genvar` is not a declaration and not an object.
 The two instances share one unit, and their process scopes carry the
 same names, `Initial9_0` and `Initial7_1` under each.
 
+A variable declared in a generate block belongs to the module, under
+an escaped name: `reg r` in `for (i = 0; i < 2; i = i + 1) begin : g`
+of `t12_v_gen_reg` is declared in `tb` as `\g[0].r ` and `\g[1].r `,
+with the backslash and the trailing space of a Verilog escaped
+identifier, and the objects are `tb.\g[0].r ` and `tb.\g[1].r `.
+There is no `g[0]` scope.
+
 *Found by* `t11_v_gen_for` against `t7_gen_for`.
+*Confirmed by* `t12_v_gen_reg`, the loop with a variable and no
+instance.
 
 **Declarations.**
 A `reg` or any other variable is kind `0x00`, a `wire` is kind `0x03`,
@@ -721,6 +765,18 @@ An output port shares the handle of the wire on its net, `0x768` for
 `b` and `y`, as a VHDL port does.
 An input port connected to a `reg` does not share the `reg`'s handle;
 `a` and `x` are distinct objects with their own records.
+An input port connected to a `wire` does share it: in
+`t12_v_port_wire`, where the parent drives `wire x` by an `assign`,
+`x` and `tb.dut.a` hold `0x768` together, and `y` and `tb.dut.b` hold
+`0x828`.
+An `output reg` port does not share the parent's wire: in
+`t12_v_port_reg` the wire `y` holds `0x768`, the input port `a`
+`0x828`, the `reg` `x` `0x8e8` and the output `reg` `b` `0x9a8`.
+So sharing happens between a port and a net, never between a port
+and a variable, and the shared handle is the net's.
+Nets come first in the whole design, in pre order: `t12_v_proc_order`
+has the child's wire `u` at `0x768`, `tb`'s wire `w` at `0x828`, then
+the child's `reg` `t` at `0x8e8` and `tb`'s `reg` `s` at `0x9a8`.
 The second handle of a variable is the handle plus the record size,
 8 bytes per 32 bits of value, and the next object's handle is the
 second handle plus `0xb8`.
@@ -737,9 +793,18 @@ VHDL signals do the same; see the open questions in
 [../format.md](../format.md).
 A `parameter` is an object with a handle and no second handle, the
 shape of a VHDL generic, in a second arena: `0x8c0` in `t11_v_param`.
+The parameters of one module sit at consecutive handles, each 8 bytes
+per 32 bits of value: the five of `t12_v_params`, `K`, `P`, `Q`, `R`
+and `L`, at `0x8c0`, `0x8c8`, `0x8d0`, `0x8d8`, `0x8e0`, and in
+`t12_v_param64` the 64 bit `W` at `0x8c0` and the 8 bit `P` at
+`0x8d0`.
+A `localparam` is a parameter like any other, in source order.
 
 *Found by* `t11_v_two_w64` against `t11_v_vec8`, and `t11_v_port`
 against `t8_port_in`.
+*Confirmed by* `t12_v_port_wire`, `t12_v_port_vec8`, `t12_v_port_reg`
+and `t12_v_proc_order` for the sharing and the order, and
+`t12_v_params` and `t12_v_param64` for the parameters.
 
 **What is missing.**
 A `string` variable, `t11_sv_str`, has its implicit `initial` scope
