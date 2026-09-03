@@ -166,6 +166,20 @@ func sameValue(f *File, typ int, want, got string) bool {
 		a, err1 := parseTime(f.Types[typ], want)
 		b, err2 := parseTime(f.Types[typ], got)
 		return err1 == nil && err2 == nil && a == b
+	case KindArray:
+		// An array of reals or times prints as `(a, b, ...)`, and each
+		// element is compared as its own type: t10_real40.
+		w, g := strings.TrimSuffix(strings.TrimPrefix(want, "("), ")"), strings.TrimSuffix(strings.TrimPrefix(got, "("), ")")
+		ws, gs := strings.Split(w, ", "), strings.Split(g, ", ")
+		if !strings.HasPrefix(want, "(") || !strings.HasPrefix(got, "(") || len(ws) != len(gs) {
+			return false
+		}
+		for i := range ws {
+			if !sameValue(f, f.Types[typ].Elem, ws[i], gs[i]) {
+				return false
+			}
+		}
+		return true
 	}
 	return false
 }
