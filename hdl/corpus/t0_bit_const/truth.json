@@ -1,0 +1,8 @@
+{
+  "case": "t0_bit_const",
+  "axis": "signal count 0 to 1",
+  "differs_from": "t0_nosig",
+  "end_time_ns": 100,
+  "signals": [{"scope": "tb", "name": "s", "width": 1, "type": "std_ulogic"}],
+  "transitions": [{"time_ns": 0, "signal": "s", "value": "0"}]
+}

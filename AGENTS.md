@@ -80,6 +80,22 @@ Do not add `actions/checkout` or any other JavaScript action.
 Check out with plain `git`, the way the existing workflows do.
 A composite action made of bash steps is fine; `forgejo-release` is one.
 
+Host mode also gives the job a **pseudo-terminal**: a step's stdin is a
+`/dev/pts` device, not `/dev/null`.
+So any tool that decides to be interactive because it sees a terminal
+will block forever, and the job sits in `running` until the six hour
+timeout while holding the single serial runner.
+`git log` is the one that has already done this: it started
+`/usr/bin/pager`, which waited on input that never came.
+
+Every command in a workflow step must therefore be non-interactive by
+construction, not by luck.
+Pass `--no-pager` to `git`, keep `GIT_PAGER=cat` in the step
+environment, and give the same treatment to anything else that pages or
+prompts.
+Redirecting a step's stdin from `/dev/null` is the blunt version of the
+same rule.
+
 
 # Engineering standards
 

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+bzl_library(
+    name = "wdb_case",
+    srcs = ["wdb_case.bzl"],
+    deps = ["@rules_vivado//build/vivado:rules"],
+)

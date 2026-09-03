@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# Every corpus database in one target:
+#
+#     bazel build //hdl/corpus:all_wdb
+#
+# See //docs/wdb-corpus.md for what the cases are for and how to read
+# the differences between them.
+filegroup(
+    name = "all_wdb",
+    srcs = [
+        "//hdl/corpus/t0_bit_const:sim",
+        "//hdl/corpus/t0_nosig:sim",
+        "//hdl/corpus/t1_bit_long_name:sim",
+        "//hdl/corpus/t1_bit_one_edge:sim",
+        "//hdl/corpus/t1_bit_two_edges:sim",
+        "//hdl/corpus/t1_hier1:sim",
+        "//hdl/corpus/t1_nine_state:sim",
+        "//hdl/corpus/t1_two_bits:sim",
+        "//hdl/corpus/t1_vec8:sim",
+    ],
+    visibility = ["//visibility:public"],
+)
