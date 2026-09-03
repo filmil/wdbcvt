@@ -1,0 +1,108 @@
+{
+  "case": "t43_port_unc_rec",
+  "axis": "ports. a : in bundle_t where bravo is unconstrained, bound to a signal declared bundle_t(bravo(7 downto 0)).",
+  "differs_from": "t43_port_uncons_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 9,
+      "type": "bundle_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 8,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 9,
+      "type": "bundle_t",
+      "port": "in",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 8,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "v.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v.bravo",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v.bravo",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a.bravo",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a.bravo",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.s",
+      "value": "0"
+    }
+  ]
+}

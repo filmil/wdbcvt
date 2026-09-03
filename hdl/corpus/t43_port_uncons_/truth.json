@@ -1,0 +1,66 @@
+{
+  "case": "t43_port_uncons_",
+  "axis": "ports. a : in std_ulogic_vector bound to an eight bit signal, against the constrained port of t8_port_vec8.",
+  "differs_from": "t8_port_vec8____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "port": "in",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.s",
+      "value": "0"
+    }
+  ]
+}

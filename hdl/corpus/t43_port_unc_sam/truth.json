@@ -1,0 +1,122 @@
+{
+  "case": "t43_port_unc_sam",
+  "axis": "ports. dut and dut2 both bound to eight bit signals.",
+  "differs_from": "t43_port_unc_two",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "port": "in",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut2",
+      "name": "a",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "port": "in",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb.dut2",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "w",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut2.a",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut2.a",
+      "value": "01011010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut2.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut2.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut2.s",
+      "value": "0"
+    }
+  ]
+}

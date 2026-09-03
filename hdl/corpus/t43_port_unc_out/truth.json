@@ -1,0 +1,55 @@
+{
+  "case": "t43_port_unc_out",
+  "axis": "ports. a : out std_ulogic_vector driven by the child, bound to an eight bit signal of tb.",
+  "differs_from": "t43_port_uncons_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "range": "7 downto 0"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 8,
+      "type": "std_ulogic_vector",
+      "port": "out",
+      "range": "7 downto 0"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "UUUUUUUU"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "11111111"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "UUUUUUUU"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "11111111"
+    }
+  ]
+}
