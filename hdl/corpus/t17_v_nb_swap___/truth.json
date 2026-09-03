@@ -1,0 +1,56 @@
+{
+  "case": "t17_v_nb_swap___",
+  "axis": "two regs swapped by nonblocking writes in one time step",
+  "differs_from": "t17_v_reg_nb____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "records": 3,
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "records": 3,
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "b",
+      "value": "0"
+    }
+  ]
+}
