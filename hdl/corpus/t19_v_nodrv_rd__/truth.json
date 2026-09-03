@@ -1,0 +1,63 @@
+{
+  "case": "t19_v_nodrv_rd__",
+  "axis": "a wire with no driver read by a continuous assignment",
+  "differs_from": "t19_v_wire_nodrv",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "records": 1,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "w2",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "Z"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w2",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w2",
+      "value": "Z"
+    }
+  ]
+}
