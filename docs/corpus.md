@@ -1341,6 +1341,31 @@ it with the quotes stripped.
 `truth.json` gained a `range` field for a generic, and the corpus test
 checks it.
 
+**Tier 41: bounds below zero, and the IEEE fixed and float packages.**
+VHDL.
+No corpus case had a VHDL index range with a negative bound, and none
+used `ieee.fixed_pkg` or `ieee.float_pkg`, whose types are declared
+with them.
+`std_ulogic_vector` is indexed by `NATURAL` and cannot take one, so
+the tier declares `vec_t`, an `array (integer range <>) of
+std_ulogic`, and constrains it at the signal.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t41_uvec________` | `t1_vec8` | `array (natural range <>) of std_ulogic` in the architecture | an entry of the `STD_ULOGIC_VECTOR` shape |
+| `t41_neg_vec_____` | `t41_uvec________` | `vec_t(3 downto -4)` over `integer range <>` | the bound signed; `INTEGER` as the index |
+| `t41_neg_asc_____` | `t41_neg_vec_____` | `vec_t(-4 to 3)` | `(-4 to 3)` |
+| `t41_arr_subtype_` | `t41_neg_vec_____` | `subtype byte_t is vec_t(3 downto -4)` | an entry named `byte_t` holding the range; no `vec_t` |
+| `t41_neg_arr_type` | `t5_int_arr` | `array (-2 to 1) of integer` | `(-2 to 1)` in the type entry |
+| `t41_neg_int_sub_` | `t21_int_sub` | `integer range -8 to 7` | `-8 to 7` in the entry |
+| `t41_sfixed______` | `t41_neg_vec_____` | `sfixed(3 downto -4)` | an entry `sfixed`, lower case, of the `vec_t` shape |
+| `t41_ufixed______` | `t41_sfixed______` | `ufixed(3 downto -4)` | the same as `ufixed` |
+| `t41_float32_____` | `t41_sfixed______` | `float32` | a constrained entry `(8 downto -23)`, 32 bytes |
+
+The `range` field of a signal in `truth.json`, written since tier 11
+and never read, is checked by the corpus test from this tier on, and
+the 32 cases that had one pass.
+
 
 ## Record which comparison produced which finding
 
@@ -1379,7 +1404,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 675 cases through tier 40, and
+5. The reader now reproduces all 684 cases through tier 41, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

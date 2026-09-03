@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 675 of 675 cases decoding with the entry lengths chaining
+*Confirmed by* 684 of 684 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -225,6 +225,67 @@ three ranges `(0 to 1) (0 to 1) (0 to 2)`.
 
 *Found by* `t18_arr_2dim` against `t2_array2d`, where the reader ran
 out of bytes 4 words early on the entry.
+
+**Bounds below zero.**
+A bound is a signed 32 bit word in a triple and in a declaration
+range alike.
+`vec_t(3 downto -4)` in `t41_neg_vec`, an `array (integer range <>)
+of std_ulogic`, puts `(3 downto -4)` in the declaration record where
+`vec_t(7 downto 0)` of `t41_uvec` puts `(7 downto 0)`; the type entry
+is the unconstrained triple in both, and the index word names
+`INTEGER` for the one and `NATURAL` for the other.
+`t41_neg_asc` has `(-4 to 3)`, and `int_array_t`, an
+`array (-2 to 1) of integer` in `t41_neg_arr_type`, holds
+`(-2 to 1)` in its entry.
+The value is the elements in index order, the leftmost first,
+whatever the bounds.
+The predefined `std_ulogic_vector` cannot take such a bound, since its
+index subtype is `NATURAL`, which is why the tier declares its own
+array type.
+*Found by* `t41_neg_vec` against `t41_uvec`.
+*Confirmed by* `t41_neg_asc`, `t41_neg_arr_type`, `small_t` of
+`t41_neg_int_sub`, an integer subtype `-8 to 7`, and the `sfixed`,
+`ufixed` and `float32` entries below.
+
+**Constrained subtype of an array.**
+A signal declared with a constrained subtype of an unconstrained array
+type, `subtype byte_t is vec_t(3 downto -4)` in `t41_arr_subtype`,
+gets an entry named `byte_t` that carries the subtype's range
+`(3 downto -4)` as its one triple, and the base type `vec_t` is not in
+the table.
+The declaration record carries the same range.
+So the entry is named after the subtype the signal is declared with,
+as the enumeration entries are, and holds the subtype's constraint
+where the base type held none.
+*Found by* `t41_arr_subtype` against `t41_neg_vec`, the same signal
+declared through a subtype.
+*Confirmed by* `float32` of `t41_float32`, which `ieee.float_pkg`
+declares as a constrained subtype of `float` and whose entry is
+`float32` with `(8 downto -23)`.
+
+**The IEEE fixed and float packages.**
+`sfixed(3 downto -4)` of `t41_sfixed` and `ufixed(3 downto -4)` of
+`t41_ufixed` are unconstrained array entries named `sfixed` and
+`ufixed` over `STD_ULOGIC`, indexed by `INTEGER`, with the bounds in
+the declaration record, and their values are one byte per element
+with the leftmost first: `to_sfixed(1.5, 3, -4)` is `00011000` and
+`to_sfixed(-2.25, 3, -4)` is `11011100`.
+`float32` of `t41_float32` is the constrained entry above, 32 bytes,
+`to_float(1.5)` recorded as the IEEE 754 bits `0x3fc00000` one byte
+per bit.
+Nothing marks a fixed or floating point vector as one: the entries
+have the shape of any array of `STD_ULOGIC`, and a reader that wants
+the number has to know the package.
+The names are spelled as the package source spells them: `sfixed`,
+`ufixed` and `float32` in lower case, where `STD_ULOGIC_VECTOR` is in
+upper case, and Vivado's `data/vhdl/src/ieee_2008` sources declare
+`subtype sfixed is (resolved) UNRESOLVED_sfixed` and
+`type STD_ULOGIC_VECTOR`.
+A resolved subtype of an unconstrained type is named for the subtype,
+as `STD_LOGIC_VECTOR` is, and the unresolved base does not appear.
+*Found by* `t41_sfixed` against `t41_neg_vec`, the same bounds over a
+user type.
+*Confirmed by* `t41_ufixed` and `t41_float32`.
 
 *Confirmed by* `t18_arr_3dim`, `t19_arr_2d_vec` and `t19_arr_of_2dim`,
 and by `truth.json` of each against the decoded value.
