@@ -608,6 +608,51 @@ between them.
 *Confirmed by* `t55_sub_prot_2__`, `t55_sub_prot_3__` and
 `t55_sub_loop____` against `t50_sub_func_prm`.
 
+The static values of a subprogram take handle space, though its
+locals do not.
+Tier 56 holds a function with a `std_ulogic` parameter and an integer
+local, `t56_typ_none____` at `0x11d0`, and adds one thing at a time:
+
+| Added | Handle space | Case |
+| :--- | ---: | :--- |
+| an array type of four integers, used by nothing | `+0` | `t56_typ_arr_unus` |
+| a local of it, initialised by `(others => 0)` | `+0x10` | `t56_typ_arr_loc_` |
+| a local of it, not initialised | `+0x10` | `t56_typ_arr_noin` |
+| a local of it, initialised by `(others => n)` from a parameter | `+0` | `t56_sub_arr_dyni` |
+| two locals of it, or of two such types | `+0x20` | `t56_typ_arr_2loc`, `t56_typ_arr_2typ` |
+| a local of an array of eight integers | `+0x20` | `t56_typ_arr8_loc` |
+| the uninitialised local, assigned `(others => 2)` in the body | `+0x20` | `t56_typ_arr_lit_` |
+| the uninitialised local, assigned `(others => v)` in the body | `+0x10` | `t56_typ_arr_dyn_` |
+| a `std_ulogic_vector(3 downto 0)` local, initialised or of a named subtype | `+4` | `t56_typ_vec4_loc`, `t56_typ_vec4_sub` |
+| two of them | `+8` | `t56_typ_vec4_2lc` |
+| one, not initialised, assigned `(others => '0')` in the body | `+8` | `t56_typ_vec_noin` |
+| an `integer range 0 to 7` local, or an enumeration local | `+0` | `t56_typ_int_rng_`, `t56_typ_enum_loc` |
+| a record local of 8 bytes, initialised by a literal or not | `+0xc` | `t56_typ_rec_loc_`, `t56_typ_rec_noin`, `t56_sub_rec_1int`, `t56_sub_rec_2int`, `t56_typ_rec_arr_` |
+| a record local of 16 bytes | `+0x14` | `t56_sub_rec_3int`, `t56_sub_rec_4int`, `t56_sub_rec_2rl_` |
+| a record local initialised by `(a => c, n => 1)` from the parameter | `+0` | `t56_typ_rec_prm_` |
+
+So a type costs nothing, and a scalar local nothing, but every static
+value of a composite type costs its bytes: the initial value of a
+composite local when it is a literal or the default, and every
+aggregate or string literal in the body, or in the call, which is the
+4 that `"0001"` costs `t50_sub_func_prm` and `"abcd"` costs
+`t50_sub_str_loc_`.
+An initial value computed at the call costs nothing, and a local that
+gets one has no default to store.
+An array's bytes are its elements, a record's its declared size plus
+4, and the declared size of a record is a multiple of 8, so a record
+of one integer declares 8 bytes as a record of two does.
+A process variable is not affected: `t56_prc_vec_noin` and
+`t56_prc_arr_noin` drop the initialiser of the tier 52 variables and
+keep their handle space and strides, `0x14` and `0x20`.
+*Found by* `t56_typ_arr_loc_` against `t56_typ_arr_unus`, then
+`t56_typ_arr_lit_` against `t56_typ_arr_noin` for the literal, and
+`t56_sub_arr_dyni` and `t56_typ_rec_prm_` for the computed initial
+value.
+*Confirmed by* the rest of tier 56, `t49_sub_int_arr_`,
+`t49_sub_rec_loc_` at `0x11d0` with its record initialised from the
+parameter, `t50_sub_func_prm` and `t50_sub_str_loc_`.
+
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
 See [values.md](values.md).
@@ -1412,6 +1457,8 @@ its own base, and the number looks like an offset into the
 subprogram's frame rather than a place in the handle space.
 They do not move the handle space: `t22_dbg_subprog` has `0x1468` as
 `t22_base` does.
+A composite local and a composite literal do, by the bytes of the
+value, see the static values paragraph below.
 `-debug subprogram` on its own, `-debug line` and `-debug off` produce
 no database at all: xsim refuses `log_wave` with "compiled without
 trace information", and asks for `all` or `typical`.
@@ -2246,10 +2293,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 851 of 851 cases, and the
+*Confirmed by* the region length check in 880 of 880 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 851 of 851 cases and
+and *confirmed by* the reader's range check in 880 of 880 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

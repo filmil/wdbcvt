@@ -1715,6 +1715,49 @@ through package subprograms instead.
 | `t55_prot_pkg_2pl` | `t55_prot_pkg_2p_` | `p2` calling last | under `tb.p2` still |
 | `t55_prot_pkg_sv_` | `t55_prot_pkg_prc` | the variable in the package, behind package subprograms | `pk.bump`, `pk.get` twice under `pk`; the variable absent |
 
+**Tier 56: the types and composite values of a subprogram.**
+VHDL, under `-debug subprogram`.
+A function with a `std_ulogic` parameter and an integer local,
+`t56_typ_none____`, gains one type declaration or one composite local at
+a time, to find what each costs the handle space and the frame.
+A type costs nothing, a composite local costs the bytes of its static
+initial value, and each aggregate or string literal in the body costs
+its bytes again.
+Three process variable cases without initialisers check that the tier
+52 rule does not depend on the initialiser.
+
+| Case | Adds | Differs from |
+| :--- | :--- | :--- |
+| `t56_typ_none____` | the baseline function `f(c)` with local `v` | `t55_sub_loop____` |
+| `t56_typ_arr_unus` | `type arr_t is array (0 to 3) of integer`, used by nothing | `t56_typ_none____` |
+| `t56_typ_arr_loc_` | a local `a : arr_t := (others => 0)` | `t56_typ_arr_unus` |
+| `t56_typ_arr_2loc` | two locals of `arr_t` | `t56_typ_arr_loc_` |
+| `t56_typ_arr_2typ` | two array types, a local of each | `t56_typ_arr_2loc` |
+| `t56_typ_arr8_loc` | a local of an array of eight integers | `t56_typ_arr_loc_` |
+| `t56_typ_vec4_loc` | a local `w : std_ulogic_vector(3 downto 0) := "0000"` | `t56_typ_none____` |
+| `t56_typ_vec4_2lc` | two such locals | `t56_typ_vec4_loc` |
+| `t56_typ_vec4_sub` | the local of a named subtype of the vector | `t56_typ_vec4_loc` |
+| `t56_typ_int_rng_` | a local `n : integer range 0 to 7 := 0` | `t56_typ_none____` |
+| `t56_typ_enum_loc` | an enumeration type and a local of it | `t56_typ_none____` |
+| `t56_typ_rec_loc_` | a record type of a `std_ulogic` and an integer, a local of it with a literal | `t56_typ_none____` |
+| `t56_typ_rec_arr_` | a record local with a vector field | `t56_typ_rec_loc_` |
+| `t56_typ_arr_prc_` | the array type in the architecture, a process variable of it | `t56_typ_arr_unus` |
+| `t56_typ_arr_noin` | the array local without an initialiser | `t56_typ_arr_loc_` |
+| `t56_typ_arr_dyn_` | the uninitialised local assigned `(others => v)` in the body | `t56_typ_arr_noin` |
+| `t56_typ_arr_lit_` | the uninitialised local assigned `(others => 2)` in the body | `t56_typ_arr_noin` |
+| `t56_typ_vec_noin` | the vector local without an initialiser, assigned `(others => '0')` | `t56_typ_vec4_loc` |
+| `t56_typ_rec_noin` | the record local without an initialiser | `t56_typ_rec_loc_` |
+| `t56_typ_rec_prm_` | the record local initialised by `(a => c, n => 1)` from the parameter | `t56_typ_rec_loc_` |
+| `t56_prc_vec_init` | a process with two vector variables, initialised | `t52_var_vec4____` |
+| `t56_prc_vec_noin` | the same without initialisers | `t56_prc_vec_init` |
+| `t56_prc_arr_noin` | a process with two array variables, not initialised | `t56_typ_arr_prc_` |
+| `t56_sub_arr_dyni` | `f(c, n)` with a local `a : arr_t := (others => n)` | `t56_typ_arr_loc_` |
+| `t56_sub_rec_2int` | a record local of two integers | `t56_typ_rec_noin` |
+| `t56_sub_rec_1int` | a record local of one integer | `t56_sub_rec_2int` |
+| `t56_sub_rec_3int` | a record local of three integers | `t56_sub_rec_2int` |
+| `t56_sub_rec_4int` | a record local of four integers | `t56_sub_rec_3int` |
+| `t56_sub_rec_2rl_` | a record local of two reals | `t56_sub_rec_2int` |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1752,7 +1795,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 851 cases through tier 55, and
+5. The reader now reproduces all 880 cases through tier 56, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
