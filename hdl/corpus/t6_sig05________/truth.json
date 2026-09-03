@@ -1,0 +1,90 @@
+{
+  "case": "t6_sig05________",
+  "axis": "object count. 5 signals, to see how the header arena table and the handle arenas grow.",
+  "differs_from": "t5_sig10________",
+  "end_time_ns": 60,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s0",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s1",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s2",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s3",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s4",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s0",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s1",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s2",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s3",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s4",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s0",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "s1",
+      "value": "1"
+    },
+    {
+      "time_ns": 30,
+      "signal": "s2",
+      "value": "1"
+    },
+    {
+      "time_ns": 40,
+      "signal": "s3",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s4",
+      "value": "1"
+    }
+  ]
+}

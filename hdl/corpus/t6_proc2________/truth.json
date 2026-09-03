@@ -1,0 +1,58 @@
+{
+  "case": "t6_proc2________",
+  "axis": "scope count. Two processes, to see how process scopes and their variables are numbered.",
+  "differs_from": "t6_var_int______",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "b",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "v",
+      "type": "integer",
+      "kind": "variable",
+      "initial": "1"
+    },
+    {
+      "scope": "tb.q",
+      "name": "w",
+      "type": "integer",
+      "kind": "variable",
+      "initial": "2"
+    }
+  ]
+}

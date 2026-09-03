@@ -1,0 +1,202 @@
+{
+  "case": "t6_sig12________",
+  "axis": "object count. 12 signals, to see how the header arena table and the handle arenas grow.",
+  "differs_from": "t5_sig10________",
+  "end_time_ns": 130,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s0",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s1",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s2",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s3",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s4",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s5",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s6",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s7",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s8",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s9",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s10",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "s11",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s0",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s1",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s2",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s3",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s4",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s5",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s6",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s7",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s8",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s9",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s10",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s11",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s0",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "s1",
+      "value": "1"
+    },
+    {
+      "time_ns": 30,
+      "signal": "s2",
+      "value": "1"
+    },
+    {
+      "time_ns": 40,
+      "signal": "s3",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s4",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "s5",
+      "value": "1"
+    },
+    {
+      "time_ns": 70,
+      "signal": "s6",
+      "value": "1"
+    },
+    {
+      "time_ns": 80,
+      "signal": "s7",
+      "value": "1"
+    },
+    {
+      "time_ns": 90,
+      "signal": "s8",
+      "value": "1"
+    },
+    {
+      "time_ns": 100,
+      "signal": "s9",
+      "value": "1"
+    },
+    {
+      "time_ns": 110,
+      "signal": "s10",
+      "value": "1"
+    },
+    {
+      "time_ns": 120,
+      "signal": "s11",
+      "value": "1"
+    }
+  ]
+}
