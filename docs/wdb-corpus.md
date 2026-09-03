@@ -30,17 +30,31 @@ So the first experiment is not a comparison between two designs.
 It is the same design, simulated twice:
 
 ```sh
-bazel build //hdl/corpus/t1_bit_one_edge:sim
-cp bazel-bin/hdl/corpus/t1_bit_one_edge/sim.wdb /tmp/a.wdb
-bazel clean --expunge_async     # or touch a source and rebuild
-bazel build //hdl/corpus/t1_bit_one_edge:sim
-cp bazel-bin/hdl/corpus/t1_bit_one_edge/sim.wdb /tmp/b.wdb
-cmp -l /tmp/a.wdb /tmp/b.wdb
+tools/noise_mask.sh //hdl/corpus/t1_bit_one_edge:sim /tmp/mask
 ```
 
-Every offset that differs is noise.
-Record those offsets as a mask.
-Apply the mask to every later comparison.
+Every offset it reports is noise.
+Pass the two files it keeps to `wdbdiff` as `-mask-a` and `-mask-b` for
+every later comparison:
+
+```sh
+bazel run //cmd/wdbdiff -- \
+    -mask-a /tmp/mask/run1.wdb -mask-b /tmp/mask/run2.wdb \
+    -a bazel-bin/hdl/corpus/t1_bit_one_edge/sim.wdb \
+    -b bazel-bin/hdl/corpus/t1_two_bits/sim.wdb
+```
+
+Bazel is the obstacle in this one experiment rather than the help.
+A second build of an unchanged target returns the cached file, so the
+naive "build it twice" compares a file with itself and reports perfect
+determinism.
+The script passes a different `WDB_NONCE` through `--action_env`, which
+changes the action key and makes the simulation run again.
+Nothing reads the variable, so it does not change what is simulated.
+
+Do not reach for `bazel clean --expunge` to force the re-run.
+It deletes the output base, and the hermetic Vivado repository lives
+there.
 
 Skipping this step produces confident, wrong conclusions: a field is
 declared to be "the signal count" because it changed, when it was the
