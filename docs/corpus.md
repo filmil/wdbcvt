@@ -1654,6 +1654,28 @@ or wrap each child in an if generate or a block.
 | `t53_ifgen_inst__` | `t52_inst2_empty_` | each child under an if generate | `0x28` per wrapper, both before the children |
 | `t53_blk_inst____` | `t52_inst2_empty_` | each child under a block | the same |
 
+**Tier 54: where the second region starts.**
+VHDL.
+A variable of `tb.p` probes the start of the second handle region
+while the libraries, the signal and the `std.env.stop` come and go,
+and a package of the design is used, referenced, or neither.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t54_none_noenv__` | `t54_none_nosig__` | no library, no signal, no `std.env.stop` | the variable at `0x738`; `standard` alone |
+| `t54_noenv_sig___` | `t54_none_noenv__` | a `bit` signal | `s` at `0x768`, the variable at `0x860` |
+| `t54_none_nosig__` | `t54_nosig_var___` | no library clause | the variable at `0x810`; `textio` and `env` with `standard` |
+| `t54_lib_none_var` | `t52_var_int_____` | no library clause, a `bit` signal | the variable at `0x938` |
+| `t54_lib_1164_bit` | `t54_lib_none_var` | `std_logic_1164` | the variable at `0xde0`, as with a `std_ulogic` |
+| `t54_1164_noenv__` | `t52_var_int_____` | no `std.env.stop` | the variable at `0xda0`; the end time 50 ns |
+| `t54_nosig_var___` | `t52_var_int_____` | no signal | the variable at `0xcb8` |
+| `t54_lib_numstd_v` | `t52_var_int_____` | `numeric_std` as well | `0xf8` on |
+| `t54_lib_mathrl_v` | `t52_var_int_____` | `math_real` as well | `0x308` on |
+| `t54_pkg_con_var_` | `t52_var_int_____` | a package with a constant, read by name | `0x30` on; the constant at `0xd40` |
+| `t54_pkg_2con_var` | `t54_pkg_con_var_` | a second constant | `0x30` on still; `0xd44` |
+| `t54_pkg_use_var_` | `t54_pkg_con_var_` | a use clause and no reference | the same |
+| `t54_pkg_unused__` | `t54_pkg_con_var_` | neither | the package absent |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1691,7 +1713,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 816 cases through tier 53, and
+5. The reader now reproduces all 829 cases through tier 54, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

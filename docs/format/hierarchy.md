@@ -720,18 +720,65 @@ has `d0`, `d0.e`, `d1`, `d1.e`; `t7_gen_for` has `g(0)`, `g(1)`,
 which ends at `0x12c8`, and the first `dut` puts its signal there and
 its `k` at `0x1300`, then the other three `dut` `0x118` apart.
 
-The region starts `0x550` past the end of the last signal's first
-region stride, with the block of the root unit.
-`tb` of tier 52 has `s` with its driver and `p`, `0x38` plus `0x20`
-plus `0x90` plus `0x28`, so a data object of `tb` or of `tb.p` sits
-at `0x858` plus `0x550` plus `0x38`, `0xde0`, and the children start
-`0x110` past `0xda8`, at `0xeb8`, whether there are one, two or
-three of them.
+The region starts `0x580` past the end of the signals, with the
+block of the root unit, and the signals themselves start at `0x738`,
+each handle `0x30` into its block.
+Tier 54 probes the start with a variable `a` of `tb.p` and takes the
+libraries, the signal and the `std.env.stop` away in turn:
+
+| Case | Packages in the file | `s` | `a` | Handle space |
+| :--- | :--- | ---: | ---: | ---: |
+| `t54_none_noenv__` | `standard` | none | `0x738` | `0x8cc` |
+| `t54_noenv_sig___` | `standard` | `0x768` | `0x860` | `0xa14` |
+| `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
+| `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
+| `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1090` |
+| `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
+| `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
+| `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
+| `t54_pkg_con_var_` | those and `pk` with one constant | `0x768` | `0xe10` | `0x1258` |
+
+With `standard` alone and no signal the variable sits at `0x738`,
+and with one `bit` signal, whose handle is `0x768`, at `0x860`: `0xf0`
+for the signal's block and `0x38` for the signal in `tb`'s block, so
+the signal's block runs from `0x738` and its handle is `0x30` into
+it, and the root unit's block follows the signals at once.
+`std.env`, which `std.env.stop` brings in with `std.textio`, moves
+the variable by `0xd8` in both shapes; `std_logic_1164` with
+`textio` by `0x540`; `env` on top of those by `0x40` more, so
+`textio` is `0x98` of the `0xd8`; `numeric_std` by `0xf8` more and
+`math_real` by `0x308` more.
+Those are the blocks of the packages, between the signals and the
+root unit, and the rest of what each package costs the handle space,
+tier 47, lies past the second region: `0x78` for `textio`, `0x70`
+for `env`, `0x15c` for `std_logic_1164`, `0x100` for `numeric_std`
+and `0xf8` for `math_real`.
+A package of the design has the block a scope has, `0x28` plus its
+constants rounded up to 8: `pk` with one integer constant moves the
+variable by `0x30`, its constant sits at `0xd40`, `0x98` before the
+root unit's block, and the two constants of `t54_pkg_2con_var` at
+`0xd40` and `0xd44` move it by `0x30` as well.
+The package is in the file when a use clause names it or a name
+refers into it, `t54_pkg_use_var_` and `t54_pkg_con_var_` alike, and
+absent when neither does, `t54_pkg_unused__`, with the handle space
+of a bench without it.
+The type of the signal changes nothing, `t54_lib_1164_bit` against
+`t52_var_int_____`, and neither does a signal's presence for the
+packages' blocks: `t54_nosig_var___` puts the variable at `0x738`
+plus `0x580`.
+
+So with the usual `std_logic_1164` and `std.env.stop`, `tb` of tier
+52 has `s` with its driver and `p`, `0x38` plus `0x20` plus `0x90`
+plus `0x28`, a data object of `tb` or of `tb.p` sits at `0x828` plus
+`0x580` plus `0x38`, `0xde0`, and the children start `0x110` past
+`0xda8`, at `0xeb8`, whether there are one, two or three of them.
 `t46_deep_100____` and `t46_gen_70000___` fit the same: `tb` with
 `p` alone costs `0xb8`, the first generic or index is `0x38` past
-that, `0x640` past the last signal, and each level of the chain costs
-`0x28` for its if generate, `0x30` for its scope and generic, and
-`0x38`, `0x20` and `0x90` for its signal, driver and process, `0x140`.
+that, `0x640` past the last signal's handle plus `0xf0`, and each
+level of the chain costs `0x28` for its if generate, `0x30` for its
+scope and generic, and `0x38`, `0x20` and `0x90` for its signal,
+driver and process, `0x140`.
 The handle space is 8 more than the strides account for when a scope
 holds no data object: `0x58` for the two wrappers of
 `t53_ifgen_inst__`, `0x30` for the `g` of `t52_gi2_empty___` against
@@ -2077,10 +2124,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 816 of 816 cases, and the
+*Confirmed by* the region length check in 829 of 829 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 816 of 816 cases and
+and *confirmed by* the reader's range check in 829 of 829 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
