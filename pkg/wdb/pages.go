@@ -84,26 +84,49 @@ type Change struct {
 // in time order. An object whose arena was never written has no
 // changes; t6_var_int shows a declared process variable in that state.
 //
-// A VHDL record is one write of a contiguous part of the value, keyed
-// by the byte address of its first byte within the handle space: the
+// A record is one write of a contiguous part of the value, keyed by
+// the byte address of its first byte within the handle space: the
 // whole value at time 0 and after a whole assignment, or the bytes of
 // a field, slice or element after a partial assignment, with the parts
 // one delta assigns merged when they are adjacent. Found by the ctl
-// record of //hdl/counter:sim, the offsets by the t32 cases. A write
-// of chunkWhole bytes or more is not one record. It is written as the
+// record of //hdl/counter:sim, the offsets by the t32 cases. A Verilog
+// value is word pairs, and a partial write covers whole pairs:
+// t11_v_vec64x writes one pair at handle+8 for bit 40. A write of
+// chunkWhole bytes or more is not one record. It is written as the
 // run of chunks Chunks describes for its own length from its own
 // address, each a record of its own, and a chunk that would cross an
 // arena boundary is split there and goes on in the next arena at key
 // 0. Found by t9_vec292 and t9_vec12000, the rule by the t10_vec sizes,
-// and its use for a partial write by t32_wide_slice__.
+// and its use for a partial write by t32_wide_slice__ and
+// t33_v_wsl_hi____.
 //
-// Changes overlays every write onto the value in file order, which is
-// time order in every observed file, and emits one value per write.
-// It checks that the first write covers the object, and that every
-// write of chunkWhole bytes or more is the run of chunks the rule
-// predicts.
+// Records of one arena are in write order, and records of different
+// arenas at the same time cannot be ordered against each other:
+// t12_v_mem40_t0 writes forty elements at time zero across two arenas
+// and the file keeps only which arena each went to. Changes orders the
+// records by time, keeping file order within a time, and reads the
+// writes of a time in that order. A record at the whole value's first
+// chunk address with that chunk's length starts a whole write, whose
+// other chunks are the first unused records of the time at the other
+// chunk addresses, whichever arena holds them. Any other record starts
+// a partial write: the longest chain of unused records of the time,
+// each the first at the address where the previous one ends, whose
+// addresses are the ones the rule predicts for the chain's length, or
+// the record alone. The chain is found by address, not by position,
+// because the rest of a chunk split at an arena boundary sits behind
+// the other writes of the time in the next arena: t33_v_mem_row___
+// writes four rows at time zero and arena 1 holds them last row
+// first. Changes overlays every
+// write onto the value and emits one value per write. It checks that
+// the first write covers the object, that a lone record is shorter
+// than a chunked write, and that a lone Verilog record is whole word
+// pairs.
 //
-// A Verilog object is written by word pairs instead; see changesVerilog.
+// The 8 byte rest of a chunk split at an arena boundary has the shape
+// of a pair write, t12_v_mem40w32 at 0x800. When both sit at one
+// time the whole write takes the first, and a pair write before the
+// whole write in that arena is read as its rest; the final value of
+// the time is right either way, because the arena keeps write order.
 func (f *File) Changes(o Object) ([]Change, error) {
 	if !o.Logged {
 		return nil, nil
@@ -125,13 +148,11 @@ func (f *File) Changes(o Object) ([]Change, error) {
 	if last >= len(f.Arenas) {
 		return nil, fmt.Errorf("object handle %#x with %d bytes reaches arena %d of %d", o.Handle, size, last, len(f.Arenas))
 	}
-	if f.verilog(dc.Type) {
-		return f.changesVerilog(o, start, end)
-	}
-	// Collect every record that overlaps the object, in file order, and
-	// order them by time. A record keeps its place among those of its
-	// time, so two writes of one byte in two deltas of one time stay in
-	// write order: t32_rec_delta___.
+	verilog := f.verilog(dc.Type)
+	// The 16 byte record of an untyped time parameter runs into the
+	// next object, so only the record at its own address is its own,
+	// and only the first 8 bytes of it: t30_sv_ptm_two.
+	timeParam := verilog && f.timeParam(dc)
 	type rec struct {
 		time uint64
 		addr uint64
@@ -148,6 +169,13 @@ func (f *File) Changes(o Object) ([]Change, error) {
 				if addr >= end || addr+uint64(len(r.Data)) <= start {
 					continue
 				}
+				if timeParam {
+					if addr != start || len(r.Data) < 8 {
+						continue
+					}
+					recs = append(recs, rec{r.Time, addr, r.Data[:8]})
+					continue
+				}
 				recs = append(recs, rec{r.Time, addr, r.Data})
 			}
 		}
@@ -156,60 +184,118 @@ func (f *File) Changes(o Object) ([]Change, error) {
 		return nil, fmt.Errorf("object handle %#x is logged but has no records", o.Handle)
 	}
 	sort.SliceStable(recs, func(i, j int) bool { return recs[i].time < recs[j].time })
-	// A write is the longest run of records of one time, each starting
-	// where the previous one ends, whose addresses are the chunks the
-	// rule predicts for the run's length; a record that starts no such
-	// run is a write of its own and is shorter than a chunked write.
-	write := func(i int) (int, uint64, error) {
-		total := uint64(len(recs[i].data))
-		j := i + 1
-		for j < len(recs) && recs[j].time == recs[i].time && recs[j].addr == recs[j-1].addr+uint64(len(recs[j-1].data)) {
-			total += uint64(len(recs[j].data))
-			j++
+	starts := chunkStarts(start, size)
+	pieceLen := func(i int) uint64 {
+		if i+1 < len(starts) {
+			return starts[i+1] - starts[i]
 		}
-		for ; j > i+1; j-- {
-			want := chunkStarts(recs[i].addr, total)
-			if len(want) == j-i {
-				ok := true
-				for k, w := range want {
-					ok = ok && w == recs[i+k].addr
-				}
-				if ok {
-					return j, total, nil
-				}
-			}
-			total -= uint64(len(recs[j-1].data))
-		}
-		if total >= chunkWhole {
-			return 0, 0, fmt.Errorf("object handle %#x: a record of %d bytes at %#x, time %d, is not a run of chunks", o.Handle, total, recs[i].addr, recs[i].time)
-		}
-		return j, total, nil
+		return end - starts[i]
 	}
 	cur := make([]byte, size)
 	var out []Change
-	for i := 0; i < len(recs); {
-		j, total, err := write(i)
-		if err != nil {
-			return nil, err
+	apply := func(r rec) {
+		lo, hi := r.addr, r.addr+uint64(len(r.data))
+		if lo < start {
+			lo = start
 		}
-		// The first write is the initial value of the whole signal;
-		// a port bound to a slice at its start, t9_port_sliceto_,
-		// sees a first write longer than its own value.
-		if len(out) == 0 && (recs[i].addr > start || recs[i].addr+total < end) {
-			return nil, fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", o.Handle, size, total, recs[i].addr)
+		if hi > end {
+			hi = end
 		}
-		for ; i < j; i++ {
-			r := recs[i]
-			lo, hi := r.addr, r.addr+uint64(len(r.data))
-			if lo < start {
-				lo = start
+		copy(cur[lo-start:hi-start], r.data[lo-r.addr:hi-r.addr])
+	}
+	// write finds the records of the write group[i] starts, among the
+	// unused records of the time, and returns their indexes.
+	write := func(group []rec, used []bool, i int) ([]int, error) {
+		r := group[i]
+		if o.Offset == 0 && r.addr == starts[0] && uint64(len(r.data)) == pieceLen(0) {
+			idx := []int{i}
+			for p := 1; p < len(starts); p++ {
+				found := -1
+				for j := i + 1; j < len(group); j++ {
+					if !used[j] && group[j].addr == starts[p] && uint64(len(group[j].data)) == pieceLen(p) {
+						found = j
+						break
+					}
+				}
+				if found < 0 {
+					idx = nil
+					break
+				}
+				idx = append(idx, found)
 			}
-			if hi > end {
-				hi = end
+			if idx != nil {
+				return idx, nil
 			}
-			copy(cur[lo-start:hi-start], r.data[lo-r.addr:hi-r.addr])
 		}
-		out = append(out, Change{Time: recs[i-1].time, Data: append([]byte(nil), cur...)})
+		run := []int{i}
+		total := uint64(len(r.data))
+		for {
+			found := -1
+			for j := i + 1; j < len(group); j++ {
+				if !used[j] && group[j].addr == r.addr+total {
+					found = j
+					break
+				}
+			}
+			if found < 0 {
+				break
+			}
+			run = append(run, found)
+			total += uint64(len(group[found].data))
+		}
+		for ; len(run) > 1; run = run[:len(run)-1] {
+			want := chunkStarts(r.addr, total)
+			ok := len(want) == len(run)
+			for k := 0; ok && k < len(want); k++ {
+				ok = want[k] == group[run[k]].addr
+			}
+			if ok {
+				return run, nil
+			}
+			total -= uint64(len(group[run[len(run)-1]].data))
+		}
+		if total >= chunkWhole {
+			return nil, fmt.Errorf("object handle %#x: a record of %d bytes at %#x, time %d, is not a run of chunks", o.Handle, total, r.addr, r.time)
+		}
+		if verilog && !timeParam && ((r.addr-start)%8 != 0 || total%8 != 0) {
+			return nil, fmt.Errorf("object handle %#x: record at %#x of %d bytes is neither a chunk nor whole word pairs", o.Handle, r.addr, total)
+		}
+		return run, nil
+	}
+	for lo := 0; lo < len(recs); {
+		hi := lo
+		for hi < len(recs) && recs[hi].time == recs[lo].time {
+			hi++
+		}
+		group := recs[lo:hi]
+		used := make([]bool, len(group))
+		for i := range group {
+			if used[i] {
+				continue
+			}
+			idx, err := write(group, used, i)
+			if err != nil {
+				return nil, err
+			}
+			// The first write is the initial value of the whole signal;
+			// a port bound to a slice at its start, t9_port_sliceto_,
+			// sees a first write longer than its own value.
+			if len(out) == 0 {
+				var total uint64
+				for _, j := range idx {
+					total += uint64(len(group[j].data))
+				}
+				if group[i].addr > start || group[i].addr+total < end {
+					return nil, fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", o.Handle, size, total, group[i].addr)
+				}
+			}
+			for _, j := range idx {
+				used[j] = true
+				apply(group[j])
+			}
+			out = append(out, Change{Time: group[i].time, Data: append([]byte(nil), cur...)})
+		}
+		lo = hi
 	}
 	return out, nil
 }
