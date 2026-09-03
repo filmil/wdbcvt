@@ -92,6 +92,11 @@ func (f *File) Dump(w io.Writer) error {
 		p(" %#x", w)
 	}
 	p("\n")
+	p("  value classes ")
+	for _, c := range d.Classes {
+		p(" %v", c)
+	}
+	p("\n")
 
 	p("files (%d):\n", len(f.Files))
 	for i, sf := range f.Files {

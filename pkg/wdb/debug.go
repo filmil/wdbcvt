@@ -10,9 +10,10 @@ import (
 // Layout constants of the Xilinx ISim DBG 006 section. Every offset in
 // the section's own table is relative to the start of its magic string.
 const (
-	dbgOffsets = 18 // uint32 region offsets, after the magic, timestamp and precision
-	dbgCounts  = 4  // uint32 counts after the offsets
-	dbgWords   = 17 // uint32 header words after the counts
+	dbgOffsets  = 18 // uint32 region offsets, after the magic, timestamp and precision
+	dbgCounts   = 4  // uint32 counts after the offsets
+	dbgWords    = 17 // uint32 header words after the counts
+	classRecLen = 3  // words per value class entry of region 17
 
 	scopeRecLen = 9  // uint32 words per scope record
 	unitRecLen  = 9  // uint32 words per unit record
@@ -340,6 +341,12 @@ type Debug struct {
 	// t24_dbg_readers_ against t24_two_drivers_ and the -debug
 	// subprogram cases of tiers 22 and 23 against their siblings.
 	Words [dbgWords]uint32
+	// Classes is region 17: one entry per distinct class of initial
+	// value among the objects, as many as word 13 counts. The other two
+	// words of an entry are 0 in every case. VHDL files hold the one
+	// class 0; a Verilog file classes its objects by type and
+	// initializer: tier 25, t25_sv_two_class against t25_sv_two_same.
+	Classes [][3]uint32
 	// End is the file offset one past the section proper; the instance
 	// records start there and run to the end of the directory entry's
 	// length.
@@ -407,6 +414,20 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 		return fmt.Errorf("DBG section ends at %#x and the directory entry at %#x, which does not fit %d instance records",
 			s.End, dbg.Offset+dbg.Length, s.Counts[2])
 	}
+	// Region 17 runs to the end of the section proper, as offset 2
+	// says. Its entries are three words, padded to 8 bytes at the end.
+	cw, err := s.region(17, 2)
+	if err != nil {
+		return err
+	}
+	n := int(s.Words[13])
+	if len(cw) != (n*classRecLen*4+7)/8*8 {
+		return fmt.Errorf("DBG region 17 holds %d bytes for %d value classes", len(cw), n)
+	}
+	for w, i := words(cw), 0; i < n; i++ {
+		r := w[i*classRecLen:]
+		s.Classes = append(s.Classes, [3]uint32{uint32(r[0]), uint32(r[1]), uint32(r[2])})
+	}
 	f.Debug = s.Debug
 
 	scopePool, err := s.region(5, 10)
@@ -447,7 +468,7 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 	if err != nil {
 		return err
 	}
-	n := int(s.Counts[0])
+	n = int(s.Counts[0])
 	w := words(sw)
 	if len(w) < n*scopeRecLen {
 		return fmt.Errorf("DBG holds %d words for %d scopes", len(w), n)
