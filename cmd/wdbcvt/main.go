@@ -2,12 +2,17 @@
 
 // Command wdbcvt inspects Vivado xsim waveform databases.
 //
-// The .wdb container format is undocumented, so the tool starts as a
-// probe: it reports the measurements that a decoder has to be built on.
-// Point it at the file produced by //hdl/counter:sim.
+// The .wdb container format is undocumented. What the tool knows about
+// it was found by an automated assistant running experiments on the
+// corpus under //hdl/corpus, on files written by Vivado 2025.2, and is
+// recorded in //docs/format.md. Two modes:
 //
-//	bazel build //hdl/counter:sim
 //	bazel run //cmd/wdbcvt -- -in $PWD/bazel-bin/hdl/counter/sim.wdb
+//	bazel run //cmd/wdbcvt -- -dump -in $PWD/bazel-bin/hdl/counter/sim.wdb
+//
+// Without -dump the tool probes: it reports the measurements a decoder
+// has to be built on. With -dump it decodes every structure it knows
+// and prints them, ending with each object's values over time.
 package main
 
 import (
@@ -20,14 +25,54 @@ import (
 
 func main() {
 	in := flag.String("in", "", "the .wdb file to inspect (required)")
+	dump := flag.Bool("dump", false, "decode the file and print every known structure")
 	maxStrings := flag.Int("max_strings", 40, "how many printable runs to print")
 	maxBlocks := flag.Int("max_blocks", 16, "how many entropy blocks to print")
+	flag.Usage = usage
 	flag.Parse()
 
-	if err := run(*in, *maxStrings, *maxBlocks); err != nil {
+	var err error
+	if *dump {
+		err = runDump(*in)
+	} else {
+		err = run(*in, *maxStrings, *maxBlocks)
+	}
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "wdbcvt: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+// provenance is printed by --help, so that a user who finds the binary
+// without the repository still learns how its format knowledge was
+// obtained. Keep it in step with docs/provenance.md.
+const provenance = `wdbcvt reads Vivado xsim waveform databases (.wdb).
+
+The .wdb format is undocumented. What this tool knows about it was
+worked out by an AI agent running experiments on files that Vivado
+2025.2 wrote for small designs, and reading the bytes that came out.
+No AMD documentation, source or binary was used. The decoding is
+checked against a truth file written per design from its VHDL source,
+and every claim is scoped to Vivado 2025.2.
+It is not a specification. Where a wrong answer would be silent and
+expensive, open the database in Vivado instead.
+`
+
+func usage() {
+	fmt.Fprint(flag.CommandLine.Output(), provenance)
+	fmt.Fprintln(flag.CommandLine.Output(), "\nFlags:")
+	flag.PrintDefaults()
+}
+
+func runDump(in string) error {
+	if in == "" {
+		return fmt.Errorf("-in is required")
+	}
+	f, err := wdb.ReadFile(in)
+	if err != nil {
+		return err
+	}
+	return f.Dump(os.Stdout)
 }
 
 func run(in string, maxStrings, maxBlocks int) error {

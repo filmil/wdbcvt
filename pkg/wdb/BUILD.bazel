@@ -3,8 +3,15 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "wdb",
     srcs = [
+        "container.go",
+        "debug.go",
         "diff.go",
+        "dump.go",
+        "file.go",
+        "pages.go",
         "probe.go",
+        "types.go",
+        "value.go",
     ],
     importpath = "git.hdlfactory.com/HDL/wdbcvt/pkg/wdb",
     visibility = ["//visibility:public"],
@@ -12,9 +19,15 @@ go_library(
 
 go_test(
     name = "wdb_test",
+    size = "small",
     srcs = [
+        "corpus_test.go",
         "diff_test.go",
         "probe_test.go",
+    ],
+    data = [
+        "//hdl/corpus:all_truth",
+        "//hdl/corpus:all_wdb",
     ],
     embed = [":wdb"],
 )
