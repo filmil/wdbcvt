@@ -1,0 +1,174 @@
+{
+  "case": "t48_v_port_pos4_",
+  "axis": "a child with four ANSI ports connected by name in port order",
+  "differs_from": "t36_v_hier_and__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "c",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "position": 0,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "position": 1,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "c",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "position": 2,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "position": 3,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.c",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.c",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.d",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u.d",
+      "value": "1"
+    }
+  ]
+}
