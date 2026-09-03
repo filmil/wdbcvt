@@ -99,8 +99,13 @@ func (f *File) layoutOf(t int, rs *[]Range) (layout, error) {
 		return layout{roundUp(off, 8), 8}, nil
 	case KindFile:
 		// A file variable declares 0 bytes and never has a record:
-		// INPUT and OUTPUT of textio in t22_dbg_all.
+		// INPUT and OUTPUT of textio in t22_dbg_all, f of
+		// t23_file_text.
 		return layout{}, nil
+	case KindAccess:
+		// An access variable declares the second word of its type,
+		// 48 bytes for int_ptr of t23_access, and never has a record.
+		return layout{int(ty.Words[1]), 8}, nil
 	}
 	return layout{}, fmt.Errorf("type %q has kind %s", ty.Name, ty.Kind)
 }

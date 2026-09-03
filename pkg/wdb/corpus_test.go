@@ -297,7 +297,7 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 	out := map[string][]change{}
 	types := map[string]int{}
 	for _, o := range f.Objects {
-		if o.Generic || f.Decls[o.Decl].Kind == DeclLocal {
+		if o.Generic || f.Decls[o.Decl].Kind.subprogram() {
 			continue
 		}
 		dc := f.Decls[o.Decl]
@@ -373,11 +373,12 @@ func TestCorpus(t *testing.T) {
 			// entity instantiated n times is listed n times in each of
 			// the n process scopes, with the n handles. t9_mark_two,
 			// t9_var_inst3.
-			// A subprogram local has a second handle as a signal
-			// does, and is sorted by its declaration kind.
+			// A subprogram local, and a shared variable of a protected
+			// type, has a second handle as a signal does, and is sorted
+			// by its declaration kind.
 			signals, others := map[string]bool{}, map[string]bool{}
 			for _, o := range f.Objects {
-				if !o.Generic && f.Decls[o.Decl].Kind != DeclLocal {
+				if !o.Generic && !f.Decls[o.Decl].Kind.vhdlData() {
 					signals[plainPath(f.ObjectPath(o))] = true
 				} else {
 					others[plainPath(f.ObjectPath(o))] = true
@@ -549,7 +550,7 @@ func TestCorpus(t *testing.T) {
 			for _, vr := range tr.Variables {
 				path := vr.Scope + "." + vr.Name
 				o, ok := objByPath[path]
-				if !ok || (!o.Generic && f.Decls[o.Decl].Kind != DeclLocal) {
+				if !ok || (!o.Generic && !f.Decls[o.Decl].Kind.vhdlData()) {
 					t.Errorf("truth variable %s is not a variable object", path)
 					continue
 				}
@@ -593,9 +594,9 @@ func TestCorpus(t *testing.T) {
 					if v.Scalar != vr.Value {
 						t.Errorf("%s = %s, truth says %s", path, v.Scalar, vr.Value)
 					}
-				case "local":
-					if dc.Kind != DeclLocal {
-						t.Errorf("%s: declaration kind %s, want local", path, dc.Kind)
+				case "local", "signal param":
+					if dc.Kind.String() != vr.Kind {
+						t.Errorf("%s: declaration kind %s, want %s", path, dc.Kind, vr.Kind)
 					}
 					if len(ch) != 0 || o.Logged {
 						t.Errorf("%s: %d records, a subprogram local has had none", path, len(ch))

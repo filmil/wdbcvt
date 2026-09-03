@@ -53,7 +53,7 @@ func (f *File) Dump(w io.Writer) error {
 			p(" %d to %d", t.Low, t.High)
 		case KindReal:
 			p(" variant %d %g to %g trailer %d", t.Variant, t.FLow, t.FHigh, t.Trailer)
-		case KindFile:
+		case KindAccess, KindFile:
 			p(" of [%d] words %v", t.Elem, t.Words)
 		case KindPhysical:
 			for _, u := range t.Units {

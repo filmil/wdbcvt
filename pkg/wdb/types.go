@@ -20,7 +20,8 @@ const (
 	KindInteger  Kind = 0x05 // integer with bounds
 	KindReal     Kind = 0x06 // floating point with bounds
 	KindAlias    Kind = 0x07 // SystemVerilog typedef: a name for another entry
-	KindFile     Kind = 0x0c // VHDL file type: TEXT, seen only under -debug all
+	KindAccess   Kind = 0x08 // VHDL access type: a designated type and two words
+	KindFile     Kind = 0x0c // VHDL file type: an element type and two words
 	KindPhysical Kind = 0x0d // physical type with units: TIME
 	KindArray    Kind = 0x10 // array, constrained or not
 	KindRecord   Kind = 0x11 // record with named fields
@@ -61,6 +62,10 @@ func (k Kind) String() string {
 		return "real"
 	case KindAlias:
 		return "alias"
+	case KindAccess:
+		return "access"
+	case KindFile:
+		return "file"
 	case KindPhysical:
 		return "physical"
 	case KindArray:
@@ -169,9 +174,10 @@ type Type struct {
 	// Units lists a physical type's units.
 	Units []TimeUnit
 
-	// Words holds the two words after the element type of a file
-	// type. What they mean is open: TEXT of t22_dbg_all holds 8 and
-	// 40.
+	// Words holds the two words after the element type of a file or
+	// access type. Every file type holds 8 and 40, every access type
+	// 8 and 48, and an access variable declares 48 bytes while a file
+	// variable declares 0. What the words mean is open.
 	Words []uint32
 
 	// Elem is the type index of an array's element type. Dims is its
@@ -430,9 +436,11 @@ func readType(kind Kind, body []byte) (Type, error) {
 		for j := 0; j < nr && c.err == nil; j++ {
 			t.Ranges = append(t.Ranges, Range{Left: c.i32(), Right: c.i32(), Dir: c.i32()})
 		}
-	case KindFile:
-		// The element type, then two words whose meaning is open;
-		// TEXT of t22_dbg_all holds 8 and 40. See docs/format.md.
+	case KindAccess, KindFile:
+		// The designated or element type, then two words whose
+		// meaning is open: every file type holds 8 and 40, every
+		// access type 8 and 48, whatever the element. See
+		// docs/format.md.
 		t.Origin = c.origin()
 		t.Elem = int(c.u32())
 		for i := 0; i < 2 && c.err == nil; i++ {

@@ -98,6 +98,19 @@ func (k UnitKind) String() string {
 // DeclKind is the ninth word of a declaration record.
 type DeclKind uint32
 
+// subprogram reports whether the kind is a parameter or a local of a
+// VHDL subprogram: an object with no record, which appears only under
+// -debug subprogram or all.
+func (k DeclKind) subprogram() bool {
+	return k == DeclLocal || k == DeclSignalParam
+}
+
+// vhdlData reports whether the kind is a VHDL object other than a
+// signal: a variable, a constant, a generic or a subprogram local.
+func (k DeclKind) vhdlData() bool {
+	return k == DeclVariable || k == DeclConstant || k == DeclGeneric || k.subprogram()
+}
+
 // The declaration kinds observed so far.
 const (
 	DeclSignal   DeclKind = 0x0e
@@ -108,6 +121,10 @@ const (
 	// only under -debug subprogram or all. A parameter carries its mode
 	// as a port does. Found by t22_dbg_subprog against t22_base.
 	DeclLocal DeclKind = 0x14
+	// DeclSignalParam is a signal parameter of a VHDL subprogram. It
+	// carries its mode as a port does. Found by t23_sub_sig_prm
+	// against t22_dbg_sub_proc.
+	DeclSignalParam DeclKind = 0x15
 	// The Verilog declaration kinds: a variable (reg, logic, integer
 	// and the other variable types), a parameter, and a net (wire and
 	// every port of t11_v_port). Found by tier 11. The other net
@@ -158,6 +175,8 @@ func (k DeclKind) String() string {
 		return "constant"
 	case DeclLocal:
 		return "local"
+	case DeclSignalParam:
+		return "signal param"
 	case DeclVar:
 		return "var"
 	case DeclParam:
