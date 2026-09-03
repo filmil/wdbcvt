@@ -1,0 +1,26 @@
+{
+  "case": "t2_slv8",
+  "axis": "type: resolved std_logic_vector vs unresolved in t1_vec8",
+  "differs_from": "t1_vec8",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "std_logic_vector"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

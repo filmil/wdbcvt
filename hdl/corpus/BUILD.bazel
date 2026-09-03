@@ -4,8 +4,8 @@
 #
 #     bazel build //hdl/corpus:all_wdb
 #
-# See //docs/corpus.md for what the cases are for and how to read
-# the differences between them.
+# See //docs/corpus.md for what the cases are for and how to read the
+# differences between them.
 filegroup(
     name = "all_wdb",
     srcs = [
@@ -18,6 +18,19 @@ filegroup(
         "//hdl/corpus/t1_nine_state:sim",
         "//hdl/corpus/t1_two_bits:sim",
         "//hdl/corpus/t1_vec8:sim",
+        "//hdl/corpus/t2_array2d:sim",
+        "//hdl/corpus/t2_bit:sim",
+        "//hdl/corpus/t2_boolean:sim",
+        "//hdl/corpus/t2_character:sim",
+        "//hdl/corpus/t2_enum:sim",
+        "//hdl/corpus/t2_hier3:sim",
+        "//hdl/corpus/t2_integer:sim",
+        "//hdl/corpus/t2_real:sim",
+        "//hdl/corpus/t2_record:sim",
+        "//hdl/corpus/t2_signed8:sim",
+        "//hdl/corpus/t2_slv8:sim",
+        "//hdl/corpus/t2_time:sim",
+        "//hdl/corpus/t2_unsigned8:sim",
     ],
     visibility = ["//visibility:public"],
 )

@@ -90,6 +90,121 @@ Whole file properties, also measured:
   of internal offsets rather than an opaque blob.
 
 
+## The container, as far as it is mapped
+
+Every database opens with the same fixed region. These offsets are
+identical, byte for byte, in all 22 corpus cases:
+
+| Offset | Content | Meaning |
+| :--- | :--- | :--- |
+| `0` | `Xilinx WAVE DATABASE 01` | file magic, NUL terminated |
+| `24` | `Xilinx Simulator` | the producer |
+| `296` | `WDB.Event` | a named section |
+| `344` | `Xilinx ISim TYPE FILE 001` | start of the type table |
+| `392` | `STD_ULOGIC` | the first type name, upper case |
+| `419` to `451` | `'U' 'X' '0' '1' 'Z' 'W' 'L' 'H' '-'` | the nine enumeration literals, quoted, 4 bytes apart |
+| `467` | `Xilinx RTTI` | run time type information |
+| `515` | `Xilinx ISim DBG 006` | start of the debug and hierarchy section |
+| varies | `_top`, then the architecture name, then the instance names | the scope tree |
+| varies | `Xilinx DBG` | a further section |
+
+Reproduce with `strings -a -t d -n 3 sim.wdb`.
+
+The literals sit exactly 4 bytes apart, and `'U'` is three characters
+plus a terminator, so strings in the type table are NUL terminated and
+packed with no padding.
+
+
+## How types are stored
+
+**Types are stored by name, in the clear, and enumerations carry their
+literal names.** Four independent measurements agree:
+
+* `STD_ULOGIC` appears as text, upper cased, followed by its nine
+  literals as quoted strings. So `std_ulogic` is not a builtin to this
+  format; it is an ordinary enumeration whose literals are written out.
+* A user-defined enumeration behaves the same way. `t2_enum` declares
+  `type colour_t is (crimson, viridian, cobalt)`, and `colour_t`,
+  `crimson`, `viridian` and `cobalt` all appear verbatim.
+* `t2_enum` is **24 bytes smaller** than the `std_ulogic` baseline,
+  despite far longer literal names. Three literals cost less than nine,
+  so the per-literal overhead dominates the name text. That is only
+  possible if both types are stored the same way.
+* `t2_unsigned8` and `t2_signed8` differ by **exactly 2 bytes**, which
+  is the difference in length between the strings `unsigned` and
+  `signed`. Type names are stored one byte per character.
+
+Sizes relative to the one-bit baseline, all with a single signal and a
+single transition:
+
+| Case | Type | Delta |
+| :--- | :--- | ---: |
+| `t2_enum` | 3 literal user enumeration | -24 |
+| `t1_vec8` | `std_ulogic_vector(7 downto 0)` | +137 |
+| `t2_bit` | `bit` | +402 |
+| `t2_integer` | `integer` | +405 |
+| `t2_real` | `real` | +411 |
+| `t2_boolean` | `boolean` | +417 |
+| `t2_time` | `time` | +479 |
+| `t2_signed8` | `numeric_std.signed` | +582 |
+| `t2_slv8`, `t2_unsigned8` | `std_logic_vector`, `unsigned` | +584 |
+| `t2_character` | `character` | +1461 |
+
+Two things stand out and are worth reading carefully rather than
+guessing at.
+
+**Resolved costs more than unresolved.** `t2_slv8` uses
+`std_logic_vector` where `t1_vec8` uses `std_ulogic_vector`. Same width,
+same values, same transition. The resolved form costs **447 bytes more**.
+
+**`character` is the outlier, and consistently so.** It costs +1461
+where the other predefined scalar types cost about +400. `character` is
+an enumeration of 256 literals. The extra 1059 bytes over the others,
+spread across 254 extra literals, is about 4 bytes each, which matches
+the 4 byte spacing measured in the `std_ulogic` literal table.
+
+
+## How hierarchy is stored
+
+Scope names are stored as a sequence of NUL terminated strings in the
+`Xilinx ISim DBG 006` section, in tree order.
+
+`t2_hier3` instantiates `tb` to `mid` to `leaf`, and its strings appear
+in exactly that order:
+
+```
+1179 _top
+1187 sim
+1191 dut
+1195 mid
+1201 inner
+1207 leaf
+```
+
+`_top` is the root, `sim` is the architecture name, then each instance
+label is followed by the entity it instantiates.
+
+Depth costs little. One level of nesting costs 240 bytes over a flat
+design, and going from one level to three costs a further 160, so an
+additional empty scope is about 80 bytes.
+
+
+## How records and arrays are stored
+
+**Record field names are stored in the clear, and so is the record type
+name.** `t2_record` declares `bundle_t` with fields `alpha`, `bravo` and
+`charlie`, and all four names appear verbatim in the database.
+
+A record of three fields costs +278 over a single bit, and an array of
+four 8-bit vectors costs +289. Both are far less than the +584 that one
+`std_logic_vector` costs, which suggests aggregates reuse the type
+entries of their members rather than repeating them.
+
+Whether a record is stored as one object or flattened into one object
+per field is **not yet answered**. The field names being present is
+consistent with either.
+
+
 ## The noise mask
 
 Two runs of `t1_bit_one_edge` differ in about 11 bytes across five

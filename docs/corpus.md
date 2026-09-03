@@ -127,7 +127,26 @@ one bit with one transition.
 | `t1_nine_state` | value alphabet | How many bits per value, and the code for each of U X 0 1 Z W L H and dash. |
 | `t1_hier1` | hierarchy depth 0 to 1 | How a scope is opened and closed. |
 
-Tier 2 and beyond are not written yet. In order: wider vectors, 64 bits
+Tier 2 moves the type and the structure, holding the one signal and the
+one transition of the baseline fixed.
+
+| Case | Axis |
+| :--- | :--- |
+| `t2_bit`, `t2_boolean`, `t2_character`, `t2_integer`, `t2_real`, `t2_time` | the predefined scalar types from `std.standard` |
+| `t2_slv8`, `t2_unsigned8`, `t2_signed8` | the IEEE vector types, and resolved against unresolved |
+| `t2_enum` | a user-defined enumeration, whose literal names appear nowhere else |
+| `t2_record` | a record of three fields of different shapes |
+| `t2_array2d` | an array of four vectors |
+| `t2_hier3` | hierarchy depth 1 to 3 |
+
+One limit of the answer key shows up at this tier and is worth stating.
+GHDL's VCD writer emits nothing for `character`, `time`, enumerations,
+records and arrays, because VCD cannot represent them.
+For those six cases the independent simulator check does not apply, and
+the `truth.json` plus the VCD Vivado itself writes are the only guards.
+See [provenance.md](provenance.md).
+
+Tier 3 and beyond are not written yet. In order: wider vectors, 64 bits
 and past it; integer, boolean, real, time and user enumerations; records
 and multidimensional arrays; deeper and wider hierarchy, including
 for-generate; transition counts large enough to cross a block boundary
@@ -139,6 +158,17 @@ database at all.
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
 discovered.
+
+The intended end point is a real processor rather than a toy: **SERV**,
+the bit serial RISC-V core, built through `rules_fusesoc`, which is
+already a module in the registry. That gives a design nobody wrote for
+this experiment, with a hierarchy, a register file, and a trace long
+enough to cross whatever block boundaries the format has. It is the
+test that the reader works on something it was not tuned against.
+
+It comes after the ladder, not instead of it. A database from SERV
+differs from the baseline in hundreds of ways at once, so on its own it
+would teach nothing about which byte means what.
 
 
 ## Working order

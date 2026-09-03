@@ -1,0 +1,26 @@
+{
+  "case": "t2_enum",
+  "axis": "type: user-defined enumeration",
+  "differs_from": "t1_bit_one_edge",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "colour_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "crimson"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "cobalt"
+    }
+  ]
+}

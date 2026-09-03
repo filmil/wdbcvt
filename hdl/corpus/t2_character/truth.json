@@ -1,0 +1,26 @@
+{
+  "case": "t2_character",
+  "axis": "type: character",
+  "differs_from": "t1_bit_one_edge",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "character"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "a"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "z"
+    }
+  ]
+}
