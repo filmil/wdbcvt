@@ -1476,6 +1476,32 @@ The large cases list their signals in `truth.json` as one entry with a
 | `t46_drv_3_next__` | `t46_drv_2_next__` | a third driver | `0x178` on |
 | `t46_v_wire_4asg_` | `t19_v_wire_3drv_` | a fourth `assign` on a wire | `0xf0` on, as with three |
 
+**Tier 47: what a use clause costs.**
+VHDL.
+The nine tier 2 cases with `use ieee.numeric_std.all` had `0x1f8` more
+handle space than the rest, which tier 46 recorded as a type cost.
+The tier adds use clauses to the tier 1 baseline one at a time, and
+packages of the design with nothing, types, subprograms and constants
+in them.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t47_use_numstd__` | `t1_bit_one_edge_` | `use ieee.numeric_std.all`, unused | `0x1f8`: the clause, not the type |
+| `t47_use_numbit__` | `t47_use_numstd__` | `numeric_bit` | `0x188` |
+| `t47_use_mathrl__` | `t47_use_numstd__` | `math_real` | `0x400` |
+| `t47_use_textio__` | `t47_use_numstd__` | `std.textio` | nothing; already in the file table |
+| `t47_use_none____` | `t1_bit_one_edge_` | no library or use clause, a `bit` signal | `0x604` less; only `standard`, `textio` and `env` in the file table |
+| `t47_use_1164_bit` | `t47_use_none____` | the usual clauses back | the `0x11d0` of a `std_ulogic` |
+| `t47_use_lib_only` | `t47_use_none____` | `library ieee;` alone | nothing |
+| `t47_use_one_name` | `t47_use_lib_only` | `use ieee.std_logic_1164.std_ulogic;` | the price and files of `.all` |
+| `t47_use_pkg_emp_` | `t47_use_pkg_typ_` | an empty package of the design | `0x80`, the scope and unit |
+| `t47_use_pkg_typ_` | `t47_use_pkg_two_` | a package with one subtype | `0x80` |
+| `t47_use_pkg_4arr` | `t47_use_pkg_typ_` | four array types | `0x80` |
+| `t47_use_pkg_fn2_` | `t47_use_pkg_typ_` | two functions with a body | `0x80` |
+| `t47_use_pkg_pr2_` | `t47_use_pkg_fn2_` | two procedures with a body | `0x80` |
+| `t47_use_pkg_two_` | `t47_use_numstd__` | an `integer` and a `std_ulogic` constant | `0x88`; two unlogged objects |
+| `t47_use_pkg_nul_` | `t47_use_pkg_two_` | two null range constants | `0xa0`; size 0 declarations with `(0 downto 1)` |
+
 
 ## Record which comparison produced which finding
 
@@ -1514,7 +1540,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 729 cases through tier 46, and
+5. The reader now reproduces all 744 cases through tier 47, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

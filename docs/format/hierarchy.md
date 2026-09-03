@@ -325,6 +325,20 @@ clause changes this table.
 `t1_vec8` for that reason alone: two more file entries, each with two
 paths.
 See [types.md](types.md) for the comparison that found this.
+Tier 47 adds the use clauses one at a time to the tier 1 baseline.
+`standard.vhdl`, `textio.vhdl` and `env.vhdl` are there with no clause
+at all, `t47_use_none`, since `std.env.stop` ends every bench;
+`library ieee;` alone adds nothing, `t47_use_lib_only`; a use clause
+adds the package and its body, `numeric_std.vhdl` and
+`numeric_std-body.vhdl` in `t47_use_numstd`, before `env.vhdl`, and
+one naming a single item, `use ieee.std_logic_1164.std_ulogic` in
+`t47_use_one_name`, adds the same two files as `.all`.
+The use clause also costs handle space, by the package and not by the
+type of the signal; see [container.md](container.md).
+*Found by* `t47_use_none` against `t47_use_1164_bit`.
+*Confirmed by* `t47_use_lib_only`, `t47_use_one_name`,
+`t47_use_numstd`, `t47_use_numbit`, `t47_use_mathrl`,
+`t47_use_textio`.
 
 Region 14 has 2 words per file: an index into region 15, or `-1`, and a
 count.
@@ -1709,10 +1723,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 729 of 729 cases, and the
+*Confirmed by* the region length check in 744 of 744 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 729 of 729 cases and
+and *confirmed by* the reader's range check in 744 of 744 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

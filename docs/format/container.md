@@ -45,13 +45,13 @@ See [values.md](values.md).
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 729 cases |
-| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 729 cases |
-| `0x30` | 8 | `uint64` `0x40` | same | constant in all 729 cases |
+| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 744 cases |
+| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 744 cases |
+| `0x30` | 8 | `uint64` `0x40` | same | constant in all 744 cases |
 | `0x38` | 4 | `uint32` Unix time the database was written | the noise mask, two runs of `t3_tr1` | decodes to the file's own mtime |
-| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 729 cases |
-| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 729 cases |
-| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 729 cases |
+| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 744 cases |
+| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 744 cases |
+| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 744 cases |
 | `0xc4` | 4 | `uint32` per run duration, noise | the noise mask | differs between two runs of one case |
 
 The three `uint32` at `0x98` and the `3` at `0xc0` have not moved in any
@@ -112,7 +112,7 @@ arenas 0 to 6, while slots 7 to 19 are `0`.
 The slot count is `ceil(handle space / 0x800)`, where the handle space
 is the trailer word at `0x18`, described below.
 The reader checks that rule on every file it opens, and it holds in all
-729 corpus cases.
+744 corpus cases.
 
 *Found by* `t5_sig10` against `t2_flat3`: the trailer and every
 directory entry sat 8 bytes later, and the `0x48` pointer said so.
@@ -121,7 +121,7 @@ through tier 6 and failed on `t7_sig07`, which has four slots for seven
 objects.
 `t7_sig14`, `t7_sig16` and `t7_sig24` then pinned the boundaries at
 `0x1800`, `0x2000` and `0x2800` of handle space.
-*Confirmed by* the reader's check across all 729 cases, including
+*Confirmed by* the reader's check across all 744 cases, including
 `t9_vec12000`, whose one object spans 20 slots.
 
 The slot count is not the arena count: `t6_sig05` has two arenas and
@@ -154,18 +154,18 @@ three slot header.
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 8 | `uint64` simulation end time, in the time unit the DBG section names, picoseconds in every case before tier 21 | the correlation sweep across all cases | 729 of 729 against `end_time_ns` in `truth.json`; `t21_v_ts_1ns_1ns` holds 100 for 100 ns |
-| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 729 cases |
-| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 729 of 729 cases |
-| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 729 cases; the arena span, by its value |
-| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 729 of 729 cases |
-| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 729 cases; the arena table's offset, by its value |
-| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 729 cases |
-| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 729 cases |
-| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 729 of 729 cases, checked against the marker |
+| `0x00` | 8 | `uint64` simulation end time, in the time unit the DBG section names, picoseconds in every case before tier 21 | the correlation sweep across all cases | 744 of 744 against `end_time_ns` in `truth.json`; `t21_v_ts_1ns_1ns` holds 100 for 100 ns |
+| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 744 cases |
+| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 744 of 744 cases |
+| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 744 cases; the arena span, by its value |
+| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 744 of 744 cases |
+| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 744 cases; the arena table's offset, by its value |
+| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 744 cases |
+| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 744 cases |
+| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 744 of 744 cases, checked against the marker |
 | `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 140 of 140 cases with a marker |
 | `0x40` | 4 | `uint32` `0x2800`, the size a value page inflates to | inflating a page | every page in every case inflates to 10240 bytes |
-| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 729 cases |
+| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 744 cases |
 
 The word at `0x18` is `0x11d0` for one bit with one edge, `0x1318` for
 two bits, and `0x2a38` for twenty.
@@ -211,14 +211,47 @@ Tier 9 adds a few more prices, each against the `0x11d0` of
 | `t46_drv_2_next__` | `0x1428` | `0x258` | a `std_logic` with two drivers, next to a driven `std_ulogic`; as `t24_two_drivers` |
 | `t46_drv_3_next__` | `0x1510` | `0x340` | the same with three drivers; as `t34_res_3drv` |
 
-The type of a signal changes the price without changing the stride.
+A use clause costs handle space, and the type of the signal does not.
 The `bit`, `boolean`, `character`, `integer`, `real` and `time` signals
 of tier 2 cost `0x340` each over `t0_nosig`, `0x1f8` more than the
 `0x148` of a `std_ulogic`, and the `std_logic_vector`, `signed` and
 `unsigned` of 8 elements cost `0x338`, `0x1f8` more than the `0x140`
 of the `std_ulogic_vector` of `t1_vec8`.
-The user enumeration of `t2_enum` costs the `0x148` of a `std_ulogic`.
+Those nine benches are the nine with `use ieee.numeric_std.all`.
+Tier 47 adds that clause to `t1_bit_one_edge` and changes nothing
+else, and the handle space is the `0x13c8` of `t2_bit`; a `bit` signal
+under the usual `std_logic_1164` clause, `t47_use_1164_bit`, costs the
+`0x11d0` of a `std_ulogic`.
+The prices, each over `t1_bit_one_edge`:
+
+| Case | Handle space | Cost | Of what |
+| :--- | ---: | ---: | :--- |
+| `t47_use_none____` | `0xbcc` | `-0x604` | no `library ieee` and no use clause |
+| `t47_use_lib_only` | `0xbcc` | `-0x604` | `library ieee;` and no use clause |
+| `t47_use_one_name` | `0x11d0` | `0` | `use ieee.std_logic_1164.std_ulogic;`, the price of `.all` |
+| `t47_use_textio__` | `0x11d0` | `0` | `use std.textio.all`, a package the file table already lists |
+| `t47_use_numbit__` | `0x1358` | `0x188` | `use ieee.numeric_bit.all` |
+| `t47_use_numstd__` | `0x13c8` | `0x1f8` | `use ieee.numeric_std.all` |
+| `t47_use_mathrl__` | `0x15d0` | `0x400` | `use ieee.math_real.all` |
+| `t47_use_pkg_emp_` | `0x1250` | `0x80` | an empty package of the design, its scope and unit |
+| `t47_use_pkg_typ_` | `0x1250` | `0x80` | a package with one subtype |
+| `t47_use_pkg_4arr` | `0x1250` | `0x80` | a package with four array types |
+| `t47_use_pkg_fn2_` | `0x1250` | `0x80` | a package with two functions and a body |
+| `t47_use_pkg_pr2_` | `0x1250` | `0x80` | a package with two procedures and a body |
+| `t47_use_pkg_two_` | `0x1258` | `0x88` | a package with an `integer` and a `std_ulogic` constant, 5 bytes rounded to 8 |
+| `t47_use_pkg_nul_` | `0x1270` | `0xa0` | a package with two null range vector constants, 16 each |
+
+So `library ieee` with `use ieee.std_logic_1164.all` is `0x604` of
+the `0x1088` of `t0_nosig`, a package of the design is `0x80` for its
+scope and unit plus the rounded storage of its constants, and its
+types and subprograms are free.
+What a library package costs is not its types or subprograms by that
+rule, and not its constants either: `numeric_std` declares two null
+range constants, which cost `0x20` in a package of the design, and
+takes `0x1f8`.
 That is data without a reading.
+*Found by* `t47_use_numstd__` against `t1_bit_one_edge_`.
+*Confirmed by* the rest of the table.
 
 Three trailer words describe the arena table together: `0xc8` at `0x20`
 is where it starts, the word at `0x0c` is how many slots it has, and
