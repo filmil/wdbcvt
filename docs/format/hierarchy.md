@@ -377,8 +377,8 @@ variable that the simulator gave storage.
 | `24` | 4 | 0 |
 | `28` | 4 | 0 for a signal, 2 when the second handle is 0 |
 | `32` | 8 | declaration index |
-| `40` | 4 | 0 |
-| `44` | 4 | `-1`, 0, or a value that differs between runs; open |
+| `40` | 4 | position of a Verilog port in its module's port list, from 0; 0 for every VHDL object and every non port |
+| `44` | 4 | not written: `-1`, 0, or a value that differs between runs; see below |
 | `48` | 8 | 0 |
 
 The word at `16` was read as a `uint64` scope index through tier 8,
@@ -401,6 +401,48 @@ See [values.md](values.md).
 *Found by* `//hdl/serv:sim` against `t9_port_slice`.
 *Confirmed by* `t37_v_port_slc__`, `t37_v_port_bit__`,
 `t37_v_port_pair1` and `t37_v_port_span_`.
+
+The word at `40` was recorded as 0 through tier 47, when every case
+with a Verilog port had read as 0 or 1.
+A sweep of the word over the corpus found 1, 2 and 3 on the ports of
+the tier 36 children and 0 to 29 on the ports of `//hdl/serv:sim`,
+where `servant_sim` holds 0 for `wb_clk`, 1 for `wb_rst`, 2 for
+`pc_adr`, 3 for `pc_vld` and 4 for `q`, the order of its port list.
+Tier 48 fixes what the number counts.
+`t48_v_port_pos4_` instantiates a child with ports `a`, `b`, `c`, `d`
+and holds 0, 1, 2, 3 on them.
+`t48_v_port_rev__` connects them by name in reverse order, and
+`t48_v_port_posit` by position, and both hold 0, 1, 2, 3, so the
+connection does not count.
+`t48_v_port_nansi` declares the same ports in a non ANSI header,
+`module child(a, b, c, d);` followed by `output d; output c; input b;
+input a;`, and its objects come in declaration order, `d`, `c`, `b`,
+`a`, holding 3, 2, 1, 0: the number is the place in the port list,
+and the object order is the declaration order.
+`t48_v_port_open_` leaves `d` unconnected and `d` still holds 3.
+Every VHDL port holds 0: the 557 objects of `//hdl/potato:sim` and
+every port case of the VHDL tiers.
+The reader keeps it as `Position` and the dump prints it after a port.
+
+*Found by* the sweep over the corpus, then `t48_v_port_nansi` against
+`t48_v_port_pos4_`.
+*Confirmed by* `t48_v_port_rev__`, `t48_v_port_posit`,
+`t48_v_port_open_`, `t36_v_hier_and__`, `t13_v_hier3_net_`,
+`t11_v_port______` and `//hdl/serv:sim`.
+
+The word at `44` is not written by the producer, on the evidence of
+the same sweep.
+Across the 746 databases in the tree it is 0 on every object of 235,
+one of `0x7ffc` to `0x7fff` on every object of 352, all of them
+Verilog, `-1` on the objects of a few VHDL cases, and an arbitrary
+32 bit value elsewhere, with different objects of one file holding
+different values: 0 on the loop indexes and `0x60b54a78` on the
+signals of `t7_gen_for______`.
+The `0x7ffc` to `0x7fff` range is the shape of the upper half of a
+stack address on the producing host, and the arbitrary values the
+shape of heap addresses, so the reading is memory the writer copied
+without setting.
+The reader masks it.
 
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
@@ -1510,6 +1552,12 @@ An output port shares the handle of the wire on its net, `0x768` for
 `b` and `y`, as a VHDL port does.
 An input port connected to a `reg` does not share the `reg`'s handle;
 `a` and `x` are distinct objects with their own records.
+Such a port takes its handle in the order of the connections written
+in the instantiation, not the order of the port list:
+`t48_v_port_pos4_` connects `.a(a), .b(b)` and holds `0x8e8` on `a`
+and `0x9a8` on `b`, and `t48_v_port_rev__` connects `.d(d), .c(c),
+.b(b), .a(a)` and holds `0x8e8` on `b` and `0x9a8` on `a`.
+The output ports `c` and `d` share the parent's wires either way.
 An input port connected to a `wire` does share it: in
 `t12_v_port_wire`, where the parent drives `wire x` by an `assign`,
 `x` and `tb.dut.a` hold `0x768` together, and `y` and `tb.dut.b` hold
@@ -1723,10 +1771,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 744 of 744 cases, and the
+*Confirmed by* the region length check in 749 of 749 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 744 of 744 cases and
+and *confirmed by* the reader's range check in 749 of 749 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

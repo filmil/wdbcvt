@@ -1502,6 +1502,24 @@ in them.
 | `t47_use_pkg_two_` | `t47_use_numstd__` | an `integer` and a `std_ulogic` constant | `0x88`; two unlogged objects |
 | `t47_use_pkg_nul_` | `t47_use_pkg_two_` | two null range constants | `0xa0`; size 0 declarations with `(0 downto 1)` |
 
+**Tier 48: the port position word.**
+Verilog.
+A sweep of the two open words of the instance record over the corpus
+and `//hdl/serv:sim` found word 10 at 0 to 29 on the ports of `serv`,
+in the order of each module's port list, and word 12 holding values
+with the shape of addresses.
+The tier separates the port list from the connection and from the
+declaration order.
+The `position` field of `truth.json` checks it.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t48_v_port_pos4_` | `t36_v_hier_and__` | four ANSI ports connected by name in order | 0, 1, 2, 3 |
+| `t48_v_port_rev__` | `t48_v_port_pos4_` | connected by name in reverse order | 0, 1, 2, 3; the input port handles swap |
+| `t48_v_port_posit` | `t48_v_port_pos4_` | connected by position | 0, 1, 2, 3 |
+| `t48_v_port_nansi` | `t48_v_port_pos4_` | non ANSI header, declarations reversed | objects `d`, `c`, `b`, `a` with 3, 2, 1, 0 |
+| `t48_v_port_open_` | `t48_v_port_pos4_` | output `d` unconnected | 3 still; `d` gets its own handle |
+
 
 ## Record which comparison produced which finding
 
@@ -1540,7 +1558,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 744 cases through tier 47, and
+5. The reader now reproduces all 749 cases through tier 48, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
