@@ -15,22 +15,51 @@ type Kind uint8
 
 // The kinds observed so far. Every corpus type falls into one of these.
 const (
-	KindEnum     Kind = 0x03 // enumeration: BIT, STD_ULOGIC, BOOLEAN, CHARACTER, user enums
+	KindEnum     Kind = 0x03 // enumeration: BIT, STD_ULOGIC, BOOLEAN, CHARACTER, user enums, Verilog logic and bit
+	KindValues   Kind = 0x04 // SystemVerilog enum: named values of a base type
 	KindInteger  Kind = 0x05 // integer with bounds
 	KindReal     Kind = 0x06 // floating point with bounds
+	KindAlias    Kind = 0x07 // SystemVerilog typedef: a name for another entry
 	KindPhysical Kind = 0x0d // physical type with units: TIME
 	KindArray    Kind = 0x10 // array, constrained or not
 	KindRecord   Kind = 0x11 // record with named fields
+)
+
+// The first word of most entries says which language the type came
+// from, and is a bit set: bit 1 for VHDL, bit 0 for Verilog, bit 2 for
+// a Verilog predefined type, and bit 3 for a time type in either
+// language. Found by t11_v_bit_edge against t1_bit_one_edge, then the
+// rest of tier 11 against tier 2; see docs/format/types.md.
+const (
+	OriginVHDL        = 0x2
+	OriginVHDLTime    = 0xa
+	OriginVerilog     = 0x1
+	OriginVerilogPre  = 0x5
+	OriginVerilogTime = 0xd
+)
+
+// The u16 after the first word of an array or record entry: 1 for a
+// VHDL type, 3 for a packed Verilog type and 2 for an unpacked one.
+// Found by t11_sv_struct against t11_sv_ustruct, and by t11_v_mem4,
+// whose memory is unpacked and whose word is packed.
+const (
+	LayoutVHDL     = 1
+	LayoutUnpacked = 2
+	LayoutPacked   = 3
 )
 
 func (k Kind) String() string {
 	switch k {
 	case KindEnum:
 		return "enum"
+	case KindValues:
+		return "values"
 	case KindInteger:
 		return "integer"
 	case KindReal:
 		return "real"
+	case KindAlias:
+		return "alias"
 	case KindPhysical:
 		return "physical"
 	case KindArray:
@@ -73,6 +102,12 @@ type TimeUnit struct {
 	Scale uint64
 }
 
+// NamedValue is one value of a SystemVerilog enum.
+type NamedValue struct {
+	Name  string
+	Value uint64
+}
+
 // Field is one field of a record type.
 type Field struct {
 	Name string
@@ -86,17 +121,35 @@ type Field struct {
 // Type is one entry of the type table.
 type Type struct {
 	Kind Kind
-	// Name is the VHDL type name as the table stores it. Predefined and
-	// IEEE types are upper case, user types keep the source case.
+	// Name is the type name as the table stores it. VHDL predefined and
+	// IEEE types are upper case, user types keep the source case, and a
+	// Verilog vector, memory or struct with no typedef has no name.
 	Name string
+	// Origin is the first word of the entry, one of the Origin values.
+	// A physical type and an alias do not carry it.
+	Origin uint32
+	// Layout is the u16 after Origin in an array or record entry, one
+	// of the Layout values.
+	Layout uint16
 
+	// Variant is the second word of an enumeration or real entry. It is
+	// 2 for a VHDL enumeration, 0 for VHDL REAL, 0 for Verilog logic and
+	// 1 for Verilog bit and real. What it selects is open.
+	Variant uint32
 	// Class is the third word of an enumeration entry: 2 for BIT, 3 for
-	// STD_ULOGIC, 5 for BOOLEAN and user enumerations. What it selects is
-	// open.
+	// STD_ULOGIC, 5 for BOOLEAN and user enumerations, 1 for Verilog
+	// logic and bit. What it selects is open.
 	Class uint32
 	// Literals are the enumeration literals in declaration order.
-	// Character literals keep their quotes, as in `'U'`.
+	// Character literals keep their quotes, as in `'U'`. Verilog logic
+	// lists 0 1 Z X and bit lists 0 1 0 0.
 	Literals []string
+	// Values lists the named values of a SystemVerilog enum, whose base
+	// type is Elem, constrained by Ranges. Found by t11_sv_enum.
+	Values []NamedValue
+	// Target is the entry an alias names. Found by t11_sv_enum, whose
+	// typedef state_t is an alias of the unnamed values entry.
+	Target int
 
 	// Low and High bound an integer type.
 	Low, High int32
@@ -107,12 +160,14 @@ type Type struct {
 	Units []TimeUnit
 
 	// Elem and Index are type indexes for an array's element and index
-	// types. Dims is its dimension count. Constrained says whether the
-	// entry itself fixes the bounds; Ranges holds one Range per
-	// dimension, then the element constraints in the order they appear.
+	// types. Dims is its dimension count. Ranges holds one Range per
+	// dimension, then the element constraints in the order they appear;
+	// an unconstrained dimension is (0, 0, -2). The word before the
+	// ranges is their count: t5_int_arr has 1 for (0 to 3), t2_array2d
+	// has 2 for (0 to 3) (7 downto 0), t11_v_mem4 has 2 for two
+	// unconstrained triples.
 	Elem, Index int
 	Dims        int
-	Constrained bool
 	Ranges      []Range
 
 	// Fields lists a record's fields in declaration order.
@@ -252,6 +307,47 @@ func (c *cursor) expect(want uint32, what string) {
 	}
 }
 
+func (c *cursor) expect16(want uint16, what string) {
+	if got := c.u16(); c.err == nil && got != want {
+		c.err = fmt.Errorf("%s: got %#x, want %#x", what, got, want)
+	}
+}
+
+// origin reads the first word of an entry and refuses a value that has
+// not been observed.
+func (c *cursor) origin() uint32 {
+	v := c.u32()
+	switch v {
+	case OriginVHDL, OriginVHDLTime, OriginVerilog, OriginVerilogPre, OriginVerilogTime:
+	default:
+		if c.err == nil {
+			c.err = fmt.Errorf("origin word %#x", v)
+		}
+	}
+	return v
+}
+
+// layout reads the u16 that follows the origin of an array or record.
+func (c *cursor) layout() uint16 {
+	v := c.u16()
+	switch v {
+	case LayoutVHDL, LayoutUnpacked, LayoutPacked:
+	default:
+		if c.err == nil {
+			c.err = fmt.Errorf("layout word %#x", v)
+		}
+	}
+	return v
+}
+
+// trailer reads the last word of an enumeration or real entry, which is
+// 1 for a VHDL type and 0 for a Verilog one.
+func (c *cursor) trailer(what string) {
+	if got := c.u32(); c.err == nil && got != 0 && got != 1 {
+		c.err = fmt.Errorf("%s trailer: got %#x, want 0 or 1", what, got)
+	}
+}
+
 // readType decodes one entry body: the name and the kind specific part.
 func readType(kind Kind, body []byte) (Type, error) {
 	t := Type{Kind: kind}
@@ -259,54 +355,72 @@ func readType(kind Kind, body []byte) (Type, error) {
 	t.Name = c.str()
 	switch kind {
 	case KindEnum:
-		c.expect(2, "enum word 0")
-		c.expect(2, "enum word 1")
+		t.Origin = c.origin()
+		t.Variant = c.u32()
 		t.Class = c.u32()
 		n := int(c.u32())
 		for i := 0; i < n && c.err == nil; i++ {
 			t.Literals = append(t.Literals, c.str())
 		}
-		c.expect(1, "enum trailer")
+		c.trailer("enum")
+	case KindValues:
+		// [u32 1][u32 base][u32 n][u32 8] then n times name NUL [u64
+		// value], then [u32 count] and count constraint triples for
+		// the base type with no end marker. The 8 is the byte size of
+		// a value. t11_sv_enum has a count of 0 over base int,
+		// t11_sv_enum4 a count of 1 and (3 downto 0) over an unnamed
+		// logic vector.
+		t.Origin = c.origin()
+		t.Elem = int(c.u32())
+		n := int(c.u32())
+		c.expect(8, "values word 3")
+		for i := 0; i < n && c.err == nil; i++ {
+			v := NamedValue{Name: c.str()}
+			v.Value = c.u64()
+			t.Values = append(t.Values, v)
+		}
+		nr := int(c.u32())
+		for j := 0; j < nr && c.err == nil; j++ {
+			t.Ranges = append(t.Ranges, Range{Left: c.i32(), Right: c.i32(), Dir: c.i32()})
+		}
 	case KindInteger:
-		c.expect(2, "integer word 0")
+		t.Origin = c.origin()
 		t.Low = c.i32()
 		t.High = c.i32()
 		c.expect(1, "integer trailer")
 	case KindReal:
-		c.expect(2, "real word 0")
-		c.expect(0, "real word 1")
+		t.Origin = c.origin()
+		t.Variant = c.u32()
 		t.FLow = c.f64()
 		t.FHigh = c.f64()
-		c.expect(1, "real trailer")
+		c.trailer("real")
+	case KindAlias:
+		t.Origin = c.origin()
+		t.Target = int(c.u32())
+		c.expect(0, "alias trailer")
 	case KindPhysical:
-		c.expect(0xa, "physical word 0")
+		t.Origin = c.origin()
 		n := int(c.u32())
 		for i := 0; i < n && c.err == nil; i++ {
 			name := c.str()
 			t.Units = append(t.Units, TimeUnit{Name: name, Scale: c.u64()})
 		}
 	case KindArray:
-		c.expect(2, "array word 0")
-		c.u16() // 1
-		c.u16() // 0xa0
+		t.Origin = c.origin()
+		t.Layout = c.layout()
+		c.expect16(0xa0, "array word 1 high half")
 		t.Elem = int(c.u32())
 		t.Dims = int(c.u32())
 		t.Index = int(c.u32())
-		switch v := c.u32(); v {
-		case 1:
-			t.Constrained = false
-		case 2:
-			t.Constrained = true
-		default:
-			if c.err == nil {
-				c.err = fmt.Errorf("array constraint word %#x", v)
-			}
-		}
+		nr := int(c.u32())
 		t.Ranges = c.ranges()
+		if c.err == nil && nr != len(t.Ranges) {
+			c.err = fmt.Errorf("array range count word %d, %d triples follow", nr, len(t.Ranges))
+		}
 	case KindRecord:
-		c.expect(2, "record word 0")
-		c.u16() // 1
-		c.u16() // 0xb
+		t.Origin = c.origin()
+		t.Layout = c.layout()
+		c.expect16(0xb, "record word 1 high half")
 		n := int(c.u32())
 		for i := 0; i < n && c.err == nil; i++ {
 			f := Field{Name: c.str()}

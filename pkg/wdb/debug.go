@@ -31,6 +31,13 @@ const (
 	// UnitGenerate is a generate statement, and also each iteration of
 	// a for generate: t7_gen_for has one for `g` and one per `\g(i)\`.
 	UnitGenerate UnitKind = 0x0c
+	// The Verilog unit kinds. A module, a named block, and a process:
+	// an initial or always block, a continuous assignment, or the
+	// implicit initial block a reg initializer makes. Found by
+	// t11_v_bit_edge against t1_bit_one_edge, t11_v_always, t11_v_wire.
+	UnitModule   UnitKind = 0x00
+	UnitBlock    UnitKind = 0x05
+	UnitVProcess UnitKind = 0x07
 )
 
 func (k UnitKind) String() string {
@@ -43,6 +50,12 @@ func (k UnitKind) String() string {
 		return "process"
 	case UnitGenerate:
 		return "generate"
+	case UnitModule:
+		return "module"
+	case UnitBlock:
+		return "block"
+	case UnitVProcess:
+		return "vprocess"
 	}
 	return fmt.Sprintf("unit(%#x)", uint32(k))
 }
@@ -56,6 +69,12 @@ const (
 	DeclVariable DeclKind = 0x0f // a variable declared in a process
 	DeclGeneric  DeclKind = 0x12
 	DeclConstant DeclKind = 0x13 // a constant, a for loop index or a generate index
+	// The Verilog declaration kinds: a variable (reg, logic, integer
+	// and the other variable types), a parameter, and a net (wire and
+	// every port of t11_v_port). Found by tier 11.
+	DeclVar   DeclKind = 0x00
+	DeclParam DeclKind = 0x01
+	DeclNet   DeclKind = 0x03
 )
 
 func (k DeclKind) String() string {
@@ -68,6 +87,12 @@ func (k DeclKind) String() string {
 		return "variable"
 	case DeclConstant:
 		return "constant"
+	case DeclVar:
+		return "var"
+	case DeclParam:
+		return "parameter"
+	case DeclNet:
+		return "net"
 	}
 	return fmt.Sprintf("decl(%#x)", uint32(k))
 }
@@ -145,7 +170,9 @@ type Decl struct {
 	Name string
 	// File and Line locate the declaration.
 	File, Line int
-	// Size is the value size in bytes, as it appears in a page record.
+	// Size is the value size: bytes for a VHDL type, as a page record
+	// holds it, and bits for a Verilog type, whose records hold word
+	// pairs instead; see verilog.go.
 	Size int
 	// Type indexes File.Types.
 	Type int

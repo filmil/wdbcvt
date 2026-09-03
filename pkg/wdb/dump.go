@@ -35,27 +35,32 @@ func (f *File) Dump(w io.Writer) error {
 
 	p("types (%d):\n", len(f.Types))
 	for i, t := range f.Types {
-		p("  [%d] %s %s", i, t.Kind, t.Name)
+		p("  [%d] %s %q origin %#x", i, t.Kind, t.Name, t.Origin)
 		switch t.Kind {
 		case KindEnum:
-			p(" class %d: %s", t.Class, strings.Join(t.Literals, " "))
+			p(" variant %d class %d: %s", t.Variant, t.Class, strings.Join(t.Literals, " "))
+		case KindValues:
+			p(" of [%d]:", t.Elem)
+			for _, v := range t.Values {
+				p(" %s=%d", v.Name, v.Value)
+			}
+		case KindAlias:
+			p(" of [%d]", t.Target)
 		case KindInteger:
 			p(" %d to %d", t.Low, t.High)
 		case KindReal:
-			p(" %g to %g", t.FLow, t.FHigh)
+			p(" variant %d %g to %g", t.Variant, t.FLow, t.FHigh)
 		case KindPhysical:
 			for _, u := range t.Units {
 				p(" %s=%d", u.Name, u.Scale)
 			}
 		case KindArray:
-			p(" of [%d] indexed by [%d], %d dim", t.Elem, t.Index, t.Dims)
-			if t.Constrained {
-				p(", constrained")
-			}
+			p(" layout %d of [%d] indexed by [%d], %d dim", t.Layout, t.Elem, t.Index, t.Dims)
 			for _, r := range t.Ranges {
 				p(" (%s)", r)
 			}
 		case KindRecord:
+			p(" layout %d", t.Layout)
 			for _, fd := range t.Fields {
 				p(" %s:[%d]", fd.Name, fd.Type)
 				for _, r := range fd.Ranges {
