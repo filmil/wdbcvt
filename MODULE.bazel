@@ -53,3 +53,22 @@ vivado.install(
     urls = ["file:///data/tools/archives/FPGAs_AdaptiveSoCs_Unified_SDI_2025.2_1114_2157_1.tar"],
 )
 use_repo(vivado, "vivado_hermetic")
+
+# SERV, the bit serial RISC-V core, as the design nobody wrote for this
+# repository. The reader is confirmed on it, not tuned against it; see
+# docs/corpus.md. Pinned to a release so that the database it produces
+# stays comparable between runs.
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "serv",
+    build_file = "//third_party/serv:serv.BUILD",
+    # xvlog without --relax rejects a net used before its declaration,
+    # which serv_state.v does once. The patch moves the declaration up
+    # and changes nothing else.
+    patch_args = ["-p1"],
+    patches = ["//third_party/serv:0001-declare-trap_pending-before-use.patch"],
+    sha256 = "f81c37b9f9d548c658e23bb7eb90fbed8b54e2e9e51fa42b8cd2f34cecc472ab",
+    strip_prefix = "serv-1.4.0",
+    urls = ["https://github.com/olofk/serv/archive/refs/tags/1.4.0.tar.gz"],
+)
