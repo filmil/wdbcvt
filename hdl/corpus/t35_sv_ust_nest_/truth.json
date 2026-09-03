@@ -1,0 +1,82 @@
+{
+  "case": "t35_sv_ust_nest_",
+  "axis": "an unpacked struct inside an unpacked struct, s.r.b written",
+  "differs_from": "t35_sv_ust_fld__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 6,
+      "type": "outer_t",
+      "fields": [
+        {
+          "scope": "",
+          "name": "a",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        },
+        {
+          "scope": "",
+          "name": "r",
+          "width": 5,
+          "type": "rec_t",
+          "fields": [
+            {
+              "scope": "",
+              "name": "a",
+              "width": 1,
+              "type": "logic",
+              "declared": "logic"
+            },
+            {
+              "scope": "",
+              "name": "b",
+              "width": 4,
+              "type": "",
+              "declared": "logic"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.r.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.r.b",
+      "value": "XXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.r.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.r.b",
+      "value": "0000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.r.b",
+      "value": "1010"
+    }
+  ]
+}

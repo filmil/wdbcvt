@@ -1,0 +1,40 @@
+{
+  "case": "t35_sv_ust_tdef_",
+  "axis": "a typedef of an unpacked array of unpacked structs, arr_t m",
+  "differs_from": "t35_sv_ust_arr__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 10,
+      "type": "arr_t",
+      "elements": 2,
+      "element_width": 5,
+      "element_type": "rec_t",
+      "declared": "arr_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => X, b => XXXX), (a => X, b => XXXX))"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => X, b => XXXX))"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => 0, b => 0000))"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => 1, b => 1010))"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "case": "t35_sv_ust_arr__",
+  "axis": "an unpacked array of unpacked structs, rec_t m [0:1], m[1] written whole",
+  "differs_from": "t13_sv_struct_ar",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 10,
+      "type": "",
+      "elements": 2,
+      "element_width": 5,
+      "element_type": "rec_t",
+      "declared": "rec_t [0:1]"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => X, b => XXXX), (a => X, b => XXXX))"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => X, b => XXXX))"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => 0, b => 0000))"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "((a => 0, b => 0000), (a => 1, b => 1010))"
+    }
+  ]
+}
