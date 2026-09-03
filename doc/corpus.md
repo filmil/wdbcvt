@@ -146,7 +146,7 @@ discovered.
 1. Run the noise experiment. Produce the mask.
 2. Diff Tier 0 against Tier 1 baseline. Find the signal record.
 3. Walk Tier 1 one axis at a time. Each answer is a row in the findings
-   table in [wdb-format.md](wdb-format.md), with the command that
+   table in [format.md](format.md), with the command that
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.

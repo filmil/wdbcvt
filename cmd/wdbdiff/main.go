@@ -7,7 +7,7 @@
 // easy to skip. Simulate one design twice and derive a noise mask from
 // the pair; only then compare two different designs through that mask.
 // Without the mask a run timestamp gets confidently identified as a
-// signal count. See docs/wdb-corpus.md.
+// signal count. See doc/corpus.md.
 //
 //	# What changes between two runs of the same design.
 //	wdbdiff -a run1.wdb -b run2.wdb

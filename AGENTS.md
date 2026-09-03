@@ -8,7 +8,7 @@ It states what this repository is for, how it is built, and what the
 
 This repository has one purpose: work out the layout of the Vivado `xsim`
 waveform database format, and build a converter for it.
-`docs/wdb-format.md` is the working record of that effort.
+`doc/format.md` is the working record of that effort.
 Add a row to its findings table only for something reproduced, and keep
 guesses in the open questions section where they are labelled as guesses.
 
@@ -112,7 +112,7 @@ same rule.
 # Provenance rules
 
 This is an AI-first exploration of an undocumented format.
-`docs/provenance.md` states that plainly, names the guards that stand in
+`doc/provenance.md` states that plainly, names the guards that stand in
 for a specification, and says where `dewdb` should not be used.
 Keep it accurate as the guards change.
 
@@ -123,7 +123,10 @@ Rules that follow from it, and that apply to every change here:
   from an agent running experiments, not from documentation.
   A reader who finds the tool without finding the docs still learns how
   the knowledge was obtained.
-* A decoded field enters the findings table in `docs/wdb-format.md` only
+* All findings about the format live in `//doc`. Write them down as
+  they are discovered, not at the end. `doc/README.md` is the index and
+  says how a finding is recorded.
+* A decoded field enters the findings table in `doc/format.md` only
   with the command that reproduces it.
   Everything else stays in the open questions section, labelled a guess.
 * A test asserts against a `truth.json`, or against the VCD as read by

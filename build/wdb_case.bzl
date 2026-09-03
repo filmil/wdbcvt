@@ -14,7 +14,7 @@ def wdb_case(name, srcs, extra_deps = []):
     Every case is held to the same shape on purpose, so that two cases
     differ only in their sources. The library name is always `corpus`
     and the top level entity is always `tb`, so neither can become a
-    confound when two databases are compared. See //docs/wdb-corpus.md.
+    confound when two databases are compared. See //doc/corpus.md.
 
     Produces `<name>_sim.wdb` and `<name>_sim.vcd` under this package,
     and a `truth.json` filegroup that tests read as the ground truth for

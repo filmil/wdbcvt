@@ -4,7 +4,7 @@
 // (.wdb) container format, and the tools used to find out more.
 //
 // The format is undocumented by AMD. Nothing here guesses: Probe reports
-// measurements taken from a file, and docs/wdb-format.md records which of
+// measurements taken from a file, and doc/format.md records which of
 // those measurements have hardened into facts.
 package wdb
 

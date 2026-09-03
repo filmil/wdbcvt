@@ -62,7 +62,7 @@ failure this avoids.
 Each corpus case ships a `truth.json` stating the signals, widths,
 times and values that the simulation was written to produce. It is
 derived from the design, not from the database. The decoder has to
-reproduce it. See [wdb-corpus.md](wdb-corpus.md).
+reproduce it. See [corpus.md](corpus.md).
 
 **4. Independent simulators.**
 GHDL and nvc simulate the same VHDL and write their own waveforms. They
@@ -81,7 +81,7 @@ reference implementation, vendored test only. See
 ## The rules that follow
 
 * A decoded field is recorded in the findings table of
-  [wdb-format.md](wdb-format.md) only with the command that reproduces
+  [format.md](format.md) only with the command that reproduces
   it. Anything else stays in the open questions section, labelled as a
   guess.
 * A test asserts against `truth.json` or against the VCD read by

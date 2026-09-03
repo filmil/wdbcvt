@@ -4,7 +4,7 @@
 #
 #     bazel build //hdl/corpus:all_wdb
 #
-# See //docs/wdb-corpus.md for what the cases are for and how to read
+# See //doc/corpus.md for what the cases are for and how to read
 # the differences between them.
 filegroup(
     name = "all_wdb",
