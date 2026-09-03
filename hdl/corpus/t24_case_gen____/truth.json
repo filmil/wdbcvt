@@ -1,0 +1,35 @@
+{
+  "case": "t24_case_gen____",
+  "axis": "g: case k generate, constant k := 1, the second alternative taken",
+  "differs_from": "t8_gen_if_______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.g",
+      "name": "b",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.g.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g.b",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "k",
+      "type": "integer",
+      "kind": "constant",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "case": "t24_null_range__",
+  "axis": "signal z : std_ulogic_vector(0 downto 1), a null range beside s",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "z",
+      "width": 0,
+      "type": "std_ulogic_vector",
+      "logged": false
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

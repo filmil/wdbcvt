@@ -1,0 +1,34 @@
+{
+  "case": "t24_sv_dynarr___",
+  "axis": "a dynamic array: int d[]",
+  "differs_from": "t24_sv_queue____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "absent": [
+    {
+      "scope": "tb",
+      "name": "d",
+      "type": "int[]"
+    }
+  ]
+}

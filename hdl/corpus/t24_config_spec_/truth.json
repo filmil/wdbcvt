@@ -1,0 +1,27 @@
+{
+  "case": "t24_config_spec_",
+  "axis": "component child with for dut : child use entity work.child(a), against the last analysed b",
+  "differs_from": "t23_arch_b______",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "records": 2
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.s",
+      "value": "1"
+    }
+  ]
+}

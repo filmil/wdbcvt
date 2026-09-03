@@ -1,0 +1,47 @@
+{
+  "case": "t24_att_stable__",
+  "axis": "b <= s'stable(1 ns)",
+  "differs_from": "t24_att_delayed_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "boolean"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "TRUE"
+    },
+    {
+      "time_ns": 50,
+      "signal": "b",
+      "value": "FALSE"
+    },
+    {
+      "time_ns": 51,
+      "signal": "b",
+      "value": "TRUE"
+    }
+  ]
+}

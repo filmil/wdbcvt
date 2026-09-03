@@ -1,0 +1,43 @@
+{
+  "case": "t24_ext_name____",
+  "axis": "a <= << signal .tb.dut.s : std_ulogic >> in tb",
+  "differs_from": "t1_hier1________",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "records": 3
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "a",
+      "value": "1"
+    }
+  ]
+}

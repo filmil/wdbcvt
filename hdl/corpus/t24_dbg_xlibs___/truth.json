@@ -1,0 +1,153 @@
+{
+  "case": "t24_dbg_xlibs___",
+  "axis": "the same under -debug wave -debug xlibs",
+  "differs_from": "t22_dbg_wave____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 1,
+      "type": "std_logic",
+      "records": 4
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "Z"
+    },
+    {
+      "time_ns": 50,
+      "signal": "r",
+      "value": "1"
+    },
+    {
+      "time_ns": 70,
+      "signal": "r",
+      "value": "X"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "env",
+      "name": "DIR_SEPARATOR",
+      "type": "string",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "textio",
+      "name": "INPUT",
+      "type": "text",
+      "kind": "variable"
+    },
+    {
+      "scope": "textio",
+      "name": "OUTPUT",
+      "type": "text",
+      "kind": "variable"
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "resolution_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "and_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "or_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "xor_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "not_table",
+      "type": "stdlogic_1d",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "cvt_to_x01",
+      "type": "logic_x01_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "cvt_to_x01z",
+      "type": "logic_x01z_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "cvt_to_ux01",
+      "type": "logic_ux01_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "MVL9_to_char",
+      "type": "char_indexed_by_mvl9",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "char_to_MVL9",
+      "type": "mvl9_indexed_by_char",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "char_to_MVL9plus",
+      "type": "mvl9plus_indexed_by_char",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "NBSP",
+      "type": "character",
+      "kind": "constant",
+      "logged": false
+    }
+  ]
+}

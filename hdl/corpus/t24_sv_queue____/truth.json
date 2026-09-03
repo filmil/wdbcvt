@@ -1,0 +1,34 @@
+{
+  "case": "t24_sv_queue____",
+  "axis": "a queue: int q[$]",
+  "differs_from": "t11_sv_str______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "absent": [
+    {
+      "scope": "tb",
+      "name": "q",
+      "type": "int[$]"
+    }
+  ]
+}
