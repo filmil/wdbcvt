@@ -1,0 +1,41 @@
+{
+  "case": "t38_v_rmh_rng___",
+  "axis": "$readmemh with the range 1 to 2 over the four line file",
+  "differs_from": "t38_v_rmh_4w____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 128,
+      "type": "",
+      "elements": 4,
+      "element_width": 32,
+      "element_type": "",
+      "records": 4,
+      "declared": "memory of reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, 00000000000000000000000000000001, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, 00000000000000000000000000000001, 00000000000000000000000000000010, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, 00000000000000000000000000000001, 00000000000000000000000000000010, 10100101110000111111000000001111)"
+    }
+  ]
+}

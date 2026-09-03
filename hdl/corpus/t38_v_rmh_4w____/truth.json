@@ -1,0 +1,51 @@
+{
+  "case": "t38_v_rmh_4w____",
+  "axis": "the four words loaded by $readmemh from a four line file",
+  "differs_from": "t38_v_mem4w32___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 128,
+      "type": "",
+      "elements": 4,
+      "element_width": 32,
+      "element_type": "",
+      "records": 6,
+      "declared": "memory of reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000000000000000000000000001, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000000000000000000000000001, 00000000000000000000000000000010, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000000000000000000000000001, 00000000000000000000000000000010, 00000000000000000000000000000011, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000000000000000000000000001, 00000000000000000000000000000010, 00000000000000000000000000000011, 00000000000000000000000000000100)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(00000000000000000000000000000001, 00000000000000000000000000000010, 10100101110000111111000000001111, 00000000000000000000000000000100)"
+    }
+  ]
+}
