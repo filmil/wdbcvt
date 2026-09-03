@@ -293,7 +293,7 @@ func (f *File) vcdOmitted(o Object) string {
 		lits := strings.Join(e.Literals, "")
 		return lits == "'0''1'" || lits == "'U''X''0''1''Z''W''L''H''-'"
 	}
-	if bitLike(dc.Type) || ty.Kind == KindArray && ty.Dims == 1 && bitLike(ty.Elem) {
+	if bitLike(dc.Type) || ty.Kind == KindArray && bitLike(ty.Elem) {
 		return ""
 	}
 	return "a VHDL type other than BIT, STD_ULOGIC and their vectors: " + ty.Kind.String() + " " + ty.Name
