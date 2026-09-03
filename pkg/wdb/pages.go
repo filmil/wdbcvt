@@ -352,7 +352,9 @@ const chunkWhole = 275
 // rounded down. t10_vec275 gives 2 chunks of 137 and 138, t10_vec276
 // gives 4 of 69, t10_vec574 and t10_vec575 sit either side of 4 and 6,
 // t10_vec30000 gives 202 of 148 with a last chunk of 252. Why the
-// constants are 24 and 299 is not known.
+// constants are 24 and 299 is not known. The remainder can be longer
+// than a chunk by up to count - 1 bytes; chunkLens says what happens
+// to it then.
 func Chunks(size uint64) (count, length uint64) {
 	if size < chunkWhole {
 		return 1, size
@@ -362,25 +364,44 @@ func Chunks(size uint64) (count, length uint64) {
 	return count, size / count
 }
 
-// chunkStarts lists the record addresses Chunks predicts for a value of
-// size bytes at handle, allowing for the split of a chunk at an arena
-// boundary: the chunk goes on in the next arena as a record of its own
-// at key 0.
-func chunkStarts(handle, size uint64) []uint64 {
+// chunkLens lists the record lengths of a value of size bytes, in
+// order: the chunks of Chunks, with the remainder chunked again by the
+// same rule when it is 276 bytes or more. A remainder of exactly 275
+// bytes is one record, where a value of 275 bytes is two chunks. Found
+// by //hdl/potato:sim, whose 32768 byte memories end in four records
+// of 89 where one of 356 was expected; the threshold by t39_vec20120
+// against t39_vec20121, remainders of 275 and 276, and the rule by
+// the other tier 39 remainders from 280 to 356.
+func chunkLens(size uint64) []uint64 {
 	count, length := Chunks(size)
+	if count == 1 {
+		return []uint64{size}
+	}
+	var lens []uint64
+	for i := uint64(1); i < count; i++ {
+		lens = append(lens, length)
+	}
+	rest := size - (count-1)*length
+	if rest > chunkWhole {
+		return append(lens, chunkLens(rest)...)
+	}
+	return append(lens, rest)
+}
+
+// chunkStarts lists the record addresses chunkLens predicts for a
+// value of size bytes at handle, allowing for the split of a chunk at
+// an arena boundary: the chunk goes on in the next arena as a record
+// of its own at key 0.
+func chunkStarts(handle, size uint64) []uint64 {
 	var want []uint64
-	next := handle
-	for i := uint64(0); i < count; i++ {
-		at := handle + i*length
-		// An arena boundary inside the previous chunk starts a record.
-		if b := (next/arenaSpan + 1) * arenaSpan; b < at {
+	at := handle
+	for _, l := range chunkLens(size) {
+		want = append(want, at)
+		// An arena boundary inside the chunk starts a record.
+		if b := (at/arenaSpan + 1) * arenaSpan; b < at+l {
 			want = append(want, b)
 		}
-		want = append(want, at)
-		next = at
-	}
-	if b := (next/arenaSpan + 1) * arenaSpan; b < handle+size {
-		want = append(want, b)
+		at += l
 	}
 	return want
 }
