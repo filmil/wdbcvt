@@ -1,8 +1,0 @@
-{
-  "case": "t0_nosig",
-  "axis": "floor",
-  "differs_from": null,
-  "end_time_ns": 100,
-  "signals": [],
-  "transitions": []
-}

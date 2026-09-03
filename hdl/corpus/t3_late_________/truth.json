@@ -1,0 +1,26 @@
+{
+  "case": "t3_late_________",
+  "axis": "transition time 10 ns to 1000 ns",
+  "differs_from": "t3_tr1__________",
+  "end_time_ns": 1010,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 1000,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

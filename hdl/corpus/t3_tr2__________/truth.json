@@ -1,0 +1,31 @@
+{
+  "case": "t3_tr2__________",
+  "axis": "value change data",
+  "differs_from": "t3_tr1__________",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}
