@@ -46,17 +46,6 @@ func takeRanges(rs *[]Range, n int, what string) ([]Range, error) {
 	return out, nil
 }
 
-// fieldRanges is the constraint list a record field brings for its type.
-// A field whose type is itself a record starts with one extra triple
-// before the nested constraints; what it means is open, so it is dropped.
-func (f *File) fieldRanges(fd Field) []Range {
-	rs := fd.Ranges
-	if fd.Type >= 0 && fd.Type < len(f.Types) && f.Types[fd.Type].Kind == KindRecord && len(rs) > 0 {
-		rs = rs[1:]
-	}
-	return rs
-}
-
 // fieldConstraint picks the constraint list a record field decodes
 // with. The declaration record of a record object lists the bounds of
 // every array dimension inside it, in field order, and that list is the
@@ -65,12 +54,18 @@ func (f *File) fieldRanges(fd Field) []Range {
 // (7 downto 0) on the declaration, and t42_rec_two_cons constrains one
 // record type two ways from two declarations. So the fields consume the
 // declaration list, and fall back to their own triples only when the
-// list is empty. See docs/format/types.md, "Record".
+// list is empty. A record field's own triples are the flattened ranges
+// of the inner fields, scalars included, so the fallback for one is an
+// empty list and the inner fields fall back to their own triples in
+// turn. See docs/format/types.md, "Record".
 func (f *File) fieldConstraint(fd Field, rs *[]Range) *[]Range {
 	if len(*rs) > 0 {
 		return rs
 	}
-	own := f.fieldRanges(fd)
+	own := []Range{}
+	if fd.Type < 0 || fd.Type >= len(f.Types) || f.Types[fd.Type].Kind != KindRecord {
+		own = fd.Ranges
+	}
 	return &own
 }
 
