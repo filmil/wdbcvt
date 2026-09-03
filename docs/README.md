@@ -15,7 +15,11 @@ not be used.
 
 | File | What it holds |
 | :--- | :--- |
-| [format.md](format.md) | **The findings.** One row per confirmed fact, with the command that reproduces it. Open questions are kept separate and labelled as guesses. |
+| [format.md](format.md) | **The findings.** One row per confirmed fact, with the command that reproduces it, the comparison that found each, and the open questions, labelled as guesses. |
+| [format/container.md](format/container.md) | The fixed header, the arena table, the trailer, the directory, the page directory, the marker and the noise mask. |
+| [format/types.md](format/types.md) | The type table. |
+| [format/hierarchy.md](format/hierarchy.md) | The debug section: scopes, units, declarations, files, instance records and handles. |
+| [format/values.md](format/values.md) | Arenas, pages, value records, encodings and alignment. |
 | [corpus.md](corpus.md) | The differential corpus, and the method: minimal pairs, the noise mask, and the ground truth files. |
 | [provenance.md](provenance.md) | How the knowledge was obtained, what guards it, and the limits of it. |
 | [fst-output.md](fst-output.md) | The FST output format, its licence position, and the route chosen for writing it. |
@@ -34,6 +38,7 @@ Every claim is scoped to the Vivado version that produced the file.
 Only 2025.2 has been observed.
 A second version is a new experiment, not a confirmation.
 
-As `format.md` grows past what one document holds comfortably, split it
-into `docs/format/` with one file per area of the container, and leave
-`format.md` as the index and the findings table.
+`format.md` is the index and the findings table.
+The layout itself lives in `docs/format/`, one file per area of the
+container, and a new finding goes into the file for its area with the
+case that found it.

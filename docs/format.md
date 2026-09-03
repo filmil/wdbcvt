@@ -6,257 +6,165 @@
 ## What this document is
 
 AMD does not document the `.wdb` container that `xsim` writes.
-This file records what has actually been measured about it, and how.
-Everything here is either a measurement or a statement marked as a guess.
+This file is the index of what has been measured about it, the findings
+table, and the record of which comparison led to which discovery.
+Everything here is either a measurement or a statement marked as a
+guess.
 Nothing gets promoted from guess to fact without a reproduction.
 
+The layout itself is described in four documents, one per area:
 
-## Where the sample comes from
-
-`//hdl/counter:sim` runs a small VHDL testbench under `xsim` and writes
-its waveform database.
-
-```sh
-bazel build //hdl/counter:sim
-ls -l bazel-bin/hdl/counter/sim.wdb
-```
-
-The same target also writes `sim.vcd`.
-That pairing is the whole reason this design is the sample: VCD is a
-documented text format holding the same signal history, so it acts as the
-answer key.
-Any decoder claim about the `.wdb` can be checked against the `.vcd`
-written from the same run.
-
-The design is deliberately small and its behaviour is fully known:
-one 8-bit counter, one clock, one reset, one enable, one wrap flag, and a
-run that covers exactly one full wrap of the counting range.
-The value at every simulation time is therefore predictable without
-reading either file.
-
-
-## First pass: measure, do not guess
-
-```sh
-bazel run //cmd/wdbcvt -- -in "$PWD/bazel-bin/hdl/counter/sim.wdb"
-```
-
-`wdbcvt` reports four things, and no interpretation of them:
-
-* the file size,
-* the first 64 bytes as a hex dump,
-* Shannon entropy per 4096-byte block, and over the whole file,
-* every run of printable ASCII, longest first.
-
-Each of those answers one question that has to be settled before any
-parsing is attempted.
-
-| Measurement | The question it settles |
+| Document | Area |
 | :--- | :--- |
-| Header hex dump | Is there a magic number, and a version field next to it? |
-| Whole-file entropy | Is the payload compressed? Near 8 bits per byte means yes, and means no field-level parsing will work until it is inflated. |
-| Per-block entropy | Is the file part structured and part compressed? A low-entropy head followed by a high-entropy tail is the usual shape of a directory plus a compressed payload. |
-| Printable runs | Do signal and scope names appear in the clear? If they do, the name table is the way into the structure, because the names are known from the VHDL source. |
+| [format/container.md](format/container.md) | the fixed header, the arena table, the trailer, the directory, the page directory and the marker |
+| [format/types.md](format/types.md) | the type table: enumerations, integers, reals, physical types, arrays and records |
+| [format/hierarchy.md](format/hierarchy.md) | the debug section: scopes, units, declarations, source files, instance records and handles |
+| [format/values.md](format/values.md) | arenas, pages, value records, encodings and alignment |
+
+All of it is from Vivado 2025.2 and is scoped to that version.
+See [provenance.md](provenance.md) for what guards the claims and
+[corpus.md](corpus.md) for the cases named below.
+
+
+## Reading a database, in one paragraph
+
+A database is one flat file.
+The header at `0x48` points at three directory entries, and each entry
+names a section that sits directly before it.
+The `Xilinx RTTI` entry covers the type table.
+The `Xilinx DBG` entry covers the design hierarchy, which ends with one
+instance record per logged object, and each record carries the object's
+handle and the index of its declaration and scope.
+The page directory follows the DBG entry: one record per arena, listing
+the zlib pages of that arena.
+A page inflates to 10240 bytes of `[time][key][length][value]` records.
+An object's values are the records whose key is `handle & 0x7ff`, in
+the pages of arena `handle >> 11`.
+The trailer after the arena table holds the end time.
+
+```sh
+bazel build //hdl/corpus:all_wdb
+bazel run //cmd/wdbcvt -- -dump -in "$PWD/bazel-bin/hdl/corpus/t2_flat3________/sim.wdb"
+```
+
+The dump prints every structure in the order above, with offsets, and
+every row of the findings table can be checked against it.
 
 
 ## Findings
 
-Every row is a measurement that reproduces.
-All of them are from Vivado 2025.2, and are scoped to it.
-See [provenance.md](provenance.md) for what guards these claims.
+Every row is a measurement that reproduces with
 
-| Offset | Len | Meaning | Found by | Confirmed by |
-| :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 24 | ASCII `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | present in all 33 cases |
-| `0x18` | 17 | ASCII `Xilinx Simulator`, NUL terminated | same hex dump | present in all 33 cases |
-| `0x30` | 8 | `uint64` little endian, value `0x40` | same hex dump | constant in all 33 cases |
-| `0x38` | 4 | `uint32` little endian, Unix epoch seconds, when the database was written | **the noise mask**: two runs of `t3_tr1`, which differ only here and in four other clocks | decoded `1788417066` as `2026-09-03 08:31:06 CEST`, equal to the file's own mtime |
-| `0xd0` | 4 | a file offset. Zero unless the design has more than one signal | **scan for header fields that vary**: non-zero only in `t1_two_bits`, `t2_flat3`, `t2_record_two` | the value lands inside the file in all three, and those are exactly the multi signal cases |
-| `0xe0` | 4 | `uint32` little endian, simulation end time in **picoseconds** | **correlation sweep**: the only offset whose `uint32` equals the end time in every case | 10 of 10 cases with a known end time, 20 ns to 1010 ns, exact |
-| `0x110` | 4 | `1` when the design logs any signal, `0` when it logs none | **correlation sweep** | `0` for `t0_nosig` alone, `1` for the other 32 |
-| `0x158` | 26 | ASCII `Xilinx ISim TYPE FILE 001`, start of the type table | `strings -a -t d` | present in all 33 cases |
-| `0x178` | 4 | `uint32`, **the number of named types** in the type table | **correlation sweep**, then counting type names per case | 33 of 33, once `TRUE` and `FALSE` were correctly classified as `BOOLEAN`'s literals rather than as types |
+```sh
+bazel run //cmd/wdbcvt -- -dump -in "$PWD/bazel-bin/hdl/corpus/<case>/sim.wdb"
+```
+
+for the case the row names, and `//pkg/wdb:wdb_test` asserts every row
+against the `truth.json` of all 49 cases.
+The offsets are in the documents linked in the last column.
+
+| Finding | Found by | Confirmed by | Where |
+| :--- | :--- | :--- | :--- |
+| Magic `Xilinx WAVE DATABASE 01`, producer `Xilinx Simulator` | hex dump of `t1_bit_one_edge` | all 49 cases | container |
+| `0x38` is a Unix timestamp | noise mask, two runs of `t3_tr1` | equals the file mtime | container |
+| `0x48` holds three pointers to 48 byte directory entries | `strings -t d` on `t2_flat3`, then reading the values | all 49 cases, each pointer lands on a name | container |
+| The arena table at `0xc8` grows with the object count | `t5_sig10` shifted every trailer field by 8 | 3, 4, 6 slots in `t6_sig05`, `t6_sig12`, `t6_sig20` | container |
+| The trailer is the 0x48 bytes before the first directory pointer | `t5_sig10` against `t6_sig05` | end time correct in all 49 | container |
+| The end time is a uint64 in ps at trailer `+0` | correlation sweep over 33 cases | 49 of 49, 20 ns to 1310 ns | container |
+| The marker offset is at trailer `+0x38` | `t5_tr1000`, where the marker moved | 49 of 49 | container |
+| The marker is `[0][logged objects minus 1]` | `t6_var_int` broke the earlier `objects minus 1` reading | 49 of 49 | container |
+| Each directory entry follows the section it describes | `t2_flat3`: `WDB.Event` at `0xe0+0x48`, RTTI and DBG the same | 49 of 49 | container |
+| The page directory starts 48 bytes after the DBG entry | `t2_flat3`, reading the offsets | 49 of 49 | container |
+| An arena record is `0x4c0` bytes: 100 page offsets, 100 lengths, a count | `t5_tr1000`, two pages in one arena | `t6_tr1300`, three pages | container |
+| A page is a zlib stream that inflates to 10240 bytes | entropy profile, then `zlib` on `t1_bit_one_edge` | 49 of 49 | values |
+| Page header `[t0][last minus t0][n]` | `t5_tr1000` page 1 | all pages of all cases | values |
+| A record is `[uint64 time][uint32 key][uint32 length][value]` | `t1_bit_two_edges` against `t1_bit_one_edge` | every record of every case matches `truth.json` | values |
+| `handle >> 11` is the arena, `handle & 0x7ff` the key | `t5_sig10` | `t6_sig20`, four arenas | values |
+| A page holds 600 one byte records and overflows into a new page | `t5_tr1000` | `t6_tr1300` | values |
+| An overflowed page precedes the marker | `t5_tr1000` | `t6_tr1300` | values |
+| Enumeration values are one byte, the literal's index | `t3_valz` against `t3_tr1`, same size | `t1_nine_state` walks all nine | values |
+| Integers are int32, reals float64, time int64 ps | `t2_integer`, `t2_real`, `t2_time` | `truth.json` | values |
+| Arrays are elements back to back, left index first | `t1_vec8` | `t2_array2d`, `t5_int_arr` | values |
+| Record fields are aligned to their size, records to 8 | `t5_rec_real` against `t2_record` | `t5_arr_rec`, `t5_rec_sub5` | values |
+| A signal has one record at time 0 and one per change | `t0_bit_const` | `t3_late`, 49 of 49 | values |
+| The type table starts with `Xilinx ISim TYPE FILE 001` | `strings` on `t1_bit_one_edge` | 49 of 49 | types |
+| `+32` of the type table is the number of types | correlation sweep | 49 of 49 | types |
+| Type entries are `[len][tag]` name body | `t2_enum` against `t1_bit_one_edge` | 49 of 49 | types |
+| Enumerations list their literals; `character` has 256 | `t2_enum`, `t2_character` | `truth.json` names | types |
+| Integer entries carry the bounds, reals the bounds as float64 | `t2_integer`, `t2_real` | 49 of 49 | types |
+| Physical entries list units with scales | `t2_time` | | types |
+| Arrays carry element, index type and constraint triples | `t1_vec8` against `t2_array2d` | `t5_int_arr` | types |
+| Records list fields with types and ranges | `t2_record` | `t2_record_nested`, `t5_rec_sub5` | types |
+| Types are shared between signals of the same type | `t2_record_two` | `t6_sig20`, one `STD_ULOGIC` | types |
+| The DBG section starts with `Xilinx ISim DBG 006` and 18 region offsets | `t1_hier1` against `t2_hier3` | 49 of 49 | hierarchy |
+| Scope records: name, parent, children, first object, unit, file, line | `t2_hier3` | 49 of 49 | hierarchy |
+| Unit records: entity, architecture, kind, declaration count, file, line | `t2_hier3` | `t4_gen_diff_two` | hierarchy |
+| Declaration records: name, file, line, size, type, ranges, kind | `t2_flat3` | 49 of 49 | hierarchy |
+| Declaration kinds `0x0e` signal, `0x0f` variable, `0x12` generic, `0x13` loop index | `t4_gen_default`, `t5_tr1000`, `t6_var_int` | `t6_proc2` | hierarchy |
+| The file table holds compile and local paths | `t2_slv8` against `t1_vec8` | 49 of 49 | hierarchy |
+| Regions 14 and 15 are executable statement lines per file | `t6_proc2` | `t2_hier3` | hierarchy |
+| Instance records: handle, second handle, scope, kind, declaration | `t2_flat3` | 49 of 49 | hierarchy |
+| The second handle is the handle plus the value size rounded to 8 | `t2_record_two` against `t1_two_bits` | `t2_array2d`, `t2_record_nested` | hierarchy |
+| Equal generics share a unit; different generics duplicate it | `t4_gen_same_two` against `t4_gen_diff_two` | | hierarchy |
+| A generic is an object with one record at time 0 | `t4_gen_default` | `t4_gen_explicit` | hierarchy |
+| A process variable is an object with no records | `t6_var_int` | `t6_proc2` | hierarchy |
+| A loop index is an object with one record at time 0 holding 0 | `t5_tr1000` | `t6_tr1300` | hierarchy |
 
 Whole file properties, also measured:
 
-* **The payload is not compressed.** Mean entropy is 3.508 bits per byte
-  over the whole file. A compressed payload sits near 8.
-* **Signal names are stored in the clear, as plain ASCII.** The 40
-  character name in `t1_bit_long_name` appears verbatim at `0x3db`.
-* **Absolute source paths are stored in the clear**, including the path
-  of the Vivado installation that produced the file and the build
-  machine paths AMD compiled the standard libraries on.
-* **Adding one transition grows the file by 15 bytes and perturbs 83
-  places.** Found by comparing `t1_bit_one_edge` with
-  `t1_bit_two_edges`. Many of the perturbed bytes change by exactly `+8`
-  (`0x2b` to `0x33`, `0xeb` to `0xf3`, `0xc0` to `0xc8`), which is the
-  signature of internal offset fields moving because a record grew.
-  That, with the low entropy, says the format is a structured file full
-  of internal offsets rather than an opaque blob.
+* Signal names, scope names, type names and absolute source paths are
+  stored in the clear.
+  The paths include the Vivado installation and the machine paths AMD
+  compiled the standard libraries on.
+* Outside the noise mask, the file is deterministic.
+  Two runs of the same design differ only at timestamps and durations.
+  The pages are byte identical.
+  See the noise mask section of
+  [format/container.md](format/container.md).
+* The `xsim.dir` tree beside the database is not needed to read it.
 
 
-## The container, as far as it is mapped
+## Which comparison led to which discovery
 
-Every database opens with the same fixed region. These offsets are
-identical, byte for byte, in all 22 corpus cases:
+The corpus is built of minimal pairs, and most of the findings above
+came from one pair.
+This table is the record of that, so that a reader can see what each
+claim rests on and rerun the comparison.
 
-| Offset | Content | Meaning |
+| Comparison | Differs in | Discovery |
 | :--- | :--- | :--- |
-| `0` | `Xilinx WAVE DATABASE 01` | file magic, NUL terminated |
-| `24` | `Xilinx Simulator` | the producer |
-| `296` | `WDB.Event` | a named section |
-| `344` | `Xilinx ISim TYPE FILE 001` | start of the type table |
-| `392` | `STD_ULOGIC` | the first type name, upper case |
-| `419` to `451` | `'U' 'X' '0' '1' 'Z' 'W' 'L' 'H' '-'` | the nine enumeration literals, quoted, 4 bytes apart |
-| `467` | `Xilinx RTTI` | run time type information |
-| `515` | `Xilinx ISim DBG 006` | start of the debug and hierarchy section |
-| varies | `_top`, then the architecture name, then the instance names | the scope tree |
-| varies | `Xilinx DBG` | a further section |
+| two runs of `t3_tr1` | nothing | the noise mask: timestamps and durations only |
+| `t1_bit_two_edges` against `t1_bit_one_edge` | one transition | a transition costs 15 bytes; the record layout |
+| `t3_late` against `t3_tr1` | transition at 1000 ns not 10 ns | time is fixed width |
+| `t3_valz` against `t3_tr1` | value `Z` not `1` | a value is an index, one byte |
+| `t2_enum` against `t1_bit_one_edge` | a three literal type | enumerations are ordinary types; the entry framing |
+| `t2_unsigned8` against `t2_signed8` | the type name | names cost one byte per character; the corpus needs padded directory names |
+| `t2_slv8` against `t1_vec8` | resolved type, `use ieee.numeric_std` | the 447 bytes are two file table entries, not the resolved type |
+| `t1_hier1` against `t2_hier3` | two more levels | scope records and the parent links |
+| `t2_record_two` against `t2_record` | a second signal of the same type | types are shared; a second object gets a new handle |
+| `t2_record_two` against `t1_two_bits` | value size 16 not 1 | the handle stride grows with the value size |
+| `t2_flat3` against `t1_two_bits` | a third signal, three types | the directory entries follow their sections |
+| `t4_gen_same_two` against `t4_gen_diff_two` | the generic values | units are shared only for equal generics; names never change |
+| `t4_gen_default` against `t4_gen_explicit` | how the generic is set | no difference in the file |
+| `t5_rec_real` against `t2_record` | a real field | fields align to their size |
+| `t5_rec_sub5` against `t2_record_nested` | a 5 byte inner record | record fields align to 8 |
+| `t5_sig10` against `t2_flat3` | ten signals | the arena table grows; the trailer moves; the handle split |
+| `t5_tr1000` against `t3_tr16` | 1000 transitions | pages overflow at 600 records; the marker moves; `t1` |
+| `t6_sig05`, `t6_sig12`, `t6_sig20` | the object count | arena table slot counts 3, 4, 6 |
+| `t6_tr1300` against `t5_tr1000` | 1300 transitions | three pages, marker after the second |
+| `t6_var_int` against `t3_tr1` | a process variable | variables are objects with no records; the marker counts logged objects |
+| `t6_proc2` against `t6_var_int` | a second process | statement lines per file; the object order per scope |
 
-Reproduce with `strings -a -t d -n 3 sim.wdb`.
-
-The literals sit exactly 4 bytes apart, and `'U'` is three characters
-plus a terminator, so strings in the type table are NUL terminated and
-packed with no padding.
-
-
-## How types are stored
-
-**Types are stored by name, in the clear, and enumerations carry their
-literal names.**
-
-*Found by* `strings -a -t d` on `t1_bit_one_edge`, which shows
-`STD_ULOGIC` followed by its nine literals. *Confirmed by* four
-independent measurements:
-
-* `STD_ULOGIC` appears as text, upper cased, followed by its nine
-  literals as quoted strings. So `std_ulogic` is not a builtin to this
-  format; it is an ordinary enumeration whose literals are written out.
-* A user-defined enumeration behaves the same way. `t2_enum` declares
-  `type colour_t is (crimson, viridian, cobalt)`, and `colour_t`,
-  `crimson`, `viridian` and `cobalt` all appear verbatim.
-* `t2_enum` is **24 bytes smaller** than the `std_ulogic` baseline,
-  despite far longer literal names. Three literals cost less than nine,
-  so the per-literal overhead dominates the name text. That is only
-  possible if both types are stored the same way.
-* `t2_unsigned8` and `t2_signed8` differ by **exactly 2 bytes**, which
-  is the difference in length between the strings `unsigned` and
-  `signed`. Type names are stored one byte per character.
-
-  This one was measured twice. The first measurement was worthless,
-  because the two case directories also differed by two characters and
-  Vivado embeds the source path in the database, so the delta could have
-  been the directory names rather than the type names. Every case
-  directory is now padded to the same length, and the 2 byte difference
-  survives. The conclusion held; the first evidence for it did not. See
-  [corpus.md](corpus.md).
-
-Sizes relative to the one-bit baseline, all with a single signal and a
-single transition:
-
-| Case | Type | Delta |
-| :--- | :--- | ---: |
-| `t2_enum` | 3 literal user enumeration | -24 |
-| `t1_vec8` | `std_ulogic_vector(7 downto 0)` | +137 |
-| `t2_bit` | `bit` | +402 |
-| `t2_integer` | `integer` | +405 |
-| `t2_real` | `real` | +411 |
-| `t2_boolean` | `boolean` | +417 |
-| `t2_time` | `time` | +479 |
-| `t2_signed8` | `numeric_std.signed` | +582 |
-| `t2_slv8`, `t2_unsigned8` | `std_logic_vector`, `unsigned` | +584 |
-| `t2_character` | `character` | +1461 |
-
-Two things stand out and are worth reading carefully rather than
-guessing at.
-
-**Resolved costs more than unresolved.** *Found by* comparing `t2_slv8`
-with `t1_vec8`: `std_logic_vector` against `std_ulogic_vector`, same
-width, same values, same transition. The resolved form costs **447 bytes
-more**, and the figure is unchanged after the case name padding.
-
-**`character` is the outlier, and consistently so.** *Found by* the type
-size table below: it costs +1461 where the other predefined scalar types
-cost about +400. `character` is
-an enumeration of 256 literals. The extra 1059 bytes over the others,
-spread across 254 extra literals, is about 4 bytes each, which matches
-the 4 byte spacing measured in the `std_ulogic` literal table.
-
-
-## The correlation sweep
-
-Three of the header fields were not found by diffing two files. They
-were found by reading the same offset in all 33 databases at once and
-asking which offset holds a number the corpus already knows.
-
-For every 4 byte aligned offset, take the little endian `uint32` in each
-case, and keep the offset only if that number equals the same property
-of the design in **every** case: the end time, the signal count, the
-number of types, and so on. The properties come from `truth.json`, so
-they are known before the file is opened.
-
-The sweep is worth more than it looks, for two reasons.
-
-It finds fields a pairwise diff cannot. A field that is correct in every
-case never shows up as a difference between two cases, so diffing is
-blind to it. `0xe0` and `0x178` were both invisible that way and obvious
-to the sweep.
-
-It also refuses coincidences. One case agreeing is noise; 33 cases
-agreeing on a number that ranges from 20000 to 1010000 is not. The
-sweep reports only offsets that match everywhere, which is why the end
-time came out of it with no candidates to sift.
-
-It has one failure mode worth naming. A property that is nearly constant
-across the corpus matches almost anything, so `0x110`, which is `1` in
-32 cases and `0` in one, is recorded as what it demonstrably is rather
-than as a signal count. Design a case that moves a property before
-trusting a sweep hit on it.
-
-
-## Values over time
-
-A value change costs about 14 to 15 bytes, and the cost does not grow
-with the time value.
-
-| Case | Transitions | Bytes | Per extra transition |
-| :--- | ---: | ---: | ---: |
-| `t3_tr1` | 1 | 3678 | |
-| `t3_tr2` | 2 | 3693 | 15 |
-| `t3_tr4` | 4 | 3723 | 15 |
-| `t3_tr8` | 8 | 3782 | 14.75 |
-| `t3_tr16` | 16 | 3893 | 13.87 |
-
-**Time is fixed width, not variable length.** `t3_late` moves the single
-transition from 10 ns to 1000 ns and the file size does not change at
-all. A variable length integer would have grown. So would a decimal
-text encoding.
-
-**A value is an index, not a symbol.** `t3_valz` changes the logged
-value from `'1'` to `'Z'` and the file size does not change either.
-Together with the type table holding the nine `std_ulogic` literals in
-order, that says a logged value is a small fixed width index into the
-type's literal list.
-
-Those two cases are the same size as the baseline and differ from it in
-exactly one thing each, so a masked diff points straight at the fields.
-Both land in the same place:
-
-| Region | What the diff shows |
-| :--- | :--- |
-| `0xe0` | the end time, confirmed separately and now in the findings table |
-| `0x414` | the case directory name inside the embedded source path |
-| `0xdff` to about `0xe60` | the value change data itself |
-
-The value change region is **high entropy and does not read as plain
-records**. Changing one logged value rewrites about 37 bytes of it, far
-more than the 14 to 15 bytes a transition costs. Interleaved with that
-is a repeating ramp, `01 02 04 08 10 20 40 80 00` over and over, whose
-phase shifts by one position between two files that differ by one value.
-
-So the value change block is packed or compressed rather than a simple
-array of structures. That is the next thing to work out, and it is
-recorded in the open questions rather than guessed at here.
+Three findings were not found by a pair.
+The end time, the type count and the has-objects flag came from the
+correlation sweep: read the same offset in every case and keep the
+offsets whose value equals a property known from `truth.json` in every
+case.
+A field that is correct in every case never differs between two cases,
+so the sweep finds what a diff cannot.
+It has one failure mode: a property that is nearly constant across the
+corpus matches almost anything.
+Design a case that moves a property before trusting a sweep hit on it.
 
 
 ## VCD cannot hold what the database holds
@@ -265,22 +173,23 @@ This is a property of VCD, not of any one writer, and it decides what a
 converter can honestly produce.
 
 Vivado writes `sim.vcd` from the same simulation run that writes
-`sim.wdb`. For eight of the fifteen types measured, that VCD contains
-**no `$var` declaration and no value changes at all**. The signal is
-absent, not degraded.
+`sim.wdb`.
+For eight of the fifteen types measured, that VCD contains no `$var`
+declaration and no value changes at all.
+The signal is absent, not degraded.
 
 | Type | In Vivado's own VCD |
 | :--- | :--- |
 | `std_ulogic`, `bit` | present, as `wire 1` |
 | `std_ulogic_vector`, `std_logic_vector`, `unsigned`, `signed` | present, as `wire N` |
-| `boolean` | **absent** |
-| `integer` | **absent** |
-| `real` | **absent** |
-| `time` | **absent** |
-| `character` | **absent** |
-| user enumeration | **absent** |
-| record | **absent** |
-| array | **absent** |
+| `boolean` | absent |
+| `integer` | absent |
+| `real` | absent |
+| `time` | absent |
+| `character` | absent |
+| user enumeration | absent |
+| record | absent |
+| array | absent |
 
 The whole VCD for the `integer` case is 123 bytes of header:
 
@@ -299,210 +208,83 @@ $dumpvars
 $end
 ```
 
-Two consequences, both of which change what this project should do.
+Two consequences follow.
 
-**The VCD answer key only covers bit and vector signals.** For the other
-eight types there is no independent reading of the same run to check a
-decoder against. `provenance.md` says which guard applies where.
+The VCD answer key only covers bit and vector signals.
+For the other eight types there is no independent reading of the same
+run to check a decoder against.
+[provenance.md](provenance.md) says which guard applies where.
 
-**A `.wdb` to VCD converter is lossy, and silently so.** It would drop
-every integer, real, enumeration, record and array in a design without
-reporting anything, because VCD has nowhere to put them. FST does: it
-has `FST_VT_VCD_INTEGER`, `FST_VT_VCD_REAL`, `FST_VT_VCD_TIME`,
-`FST_VT_GEN_STRING` and `FST_VT_SV_ENUM`, and `fstWriterCreateEnumTable`
-for enumerations with their literal names. See
-[fst-output.md](fst-output.md).
-
-
-## How hierarchy is stored
-
-*Found by* comparing the `strings -a -t d` output of `t1_hier1` and
-`t2_hier3`.
-
-Scope names are stored as a sequence of NUL terminated strings in the
-`Xilinx ISim DBG 006` section, in tree order.
-
-`t2_hier3` instantiates `tb` to `mid` to `leaf`, and its strings appear
-in exactly that order:
-
-```
-1179 _top
-1187 sim
-1191 dut
-1195 mid
-1201 inner
-1207 leaf
-```
-
-`_top` is the root, `sim` is the architecture name, then each instance
-label is followed by the entity it instantiates.
-
-Depth costs little. One level of nesting costs 240 bytes over a flat
-design, and going from one level to three costs a further 160, so an
-additional empty scope is about 80 bytes.
-
-
-## How records are stored
-
-**A record is one signal object, not one per field, and its field names
-live in the type table rather than beside the signal.**
-
-The decisive measurement is a pair that holds everything else fixed.
-`t2_record` has one signal of a three field record. `t2_flat3` has three
-separate signals with the same names, the same types, the same values
-and the same transition times. The only difference is the aggregation:
-
-| Case | Bytes |
-| :--- | ---: |
-| `t2_record`, one record of three fields | 3955 |
-| `t2_flat3`, the same three fields as three signals | 5402 |
-
-The record is **1447 bytes smaller**. Flattening would not make a file
-smaller, so a record is not flattened.
-
-The type tables show why. `t2_flat3` declares only leaf types, and the
-names `alpha`, `bravo` and `charlie` do not appear in its type table at
-all, because there they are signal names:
-
-```
-392 STD_ULOGIC   ... 467 NATURAL   499 STD_ULOGIC_VECTOR   565 INTEGER
-```
-
-`t2_record` puts the record type first, with its field names inline,
-and then the member types:
-
-```
-392 bundle_t   413 alpha   427 bravo   453 charlie
-481 STD_ULOGIC ... 556 NATURAL   588 STD_ULOGIC_VECTOR   654 INTEGER
-```
-
-**Type entries are shared between signals of the same type.** *Found by*
-`t2_record_two` against `t2_record2`: two signals of one record type
-rather than one. `bundle_t`, `alpha` and `bravo` each appear **exactly
-once** in the file. Reproduce with `grep -aoc alpha sim.wdb`.
-
-**Nested records get their own type entry.** *Found by* `t2_record_nested`
-against `t2_record2`, which wraps a record in a record, and the table holds the outer type, its field names,
-then the inner type, then the inner field names, then the leaf types:
-
-```
-392 outer_t   412 delta_f   452 echo_f
-479 inner_t   499 alpha     513 bravo
-551 STD_ULOGIC ...
-```
-
-So the type table is a flat list of type definitions in dependency
-order, and a field refers to a type in it.
-
-### What each thing costs
-
-| Change | Cost |
-| :--- | ---: |
-| A second signal, one bit | +1405 |
-| A second signal of a two field record | +1458 |
-| A third field on a record, `integer`, including the `INTEGER` type entry | +61 |
-| Wrapping two fields in a nested record and adding a bit | +108 |
-
-**The signal object dominates, not the field.** A signal costs about
-1400 to 1460 bytes whatever its type, while a field costs tens of bytes.
-That is the whole reason a record beats three signals by 1447 bytes: it
-is one signal object instead of three.
-
-For a decoder this means a record signal cannot be read from the signal
-table alone. Its field names, their order and their types are only in
-the type entry the signal points at.
-
-
-## How arrays are stored
-
-An array of four 8-bit vectors costs +289 over a single bit, which is
-close to the +278 a three field record costs and far below the +1405 a
-second signal costs. So an array is also one signal object.
-
-Whether the element type appears once with a count, or once per element,
-is **not yet answered**.
-
-
-## The noise mask
-
-Two runs of `t1_bit_one_edge` differ in about 11 bytes across five
-regions, and the regions are stable across pairs:
-
-| Offset | Bytes | What it holds |
-| :--- | :--- | :--- |
-| `0x38` | 4 | Unix timestamp, confirmed above |
-| `0xc4` | 4 | a per-run duration; `32194` and `28919` in two runs |
-| `0x172` | 6 | two varying bytes followed by the same timestamp as `0x217` |
-| `0x217` | 4 | a second Unix timestamp, a few seconds before `0x38` |
-| `0x3c4` | 4 | a second per-run duration |
-
-Every one of them is a clock or a duration.
-Nothing else in the file varies between runs, which is a strong
-property: **outside these five regions the format is deterministic.**
-
-One caveat that matters. The two pairs measured so far reported 11 and
-10 differing bytes at the same five regions. A byte of a timestamp only
-shows up as noise when its two values happen to differ, so a mask built
-from a single pair understates the true noise. Build the mask from
-several pairs and take the union before trusting it.
+A `.wdb` to VCD converter is lossy, and silently so.
+It would drop every integer, real, enumeration, record and array in a
+design without reporting anything, because VCD has nowhere to put them.
+FST does: it has `FST_VT_VCD_INTEGER`, `FST_VT_VCD_REAL`,
+`FST_VT_VCD_TIME`, `FST_VT_GEN_STRING` and `FST_VT_SV_ENUM`, and
+`fstWriterCreateEnumTable` for enumerations with their literal names.
+See [fst-output.md](fst-output.md).
 
 
 ## Open questions
 
-1. Is `sim.wdb` a single file or a directory-shaped container?
-   `xsim` also writes an `xsim.dir` tree, and the `vivado_view` rule
-   opens the `.wdb` alongside it, which hints that the `.wdb` may not be
-   self-contained.
-2. Is the payload compressed, and with what?
-   Check the entropy profile first, then look for `zlib` and `zstd`
-   frame headers at the block boundaries the entropy profile suggests.
-3. How is the value change block at `0xdff` onward packed? One logged
-   value changes about 37 bytes of it, and it contains a repeating
-   `01 02 04 08 10 20 40 80 00` ramp whose phase shifts between files.
-4. Where is a value change bound to its signal, and where is its
-   timestamp?
-5. How are array elements represented in the type table, once with a
-   count or once each?
-4. Are the values of a record's fields stored as one blob per record or
-   one per field?
-5. Do the signal names survive in the clear?
-   The names to look for are known exactly: `tb`, `dut`, `ctl`, `stat`,
-   `clk`, `reset`, `enable`, `value`, `wrapped`, `counter`, and
-   `counter_types`.
-4. How is time encoded?
-   The testbench uses a 10 ns period and stops at a known time, so the
-   largest timestamp in the file is known before it is found.
-5. Does the format change between Vivado versions?
-   Only 2025.2 is in use here. Any claim is version-scoped until a
-   second version has been measured.
+Everything here is a guess or a gap, and stays here until a case
+separates the readings.
+
+1. Trailer `+0x18` grows by about `0x148` per signal object and is
+   larger than the file.
+   A memory size is the guess.
+2. The arena table has 3 slots up to 5 objects, 4 at 10 and 12, and 6
+   at 20.
+   `max(3, ceil(objects / 4) + 1)` fits, and is a guess.
+   A case with 6 to 9 objects and one with 13 to 16 would test it.
+3. The record typed field's extra range triple `(0, 8, 1)` reads 8 for
+   both a 5 byte and a 9 byte inner record.
+   Alignment is the guess.
+   An inner record with a real field would separate alignment from a
+   constant.
+4. DBG header words 14 to 16 are `0x101`, `0x101`, `0x10000` in every
+   case, and the three `0x30` words at `0x98` and the `3` at `0xc0` in
+   the fixed header are constant too.
+   No case has moved them.
+5. Word 10 of a declaration record varies between runs for a signal and
+   is 0 for a variable.
+   It is masked as noise and not read.
+6. Handles of generics, variables and loop indexes follow no pattern
+   seen yet.
+   They are read from the instance record, so nothing depends on it.
+7. Whether a page's limit is 10240 bytes or 600 records has not been
+   separated.
+   A signal wider than one byte with more than 600 changes would do it.
+8. Whether `0xc4` and the other per-run durations mean anything is
+   open.
+   They are masked.
+9. Does the format change between Vivado versions?
+   Only 2025.2 is in use here.
+   Any claim is version scoped until a second version has been
+   measured.
+10. Verilog designs have not been simulated.
+    Every case is VHDL, and the unit kinds and type classes may have
+    Verilog values the corpus has never produced.
 
 
 ## What the conversion writes out
 
-VCD first, through `github.com/filmil/go-vcd-parser`.
-It already parses VCD, including the pragmatic extensions real simulators
-emit, and it is a Bazel module, so it serves both jobs at once: it reads
-the `sim.vcd` answer key, and it supplies the signal model that a `.wdb`
-decoder fills in.
-Add it as a `bazel_dep` at the point where the first decoder claim has to
-be checked against the VCD, not before.
-Until then the VCD can be read by eye, because the design is small.
+VCD first, through `github.com/filmil/go-vcd-parser`, as the checking
+step: it reads the `sim.vcd` answer key, and a decoded database can be
+compared against it for the bit and vector signals.
 
-FST is the better output format and comes later.
-It is compressed, it holds large traces without the size blowup VCD
-suffers, and the waveform viewers read it.
-The reason to start with VCD anyway is that it is the format the answer
-key is already in, so the first end to end check compares like with like.
+FST is the deliverable, because it holds every type in the table above.
 Keep the decoder's output model separate from the VCD writer, so that
-adding an FST writer later is a new writer and not a rewrite.
+adding an FST writer is a new writer and not a rewrite.
+See [fst-output.md](fst-output.md).
 
 
 ## Method
 
-Work one open question at a time, and in this order: container shape,
-compression, name table, time encoding, sample encoding.
-Each answer becomes a row in the findings table plus a test in
-`//pkg/wdb` built on a fixture, never on a file that has to be
-regenerated by Vivado.
+Build a minimal pair, mask the noise, diff, and write the answer into
+the document for that area of the file before moving on.
+Each answer becomes a row in the findings table plus a check in
+`//pkg/wdb:wdb_test`, which asserts against `truth.json` and never
+against bytes the decoder itself produced.
 Where a claim can be cross-checked against `sim.vcd`, the test does that
 check rather than asserting bytes.
+The corpus and the pairing rules are in [corpus.md](corpus.md).
