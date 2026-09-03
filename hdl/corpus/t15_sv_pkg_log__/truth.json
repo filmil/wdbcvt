@@ -1,0 +1,36 @@
+{
+  "case": "t15_sv_pkg_log__",
+  "axis": "log_wave -recursive /p added to the script of t13_sv_pkg",
+  "differs_from": "t13_sv_pkg______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "byte_t",
+      "declared": "logic [7:0]"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ],
+  "generics": [
+    {
+      "scope": "p",
+      "name": "W",
+      "type": "int",
+      "width": 32,
+      "value": "8"
+    }
+  ]
+}

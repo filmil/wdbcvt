@@ -1,0 +1,100 @@
+{
+  "case": "t15_sv_iface_mp_",
+  "axis": "the child module taking a modport of the interface",
+  "differs_from": "t13_sv_iface____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.b",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "q",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb.b.slave",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb.dut.p",
+      "name": "d",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.b.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.q",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b.slave.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b.slave.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.p.d",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.p.d",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.b.d",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.q",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.b.slave.d",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.p.d",
+      "value": "1"
+    }
+  ]
+}
