@@ -455,10 +455,31 @@ thousand transitions.
 Every case is also held to its own `sim.vcd` by `TestVCD`; see
 [format/vcd.md](format/vcd.md).
 
-Not written yet, in order: a variable first written in the second page
-of its arena, to separate the two readings of the missing `X` record; a
-`log_wave` on a SystemVerilog package parameter; interface modports
-and an interface carrying a vector; and a `string` value.
+Tier 14 asks the one question tier 13 left about the page that
+spills: whether the missing `X` record is dropped when the page is
+written out, or written into a page still in memory at the close.
+A `reg d` without an initialiser shares the clock's arena, so that the
+arena spills with a second key in it, and is written at times chosen
+to fall in one page or the other.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t14_v_page_d` | `d` beside a clock that stays in one page | `X` records for all, in handle order, then the initial values |
+| `t14_v_spill_d` | `d` first written in the second page of the spilling arena | `d` keeps its `X`; the clock loses its own |
+| `t14_v_spill_d0`, `t14_v_spill_d2` | `d` written in the first page, and in both | the same |
+| `t14_v_spill_dfst` | `d` declared before the clock | the same; the first record of the arena is not what goes |
+| `t14_v_page_dd` | two writes of `d` across `#0` in a page that stays | two records at one time |
+| `t14_v_spill_dd` | the two writes in the first page of the spilling arena | one record, the last |
+| `t14_v_spill_dd2` | the two writes in the second page | two records |
+
+So a page written out during the run keeps the last record per key and
+time, and the `X` record was lost that way, sharing time 0 with the
+initial value.
+The last page of an arena, written at the close, keeps every delta.
+
+Not written yet, in order: a `log_wave` on a SystemVerilog package
+parameter; interface modports and an interface carrying a vector; and
+a `string` value.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -513,7 +534,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 241 cases through tier 13, and
+5. The reader now reproduces all 249 cases through tier 14, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

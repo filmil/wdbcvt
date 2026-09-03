@@ -128,6 +128,34 @@ record for an assignment of the value already held.
 *Found by* `t8_delta3`, `t8_delta_same` and `t8_same` against
 `t7_delta`.
 
+A page written out before the end of the run keeps one record per key
+and time, the last one.
+`t14_v_spill_dd` toggles a `reg clk = 1'b0` every nanosecond for 430 ns
+beside a `reg d` without an initialiser, written `1` and then `0`
+across `#0` at 5 ns, and the two share an arena that spills into a
+second page.
+Page 0 holds `d` as `X` at time 0 and `0` at 5000, and nothing of the
+`1`.
+`t14_v_page_dd`, the same two writes at 190 ns in a run that stays in
+one page, holds both records at 190000, and `t14_v_spill_dd2`, the same
+two writes at 428 ns in the second page of the spilling arena, holds
+both as well.
+So the loss belongs to a page the simulator wrote out while it was
+still running, not to the arena or to the run length, and the last page
+of an arena, written at the close, keeps every delta.
+Page 0 still holds 425 records, the most that fit, so the lost record
+left no gap.
+The missing `X` record of tier 13 is the same loss: the `X` and the
+initial value of `clk` share time 0, and `t14_v_spill_d`, which adds
+`d` to that arena, keeps the `X` of `d` and loses the one of `clk`,
+whichever of the two is declared first.
+
+*Found by* `t14_v_spill_dd` against `t14_v_page_dd`, one record at
+5000 against two at 190000.
+*Confirmed by* `t14_v_spill_dd2` against `t14_v_spill_dd`, two records
+in the last page; `t14_v_spill_d` and `t14_v_spill_dfst` against
+`t13_v_tr430_2`, the `X` of `d` kept in the spilling arena.
+
 The time unit is the picosecond, and nothing finer is kept.
 `t8_ps` waits `1 ps`, `998 ps` and `1500 fs`, and its records sit at
 1, 999 and 1000, so the third wait was cut to 1 ps, and the end time is
@@ -709,7 +737,9 @@ pairs, `6f 6c 6c 65` low and `68` high, so the first character is at
 the top and the last at bit 0.
 
 The `X` record is absent when the variable's arena spills into a
-second page.
+second page, because the page holding time 0 was then written out
+during the run, and such a page keeps one record per key and time; see
+the page section above.
 `t13_v_tr420`, a `reg clk = 1'b0` toggled every nanosecond for 420 ns,
 holds 421 records in one page, `X`, `0` and 419 toggles.
 `t13_v_tr430` holds 430 records over two pages, `0` and 429 toggles,
@@ -718,8 +748,12 @@ way.
 `t13_v_tr430_2` adds a `reg d` written once at 5 ns beside that clock;
 `d` sits in an arena of its own, holds one page, and keeps its `X`,
 `0`, `1`.
-So the loss goes with the arena that spills, not with the design, and
-the reader takes the records as they are.
+`t14_v_spill_d` puts a `reg d` without an initialiser into the clock's
+arena, and `d` keeps its `X`, the only record of its key at time 0,
+whether it is declared after the clock or before it,
+`t14_v_spill_dfst`.
+So the loss goes with a page written during the run, and the reader
+takes the records as they are.
 The same clock in VHDL, `t13_tr430`, holds 431 one byte records in one
 page, because a VHDL record is 13 bytes and a Verilog one 24; see the
 page table above.
