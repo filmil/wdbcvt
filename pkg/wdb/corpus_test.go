@@ -27,10 +27,14 @@ type truthSignal struct {
 	Elements     int           `json:"elements"`
 	ElementType  string        `json:"element_type"`
 	ElementWidth int           `json:"element_width"`
+	// Port is the mode of a signal declared in a port list: in, out,
+	// inout or buffer. Empty for a signal declared in an architecture.
+	Port string `json:"port"`
 }
 
 type truthTransition struct {
 	TimeNS int64           `json:"time_ns"`
+	TimePS int64           `json:"time_ps"`
 	Signal string          `json:"signal"`
 	Value  json.RawMessage `json:"value"`
 }
@@ -64,6 +68,7 @@ func plainPath(s string) string {
 type truth struct {
 	Case        string            `json:"case"`
 	EndTimeNS   int64             `json:"end_time_ns"`
+	EndTimePS   int64             `json:"end_time_ps"`
 	Signals     []truthSignal     `json:"signals"`
 	Transitions []truthTransition `json:"transitions"`
 	Generics    []truthGeneric    `json:"generics"`
@@ -241,7 +246,7 @@ func TestCorpus(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if got, want := f.Header.EndTimePS, uint64(tr.EndTimeNS)*1000; got != want {
+			if got, want := f.Header.EndTimePS, uint64(tr.EndTimeNS)*1000+uint64(tr.EndTimePS); got != want {
 				t.Errorf("end time %d ps, truth says %d", got, want)
 			}
 
@@ -284,6 +289,15 @@ func TestCorpus(t *testing.T) {
 					t.Errorf("%s is a generic, truth says signal", path)
 				}
 				checkType(t, f, path, s, f.Decls[o.Decl].Type)
+				// A port's mode is in the declaration: t8_port_in,
+				// t8_port_out, t8_port_inout and t8_port_buffer.
+				mode := "none"
+				if s.Port != "" {
+					mode = s.Port
+				}
+				if got := f.Decls[o.Decl].Mode.String(); got != mode {
+					t.Errorf("%s: port mode %s, truth says %s", path, got, mode)
+				}
 			}
 
 			// Values over time. Truth names a signal either by its full
@@ -304,7 +318,7 @@ func TestCorpus(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				want[path] = append(want[path], change{uint64(x.TimeNS) * 1000, v})
+				want[path] = append(want[path], change{uint64(x.TimeNS)*1000 + uint64(x.TimePS), v})
 			}
 			for path, w := range want {
 				g, ok := got[path]
@@ -358,7 +372,8 @@ func TestCorpus(t *testing.T) {
 			// changes, nor its initial value: t6_var_int changes v twice
 			// and holds no record for it. A loop index gets one record
 			// at time zero, holding zero rather than the loop's first
-			// value: t5_tr1000 iterates from 1 and records 0.
+			// value: t5_tr1000 iterates from 1 and records 0. A generate
+			// index or an architecture constant records its value.
 			for _, vr := range tr.Variables {
 				path := vr.Scope + "." + vr.Name
 				o, ok := objByPath[path]
@@ -382,9 +397,9 @@ func TestCorpus(t *testing.T) {
 					if len(ch) != 0 {
 						t.Errorf("%s: %d records, a declared variable has had none", path, len(ch))
 					}
-				case "loop":
-					if dc.Kind != DeclLoopVar {
-						t.Errorf("%s: declaration kind %s, want loop variable", path, dc.Kind)
+				case "loop", "constant":
+					if dc.Kind != DeclConstant {
+						t.Errorf("%s: declaration kind %s, want constant", path, dc.Kind)
 					}
 					if len(ch) != 1 || ch[0].TimePS != 0 {
 						t.Errorf("%s: %d records, a loop index has had one at time zero", path, len(ch))

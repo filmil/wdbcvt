@@ -55,7 +55,7 @@ const (
 	DeclSignal   DeclKind = 0x0e
 	DeclVariable DeclKind = 0x0f // a variable declared in a process
 	DeclGeneric  DeclKind = 0x12
-	DeclLoopVar  DeclKind = 0x13 // the index of a for loop
+	DeclConstant DeclKind = 0x13 // a constant, a for loop index or a generate index
 )
 
 func (k DeclKind) String() string {
@@ -66,8 +66,8 @@ func (k DeclKind) String() string {
 		return "generic"
 	case DeclVariable:
 		return "variable"
-	case DeclLoopVar:
-		return "loop variable"
+	case DeclConstant:
+		return "constant"
 	}
 	return fmt.Sprintf("decl(%#x)", uint32(k))
 }
@@ -106,7 +106,38 @@ type Unit struct {
 	EntityFile, EntityLine int
 }
 
-// Decl is one declared object: a signal or a generic of a unit.
+// PortMode is the tenth word of a declaration record: the port mode of
+// a signal declared in an entity's port list, or PortNone for anything
+// declared elsewhere. The values follow the order of the VHDL modes.
+type PortMode uint32
+
+// The port modes observed so far.
+const (
+	PortInout  PortMode = 0
+	PortIn     PortMode = 1
+	PortOut    PortMode = 2
+	PortBuffer PortMode = 3
+	PortNone   PortMode = 5 // not a port
+)
+
+func (m PortMode) String() string {
+	switch m {
+	case PortInout:
+		return "inout"
+	case PortIn:
+		return "in"
+	case PortOut:
+		return "out"
+	case PortBuffer:
+		return "buffer"
+	case PortNone:
+		return "none"
+	}
+	return fmt.Sprintf("mode %#x", uint32(m))
+}
+
+// Decl is one declared object: a signal, a port or a generic of a unit,
+// or a variable or a constant of a process.
 type Decl struct {
 	Name string
 	// File and Line locate the declaration.
@@ -118,6 +149,10 @@ type Decl struct {
 	// Ranges are the object's index constraints from the range table.
 	Ranges []Range
 	Kind   DeclKind
+	// Mode is the port mode; PortNone for a signal that is not a port.
+	// A port connected to a parent signal shares that signal's handle,
+	// so the two objects read the same records: t8_port_in.
+	Mode PortMode
 }
 
 // SourceFile is one entry of the file table.
@@ -139,7 +174,7 @@ type Object struct {
 	Scope, Decl int
 	// Generic is set for a generic and for a variable: objects with no
 	// second handle, whose instance record has 2 in its fifth word. A
-	// signal has 1 there. A generic and a loop variable get one record
+	// signal has 1 there. A generic and a constant get one record
 	// at time 0; a declared variable gets none, and its arena may not
 	// exist.
 	Generic bool
@@ -351,6 +386,7 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 			Size: int(r[4]),
 			Type: int(r[5]),
 			Kind: DeclKind(r[8]),
+			Mode: PortMode(r[9]),
 		}
 		if dc.Type < 0 || dc.Type >= len(f.Types) {
 			return fmt.Errorf("declaration %q has type index %d of %d", name, dc.Type, len(f.Types))

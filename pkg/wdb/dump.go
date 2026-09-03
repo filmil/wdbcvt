@@ -109,6 +109,9 @@ func (f *File) Dump(w io.Writer) error {
 	p("declarations (%d):\n", len(f.Decls))
 	for i, dc := range f.Decls {
 		p("  [%d] %s %s : [%d] %s, %d bytes, file %d line %d", i, dc.Kind, dc.Name, dc.Type, f.Types[dc.Type].Name, dc.Size, dc.File, dc.Line)
+		if dc.Mode != PortNone {
+			p(" port %s", dc.Mode)
+		}
 		for _, r := range dc.Ranges {
 			p(" (%s)", r)
 		}
