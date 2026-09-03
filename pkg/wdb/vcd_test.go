@@ -320,7 +320,7 @@ var vcdDeviations = map[string]string{
 // that have a database and a VCD but no truth.json. The VCD is their
 // only check. //hdl/counter:sim is a record port with per field
 // assignments, and its ctl record found the VHDL partial write.
-var designs = []string{"hdl/counter"}
+var designs = []string{"hdl/counter", "hdl/uart"}
 
 func TestVCD(t *testing.T) {
 	dirs := corpusCases(t)

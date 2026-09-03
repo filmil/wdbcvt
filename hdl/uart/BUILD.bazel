@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "srcs",
+    # Compilation order matters to xvhdl; do not sort.
+    # do not sort
+    srcs = [
+        "uart.pkg.vhdl",
+        "uart_tx.ent.vhdl",
+        "uart_rx.ent.vhdl",
+        "fifo.ent.vhdl",
+        "uart_loop.ent.vhdl",
+        "tb.ent.vhdl",
+    ],
+    tags = [
+        "vhdl_ls",
+        "vhdl_ls_lib_uart",
+    ],
+)
+
+vivado_library(
+    name = "lib",
+    srcs = [":srcs"],
+    library_name = "uart",
+)
+
+# bazel build //hdl/uart:sim
+#
+# Elaborates and runs the testbench under xsim and writes the waveform
+# database to bazel-bin/hdl/uart/sim.wdb, next to sim.vcd. The design
+# confirms the reader on a hierarchy not written for one question.
+vivado_simulation(
+    name = "sim",
+    library = ":lib",
+    top = "tb",
+)
