@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 281 of 281 cases decoding with the entry lengths chaining
+*Confirmed by* 296 of 296 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -43,7 +43,7 @@ exactly to the word at `36`.
 
 | Tag | Kind | Body |
 | :--- | :--- | :--- |
-| `0x03` | enumeration | `[u32 origin][u32 variant][u32 class][u32 n]` then `n` NUL terminated literals, then `[u32 1]` for VHDL or `[u32 0]` for Verilog |
+| `0x03` | enumeration | `[u32 origin][u32 variant][u32 class][u32 n]` then `n` NUL terminated literals, then `[u32 size]`: the value's byte size for VHDL, `1` or `4`, and `0` for Verilog |
 | `0x04` | named values | `[u32 origin][u32 base][u32 n][u32 8]` then `n` times `name NUL [u64 value]`, then `[u32 nranges]` and that many triples, no `-99` |
 | `0x05` | integer | `[u32 origin][i32 low][i32 high][u32 1]` |
 | `0x06` | real | `[u32 origin][u32 variant][f64 low][f64 high][u32 1]` for VHDL, `[u32 0]` for Verilog |
@@ -61,8 +61,39 @@ The trailing `-99` is `0xffffff9d` and closes the triple list.
 
 **Enumeration.**
 The variant word is `2` for every VHDL enumeration.
-The class word is `2` for `BIT`, `3` for `STD_ULOGIC`, and `5` for
-`BOOLEAN`, `CHARACTER` and a user enumeration.
+The class word goes with the shape of the literals, not with the type's
+name:
+
+| Class | Literals | Seen on |
+| :--- | :--- | :--- |
+| `2` | `'0'` and `'1'` | `BIT`, `mybit_t` of `t20_enum_bitlike` |
+| `3` | the nine `STD_ULOGIC` literals | `STD_ULOGIC`, `STD_LOGIC`, `my9_t` of `t20_enum_ul_like` |
+| `4` | any other set with a character literal in it | `CHARACTER`, `sym_t` `('a', 'b', 'c')`, `mix_t` `(alpha, 'b', gamma)` |
+| `5` | identifiers only | `BOOLEAN`, `colour_t`, `one_t` `(only)`, `flag_t` `(no, yes)`, `wide_t` |
+
+*Found by* `t20_enum_bitlike` against `t2_bit` and `t20_enum_ul_like`
+against `t1_bit_one_edge`: a user type with `BIT`'s literals gets class
+`2` and one with `STD_ULOGIC`'s literals gets class `3`, so the class
+does not come from the name.
+*Confirmed by* `t20_enum_chars`, `t20_enum_mixed`, `t20_enum_one` and
+`t20_enum_two_id` against `t2_enum`, which sort the remaining shapes
+into `4` and `5`, and by the tabulation of every enumeration entry in
+the corpus, which shows no other class.
+An earlier version of this page put `CHARACTER` in class `5`; the dump
+shows `4`.
+
+The last word is the byte size of a value: `1` for up to 256 literals
+and `4` from 257 on.
+*Found by* `t20_enum_300` against `t2_character`, where a 300 literal
+type declares 4 bytes and stores `e299` as `2b 01 00 00`.
+*Confirmed by* `t20_enum_256` and `t20_enum_257`, one byte and four
+bytes either side of the boundary, by `t20_enum_300_arr`, whose pair of
+the wide type is 8 bytes, and by `t20_enum_300_rec`, where the wide
+field sits at offset 4 after a `std_ulogic`.
+The size is a property of the type, so the reader takes it from this
+word rather than from the literal count.
+See [values.md](values.md).
+
 `std_ulogic` is not a builtin to this format.
 It is an ordinary enumeration whose nine literals are written out as
 `'U' 'X' '0' '1' 'Z' 'W' 'L' 'H' '-'`, and a user type
@@ -256,7 +287,9 @@ variant word:
 alike.
 `bit` lists its two literals and then two more `0`, so the literal list
 is four long for both and the variant tells them apart.
-What the variant and class words mean beyond that is open.
+The class word is `1` for both, outside the VHDL classes above, and
+what the variant words mean is open.
+The last word is `0` where a VHDL enumeration carries its value size.
 `real` has no bounds: both are `0`.
 `scalar_int` is the index type of every Verilog array, as `NATURAL` is
 the index type of `STD_ULOGIC_VECTOR`, and its low bound is

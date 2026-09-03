@@ -331,7 +331,7 @@ records; see the Verilog section below.
 
 | Type | Encoding |
 | :--- | :--- |
-| enumeration | 1 byte, the literal's index in the type's list |
+| enumeration | the literal's index in the type's list, 1 byte up to 256 literals and 4 bytes from 257 on |
 | `integer` and its subtypes | int32 |
 | `real` | float64 |
 | `time` | int64 in ps |
@@ -351,6 +351,16 @@ Records were found by `t2_record`, `t5_rec_real` and `t5_arr_rec`.
 `std_ulogic` indexes are `U X 0 1 Z W L H -`, so `0` is 2 and `1` is
 3.
 That is the order in the type table and the order in the IEEE source.
+
+A type of 300 literals stores its index as a little endian `uint32`:
+`t20_enum_300` holds `e299` as `2b 01 00 00`, and `t20_enum_256` and
+`t20_enum_257` put the boundary between 256 and 257 literals.
+The type entry's last word carries the size, so the reader does not
+count literals.
+Inside a record such a value is aligned to 4: the `w` field of
+`t20_enum_300_rec` sits at offset 4 after a `std_ulogic`, and the
+record is 8 bytes.
+An array of the wide type is 4 bytes per element, `t20_enum_300_arr`.
 
 A 2D array is stored with the first index outermost.
 `t2_array2d` is `array (0 to 3) of std_ulogic_vector(7 downto 0)`, 32

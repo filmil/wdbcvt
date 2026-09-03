@@ -550,6 +550,30 @@ the time 0 records against drivers rather than readers.
 A `trireg` case was written and dropped: xsim refuses it with
 `[XSIM 43-4096] Trireg is not supported`.
 
+Tier 20 gives user enumerations the literals of the predefined types,
+to tell whether the class word goes with the name or the literals,
+crosses the 256 literal boundary to find the value size, leaves a two
+dimensional array type unconstrained, and moves a `real` parameter's
+value and keyword.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t20_enum_bitlike` | `type mybit_t is ('0', '1')` | class `2`, as `BIT` |
+| `t20_enum_ul_like` | the nine `STD_ULOGIC` literals under another name | class `3`, as `STD_ULOGIC` |
+| `t20_enum_chars` | `type sym_t is ('a', 'b', 'c')` | class `4`, as `CHARACTER` |
+| `t20_enum_mixed` | `type mix_t is (alpha, 'b', gamma)` | class `4` |
+| `t20_enum_one` | `type one_t is (only)` | class `5`; one record only |
+| `t20_enum_two_id` | `type flag_t is (no, yes)` | class `5`, as `BOOLEAN` |
+| `t20_enum_300` | 300 literals | last word `4`; a 4 byte value |
+| `t20_enum_256` | 256 literals | last word `1`; a 1 byte value |
+| `t20_enum_257` | 257 literals | last word `4` |
+| `t20_enum_300_arr` | an array of two of the 300 literal type | 8 bytes |
+| `t20_enum_300_rec` | a record of `std_ulogic` and the 300 literal type | 8 bytes, the wide field at 4 |
+| `t20_arr_2d_uncon` | `array (natural range <>, natural range <>)` constrained at the signal | two `(0, 0, -2)` triples |
+| `t20_rec_2dim` | a two dimensional array as a record field | two triples on the field |
+| `t20_v_realp_big` | `parameter real R = 123456.789` | 16 bits |
+| `t20_v_realp_lp` | `localparam real R = 1.5` | 16 bits |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -607,7 +631,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 281 cases through tier 19, and
+5. The reader now reproduces all 296 cases through tier 20, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
