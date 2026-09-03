@@ -1,0 +1,83 @@
+{
+  "case": "t7_rec_in2v_____",
+  "axis": "nested record constraint. Two vector fields inside the inner record, to see whether the extra triple is written once per record or once per vector field.",
+  "differs_from": "t5_rec_sub5_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "outer_t",
+      "fields": [
+        {
+          "name": "delta_f",
+          "type": "inner_t",
+          "fields": [
+            {
+              "name": "alpha",
+              "width": 1,
+              "type": "std_ulogic"
+            },
+            {
+              "name": "bravo",
+              "width": 4,
+              "type": "std_ulogic_vector"
+            },
+            {
+              "name": "charlie",
+              "width": 2,
+              "type": "std_ulogic_vector"
+            }
+          ]
+        },
+        {
+          "name": "echo_f",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.bravo",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.charlie",
+      "value": "00"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.echo_f",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.bravo",
+      "value": "1010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.charlie",
+      "value": "11"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.echo_f",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "case": "t7_rec_vfirst___",
+  "axis": "nested record constraint. The vector field first, to see whether the extra triple's numbers track the field position.",
+  "differs_from": "t5_rec_sub5_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "outer_t",
+      "fields": [
+        {
+          "name": "delta_f",
+          "type": "inner_t",
+          "fields": [
+            {
+              "name": "bravo",
+              "width": 4,
+              "type": "std_ulogic_vector"
+            },
+            {
+              "name": "alpha",
+              "width": 1,
+              "type": "std_ulogic"
+            }
+          ]
+        },
+        {
+          "name": "echo_f",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.bravo",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.delta_f.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.echo_f",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.bravo",
+      "value": "1010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.delta_f.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.echo_f",
+      "value": "1"
+    }
+  ]
+}

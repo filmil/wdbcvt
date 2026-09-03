@@ -1,0 +1,95 @@
+{
+  "case": "t7_gen_for______",
+  "axis": "for generate. Three instances with the loop index as the generic, to see how generate scopes are named and whether the index is an object.",
+  "differs_from": "t4_gen_diff_two_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.g(0).dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.g(1).dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.g(2).dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.g(0).dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g(1).dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g(2).dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.g(0).dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.g(1).dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.g(2).dut.s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.g(0)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "0"
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "1"
+    },
+    {
+      "scope": "tb.g(2)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "2"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "g(0).dut",
+      "k": 0
+    },
+    {
+      "instance": "g(1).dut",
+      "k": 1
+    },
+    {
+      "instance": "g(2).dut",
+      "k": 2
+    }
+  ]
+}
