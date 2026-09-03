@@ -59,6 +59,7 @@ type truthRun struct {
 type truthTransition struct {
 	TimeNS int64           `json:"time_ns"`
 	TimePS int64           `json:"time_ps"`
+	TimeFS int64           `json:"time_fs"`
 	Signal string          `json:"signal"`
 	Value  json.RawMessage `json:"value"`
 }
@@ -111,6 +112,7 @@ type truth struct {
 	Case        string            `json:"case"`
 	EndTimeNS   int64             `json:"end_time_ns"`
 	EndTimePS   int64             `json:"end_time_ps"`
+	EndTimeFS   int64             `json:"end_time_fs"`
 	Signals     []truthSignal     `json:"signals"`
 	Transitions []truthTransition `json:"transitions"`
 	Runs        []truthRun        `json:"transition_runs"`
@@ -265,9 +267,24 @@ func checkType(t *testing.T, f *File, path string, want truthSignal, typ int) {
 // changes lists (time, value) per leaf path of every non-generic object,
 // dropping repeats of the same value so that a record written as a whole
 // compares with truth transitions written per field.
+// change is one value at one time, the time in the file's own unit.
 type change struct {
-	timePS uint64
-	value  string
+	time  uint64
+	value string
+}
+
+// ticks turns a truth time, written in nanoseconds plus picoseconds
+// plus femtoseconds, into the file's own time unit. A truth time that
+// the unit cannot express fails the test: the truth is wrong, or the
+// unit was read wrong.
+func ticks(t *testing.T, f *File, ns, ps, fs int64) uint64 {
+	t.Helper()
+	total := uint64(ns)*1000000 + uint64(ps)*1000 + uint64(fs)
+	unit := f.TimeFS(1)
+	if total%unit != 0 {
+		t.Fatalf("time %d fs is not a multiple of the file's unit, 1 %s", total, f.TimeUnit())
+	}
+	return total / unit
 }
 
 func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int) {
@@ -286,7 +303,7 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 		for _, c := range ch {
 			v, err := f.Decode(dc, c.Data)
 			if err != nil {
-				t.Fatalf("%s at %d ps: %v", f.ObjectPath(o), c.TimePS, err)
+				t.Fatalf("%s at %d %s: %v", f.ObjectPath(o), c.Time, f.TimeUnit(), err)
 			}
 			for _, leaf := range f.Leaves(plainPath(f.ObjectPath(o)), v) {
 				s := f.String(leaf.Value)
@@ -294,7 +311,7 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 				if len(prev) > 0 && prev[len(prev)-1].value == s {
 					continue
 				}
-				out[leaf.Path] = append(prev, change{c.TimePS, s})
+				out[leaf.Path] = append(prev, change{c.Time, s})
 				types[leaf.Path] = leaf.Type
 			}
 		}
@@ -306,7 +323,7 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 func finalPerTime(ch []change) []change {
 	var out []change
 	for _, c := range ch {
-		if len(out) > 0 && out[len(out)-1].timePS == c.timePS {
+		if len(out) > 0 && out[len(out)-1].time == c.time {
 			out[len(out)-1] = c
 			continue
 		}
@@ -325,8 +342,8 @@ func TestCorpus(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if got, want := f.Header.EndTimePS, uint64(tr.EndTimeNS)*1000+uint64(tr.EndTimePS); got != want {
-				t.Errorf("end time %d ps, truth says %d", got, want)
+			if got, want := f.Header.EndTime, ticks(t, f, tr.EndTimeNS, tr.EndTimePS, tr.EndTimeFS); got != want {
+				t.Errorf("end time %d %s, truth says %d", got, f.TimeUnit(), want)
 			}
 
 			// Every declared signal in the truth is an object with the
@@ -422,7 +439,7 @@ func TestCorpus(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				want[path] = append(want[path], change{uint64(x.TimeNS)*1000 + uint64(x.TimePS), v})
+				want[path] = append(want[path], change{ticks(t, f, x.TimeNS, x.TimePS, x.TimeFS), v})
 			}
 			for _, r := range tr.Runs {
 				path := r.Signal
@@ -433,7 +450,7 @@ func TestCorpus(t *testing.T) {
 					ps := uint64(r.StartNS+int64(i)*r.StepNS) * 1000
 					want[path] = append(want[path], change{ps, r.Values[i%len(r.Values)]})
 				}
-				sort.Slice(want[path], func(i, j int) bool { return want[path][i].timePS < want[path][j].timePS })
+				sort.Slice(want[path], func(i, j int) bool { return want[path][i].time < want[path][j].time })
 			}
 			for path, w := range want {
 				g, ok := got[path]
@@ -451,8 +468,8 @@ func TestCorpus(t *testing.T) {
 					continue
 				}
 				for i := range w {
-					if g[i].timePS != w[i].timePS || !sameValue(f, types[path], w[i].value, g[i].value) {
-						t.Errorf("%s change %d: got %d ps %q, truth says %d ps %q", path, i, g[i].timePS, g[i].value, w[i].timePS, w[i].value)
+					if g[i].time != w[i].time || !sameValue(f, types[path], w[i].value, g[i].value) {
+						t.Errorf("%s change %d: got %d %s %q, truth says %d %q", path, i, g[i].time, f.TimeUnit(), g[i].value, w[i].time, w[i].value)
 					}
 				}
 			}
@@ -502,7 +519,7 @@ func TestCorpus(t *testing.T) {
 					}
 					continue
 				}
-				if len(ch) != 1 || ch[0].TimePS != 0 {
+				if len(ch) != 1 || ch[0].Time != 0 {
 					t.Errorf("%s: %d changes, want one at time zero", path, len(ch))
 					continue
 				}
@@ -555,7 +572,7 @@ func TestCorpus(t *testing.T) {
 						}
 						continue
 					}
-					if len(ch) != 1 || ch[0].TimePS != 0 {
+					if len(ch) != 1 || ch[0].Time != 0 {
 						t.Errorf("%s: %d records, a loop index has had one at time zero", path, len(ch))
 						continue
 					}

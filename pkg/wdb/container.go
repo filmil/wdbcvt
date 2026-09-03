@@ -69,9 +69,9 @@ type Header struct {
 	// ArenaOffsets are the slots of the arena table. Slot i is the file
 	// offset of arena record i, or 0 when there is no such arena.
 	ArenaOffsets []uint64
-	// EndTimePS is the simulation end time in picoseconds, the first
-	// word of the trailer.
-	EndTimePS uint64
+	// EndTime is the simulation end time, the first word of the
+	// trailer, in the file's time unit; see File.TimeUnit.
+	EndTime uint64
 	// HandleSpace is the trailer word at 0x18 from its start: the number
 	// of bytes of handle space the objects occupy. Each one bit signal
 	// costs 0xf0 of it, and the arena table has ceil(HandleSpace/0x800)
@@ -148,7 +148,7 @@ func readHeader(d []byte) (Header, error) {
 		h.ArenaOffsets = append(h.ArenaOffsets, binary.LittleEndian.Uint64(d[p:]))
 	}
 	t := d[trailer:]
-	h.EndTimePS = binary.LittleEndian.Uint64(t[0x00:])
+	h.EndTime = binary.LittleEndian.Uint64(t[0x00:])
 	if n := binary.LittleEndian.Uint32(t[0x0c:]); int(n) != len(h.ArenaOffsets) {
 		return h, fmt.Errorf("trailer says %d arena table slots, the table has %d", n, len(h.ArenaOffsets))
 	}

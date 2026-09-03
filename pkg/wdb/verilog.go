@@ -202,7 +202,7 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 				} else if (addr-start)%8 != 0 || len(r.Data)%8 != 0 {
 					return nil, fmt.Errorf("object handle %#x: record at %#x of %d bytes is neither a chunk nor whole word pairs", o.Handle, addr, len(r.Data))
 				}
-				recs = append(recs, rec{r.TimePS, addr, r.Data, k, piece})
+				recs = append(recs, rec{r.Time, addr, r.Data, k, piece})
 			}
 		}
 	}
@@ -273,7 +273,7 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 				}
 				whole++
 			}
-			out = append(out, Change{TimePS: r.time, Data: append([]byte(nil), cur...)})
+			out = append(out, Change{Time: r.time, Data: append([]byte(nil), cur...)})
 		}
 		for _, r := range group {
 			if r.arena == first && (r.piece <= 0) {

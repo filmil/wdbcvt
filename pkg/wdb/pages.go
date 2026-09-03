@@ -12,8 +12,9 @@ import (
 
 // Record is one value change inside a page.
 type Record struct {
-	// TimePS is the simulation time of the change in picoseconds.
-	TimePS uint64
+	// Time is the simulation time of the change in the file's time
+	// unit; see File.TimeUnit.
+	Time uint64
 	// Key names the object within the page; see Object.Key.
 	Key uint32
 	// Data is the value, encoded as docs/format.md describes per kind.
@@ -27,7 +28,7 @@ type Page struct {
 	// T0 and T1 are the two times the page header holds. T0 is the time
 	// of the first record and T1 the time of the last record minus T0.
 	// The second page of t5_tr1000 shows the difference: its records run
-	// from 600000 to 1000000 ps and it holds T0 600000, T1 400000.
+	// from 600000 to 1000000 and it holds T0 600000, T1 400000.
 	T0, T1  uint64
 	Records []Record
 }
@@ -52,7 +53,7 @@ func readPage(d []byte, ref PageRef) (Page, error) {
 	pg.T1 = c.u64()
 	n := int(c.u32())
 	for i := 0; i < n; i++ {
-		r := Record{TimePS: c.u64(), Key: c.u32()}
+		r := Record{Time: c.u64(), Key: c.u32()}
 		l := int(c.u32())
 		if !c.need(l) {
 			break
@@ -74,8 +75,9 @@ func readPage(d []byte, ref PageRef) (Page, error) {
 
 // Change is one value of one object at one time.
 type Change struct {
-	TimePS uint64
-	Data   []byte
+	// Time is in the file's time unit; see File.TimeUnit.
+	Time uint64
+	Data []byte
 }
 
 // Changes returns every recorded value of the object, in page order,
@@ -140,7 +142,7 @@ func (f *File) Changes(o Object) ([]Change, error) {
 				if _, seen := runs[addr]; !seen {
 					addrs = append(addrs, addr)
 				}
-				runs[addr] = append(runs[addr], chunk{r.TimePS, r.Data})
+				runs[addr] = append(runs[addr], chunk{r.Time, r.Data})
 			}
 		}
 	}
@@ -157,15 +159,15 @@ func (f *File) Changes(o Object) ([]Change, error) {
 	n = len(runs[addrs[0]])
 	var out []Change
 	for i := 0; i < n; i++ {
-		c := Change{TimePS: runs[addrs[0]][i].time}
+		c := Change{Time: runs[addrs[0]][i].time}
 		next := start
 		for _, addr := range addrs {
 			if len(runs[addr]) != n {
 				return nil, fmt.Errorf("object handle %#x: chunk at %#x has %d records, the first chunk has %d", o.Handle, addr, len(runs[addr]), n)
 			}
 			ch := runs[addr][i]
-			if ch.time != c.TimePS {
-				return nil, fmt.Errorf("object handle %#x: change %d: chunk at %#x is at %d ps, the first chunk at %d ps", o.Handle, i, addr, ch.time, c.TimePS)
+			if ch.time != c.Time {
+				return nil, fmt.Errorf("object handle %#x: change %d: chunk at %#x is at %d, the first chunk at %d", o.Handle, i, addr, ch.time, c.Time)
 			}
 			lo, hi := addr, addr+uint64(len(ch.data))
 			if lo < start {

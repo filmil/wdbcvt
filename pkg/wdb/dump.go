@@ -19,7 +19,7 @@ func (f *File) Dump(w io.Writer) error {
 	h := &f.Header
 	p("header:\n")
 	p("  timestamp      %d\n", h.Timestamp)
-	p("  end time       %d ps\n", h.EndTimePS)
+	p("  end time       %d %s\n", h.EndTime, f.TimeUnit())
 	p("  handle space   %#x\n", h.HandleSpace)
 	p("  logged ranges  at %#x: %v\n", h.MarkerOffset, h.Logged)
 	p("  page size      %d\n", h.PageSize)
@@ -77,6 +77,7 @@ func (f *File) Dump(w io.Writer) error {
 	d := &f.Debug
 	p("debug:\n")
 	p("  timestamp      %d\n", d.Timestamp)
+	p("  precision      10^%d s\n", d.Precision)
 	p("  counts         scopes %d, units %d, objects %d, declarations %d\n",
 		d.Counts[0], d.Counts[1], d.Counts[2], d.Counts[3])
 	p("  offsets       ")
@@ -155,7 +156,7 @@ func (f *File) Dump(w io.Writer) error {
 			p("    page %d at %#x, %d bytes compressed, t0 %d t1 %d, %d records\n",
 				j, pg.Ref.Offset, pg.Ref.CompressedLen, pg.T0, pg.T1, len(pg.Records))
 			for _, r := range pg.Records {
-				p("      t=%-10d key %#05x  % x\n", r.TimePS, r.Key, r.Data)
+				p("      t=%-10d key %#05x  % x\n", r.Time, r.Key, r.Data)
 			}
 		}
 	}
@@ -170,9 +171,9 @@ func (f *File) Dump(w io.Writer) error {
 		for _, c := range ch {
 			v, err := f.Decode(dc, c.Data)
 			if err != nil {
-				return fmt.Errorf("%s at %d ps: %w", f.ObjectPath(o), c.TimePS, err)
+				return fmt.Errorf("%s at %d %s: %w", f.ObjectPath(o), c.Time, f.TimeUnit(), err)
 			}
-			p("  t=%-10d %s = %s\n", c.TimePS, f.ObjectPath(o), f.String(v))
+			p("  t=%-10d %s = %s\n", c.Time, f.ObjectPath(o), f.String(v))
 		}
 	}
 	return nil

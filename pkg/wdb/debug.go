@@ -10,7 +10,7 @@ import (
 // Layout constants of the Xilinx ISim DBG 006 section. Every offset in
 // the section's own table is relative to the start of its magic string.
 const (
-	dbgOffsets = 18 // uint32 region offsets, after the magic, timestamp and -12
+	dbgOffsets = 18 // uint32 region offsets, after the magic, timestamp and precision
 	dbgCounts  = 4  // uint32 counts after the offsets
 
 	scopeRecLen = 9  // uint32 words per scope record
@@ -273,6 +273,11 @@ func (o Object) Key() uint32 { return uint32(o.Handle % arenaSpan) }
 // Debug is the decoded Xilinx ISim DBG 006 section.
 type Debug struct {
 	Timestamp uint32
+	// Precision is the power of ten of the file's time unit in seconds:
+	// -12 for the picosecond of every VHDL case and of a Verilog source
+	// under `timescale 1ns / 1ps`, -9, -10 and -15 for a Verilog
+	// precision of 1ns, 100ps and 1fs, tier 21.
+	Precision int32
 	// Offsets is the section's own table of region offsets, kept for
 	// the regions that are not decoded yet.
 	Offsets [dbgOffsets]uint32
@@ -321,8 +326,9 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 	}
 	c := &cursor{b: sec, p: len(debugMagic) + 1}
 	s.Timestamp = c.u32()
-	if v := c.i32(); c.err == nil && v != -12 {
-		return fmt.Errorf("DBG word after the timestamp is %d, want -12", v)
+	s.Precision = c.i32()
+	if c.err == nil && (s.Precision > 0 || s.Precision < -15) {
+		return fmt.Errorf("DBG time precision is 10^%d s, want -15 to 0", s.Precision)
 	}
 	for i := range s.Offsets {
 		s.Offsets[i] = c.u32()
@@ -509,4 +515,32 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 		f.Objects = append(f.Objects, o)
 	}
 	return nil
+}
+
+// TimeUnit names the unit every time in the file is counted in: the
+// end time, the page bounds and the record times. It is 10 to the
+// Debug.Precision seconds: `ps` for every VHDL case and for a Verilog
+// source under `timescale 1ns / 1ps`, and `ns`, `100ps` or `fs` for
+// the tier 21 time scales.
+func (f *File) TimeUnit() string {
+	names := map[int32]string{0: "s", -3: "ms", -6: "us", -9: "ns", -12: "ps", -15: "fs"}
+	p := f.Debug.Precision
+	base := p
+	scale := 1
+	for base%3 != 0 {
+		base--
+		scale *= 10
+	}
+	if scale == 1 {
+		return names[base]
+	}
+	return fmt.Sprintf("%d%s", scale, names[base])
+}
+
+// TimeFS converts a time in the file's unit to femtoseconds.
+func (f *File) TimeFS(t uint64) uint64 {
+	for p := f.Debug.Precision; p > -15; p-- {
+		t *= 10
+	}
+	return t
 }

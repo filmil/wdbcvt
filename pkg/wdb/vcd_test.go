@@ -51,6 +51,8 @@ type vcdVar struct {
 type vcdFile struct {
 	vars    []vcdVar
 	changes map[string][]change
+	// timescaleFS is the VCD's $timescale in femtoseconds.
+	timescaleFS float64
 }
 
 // plainIdent matches the identifiers go-vcd-parser 0.1.0 reads. xsim
@@ -124,11 +126,10 @@ func loadVCD(t *testing.T, path string) *vcdFile {
 				code: v.Code,
 			})
 		case d.Timescale != nil:
-			// Every corpus VCD is written in picoseconds; the test
-			// reads simulation times as picoseconds.
-			if ps := d.Timescale.AsSeconds() * 1e12; ps < 0.999 || ps > 1.001 {
-				t.Fatalf("%s: timescale is %g ps, the test assumes 1 ps", path, ps)
-			}
+			// The VCD is written in the simulation precision, which
+			// is the database's time unit as well, so the test
+			// compares the two times as they are: tier 21.
+			out.timescaleFS = d.Timescale.AsSeconds() * 1e15
 		}
 	}
 	var now uint64
@@ -315,6 +316,9 @@ func TestVCD(t *testing.T) {
 				t.Fatal(err)
 			}
 			v := loadVCD(t, filepath.Join(dir, "sim.vcd"))
+			if unit := float64(f.TimeFS(1)); v.timescaleFS < unit*0.999 || v.timescaleFS > unit*1.001 {
+				t.Fatalf("VCD timescale %g fs, the database counts in %s", v.timescaleFS, f.TimeUnit())
+			}
 
 			objByPath := map[string]Object{}
 			for _, o := range f.Objects {
@@ -343,9 +347,9 @@ func TestVCD(t *testing.T) {
 				for _, c := range ch {
 					val, err := f.Decode(dc, c.Data)
 					if err != nil {
-						t.Fatalf("%s at %d ps: %v", vv.path, c.TimePS, err)
+						t.Fatalf("%s at %d %s: %v", vv.path, c.Time, f.TimeUnit(), err)
 					}
-					want = append(want, change{c.TimePS, f.vcdSpell(val)})
+					want = append(want, change{c.Time, f.vcdSpell(val)})
 				}
 				want = finalPerTime(want)
 				got := v.changes[vv.code]
@@ -359,15 +363,15 @@ func TestVCD(t *testing.T) {
 					t.Errorf("%s: VCD lists %d times, the database %d", vv.path, len(got), len(want))
 				}
 				for i := 0; i < len(got) && i < len(want); i++ {
-					if got[i].timePS != want[i].timePS {
+					if got[i].time != want[i].time {
 						mismatch = true
-						t.Errorf("%s: VCD change %d at %d ps, the database at %d ps", vv.path, i, got[i].timePS, want[i].timePS)
+						t.Errorf("%s: VCD change %d at %d, the database at %d %s", vv.path, i, got[i].time, want[i].time, f.TimeUnit())
 						break
 					}
 					if !sameVCDValue(vv.kind, vv.size, got[i].value, want[i].value) {
 						mismatch = true
 						if deviation == "" {
-							t.Errorf("%s at %d ps: VCD %s, the database %s", vv.path, got[i].timePS, got[i].value, want[i].value)
+							t.Errorf("%s at %d %s: VCD %s, the database %s", vv.path, got[i].time, f.TimeUnit(), got[i].value, want[i].value)
 						}
 					}
 				}
