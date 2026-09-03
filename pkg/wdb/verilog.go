@@ -325,6 +325,31 @@ func (f *File) decodeVerilog(t int, data []byte, rs *[]Range) (Value, error) {
 		}
 		v.Scalar = strconv.FormatFloat(math.Float64frombits(binary.LittleEndian.Uint64(data)), 'g', -1, 64)
 		return v, nil
+	case ty.Kind == KindArray && ty.Layout == LayoutUnpacked && f.Types[f.resolve(ty.Elem)].Kind == KindReal:
+		// An unpacked array of real gives each element one pair, the
+		// last element lowest, as an unpacked struct does its fields:
+		// t13_sv_real_arr writes r[1] of real r [0:1] into pair 0.
+		dims, err := f.arrayDims(ty, rs)
+		if err != nil {
+			return v, err
+		}
+		n := 1
+		for _, r := range dims {
+			n *= r.Length()
+		}
+		if len(data) != 8*n {
+			return v, fmt.Errorf("%s: %d bytes for %d reals", ty.Name, len(data), n)
+		}
+		v.Elems = make([]Value, n)
+		for i := 0; i < n; i++ {
+			ers := *rs
+			e, err := f.decodeVerilog(ty.Elem, data[8*(n-1-i):8*(n-i)], &ers)
+			if err != nil {
+				return v, err
+			}
+			v.Elems[i] = e
+		}
+		return v, nil
 	case ty.Kind == KindRecord && ty.Layout == LayoutUnpacked:
 		v.Fields = make([]Value, len(ty.Fields))
 		w := 0
