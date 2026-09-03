@@ -1,0 +1,138 @@
+{
+  "case": "t49_mix_deep____",
+  "axis": "a VHDL leaf under a Verilog child under a VHDL testbench",
+  "differs_from": "t49_mix_2port___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "y",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "position": 0,
+      "storage": 1,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "position": 1,
+      "storage": 1,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut.u",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in",
+      "storage": 1
+    },
+    {
+      "scope": "tb.dut.u",
+      "name": "b",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "out",
+      "storage": 1
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "y",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.b",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.u.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.b",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.u.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.u.b",
+      "value": "1"
+    }
+  ]
+}

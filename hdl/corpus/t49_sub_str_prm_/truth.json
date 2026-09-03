@@ -1,0 +1,36 @@
+{
+  "case": "t49_sub_str_prm_",
+  "axis": "a procedure with a constant string parameter of unconstrained size under -debug subprogram; the parameter has no declaration and no object",
+  "differs_from": "t23_sub_sig_prm_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.drive",
+      "name": "q",
+      "type": "std_ulogic",
+      "kind": "signal param",
+      "port": "out",
+      "storage": 6
+    }
+  ]
+}

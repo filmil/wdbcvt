@@ -1,0 +1,44 @@
+{
+  "case": "t49_sub_int_arr_",
+  "axis": "a function with a local variable of an integer array type under -debug subprogram",
+  "differs_from": "t23_sub_sizes___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f",
+      "name": "a",
+      "type": "arr_t",
+      "kind": "local",
+      "port": "",
+      "storage": 4
+    }
+  ]
+}

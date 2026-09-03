@@ -1,0 +1,102 @@
+{
+  "case": "t49_mix_2port___",
+  "axis": "a Verilog child with an input and an output port under a VHDL testbench",
+  "differs_from": "t21_mix_v_in_vh_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "y",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "position": 0,
+      "storage": 1,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "position": 1,
+      "storage": 1,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "U"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "y",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "y",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.b",
+      "value": "1"
+    }
+  ]
+}
