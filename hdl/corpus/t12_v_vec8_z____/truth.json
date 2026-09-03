@@ -1,0 +1,32 @@
+{
+  "case": "t12_v_vec8_z____",
+  "axis": "Z and X bits in one value",
+  "differs_from": "t11_v_vec8______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "Z0Z1XX01"
+    }
+  ]
+}

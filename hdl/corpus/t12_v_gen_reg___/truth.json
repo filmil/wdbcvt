@@ -1,0 +1,54 @@
+{
+  "case": "t12_v_gen_reg___",
+  "axis": "a generate for loop declaring a reg in each iteration",
+  "differs_from": "t11_v_gen_for___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.g[0]",
+      "name": "r",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.g[1]",
+      "name": "r",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].r",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].r",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[0].r",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].r",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].r",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[1].r",
+      "value": "1"
+    }
+  ]
+}

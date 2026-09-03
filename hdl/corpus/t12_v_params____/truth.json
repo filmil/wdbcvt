@@ -1,0 +1,69 @@
+{
+  "case": "t12_v_params____",
+  "axis": "parameters: sized, integer, real and a localparam",
+  "differs_from": "t11_v_param_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "dut",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000000111"
+    },
+    {
+      "instance": "dut",
+      "name": "P",
+      "type": "",
+      "declared": "parameter [7:0]",
+      "value": "01011010"
+    },
+    {
+      "instance": "dut",
+      "name": "Q",
+      "type": "integer",
+      "declared": "parameter integer",
+      "value": "9"
+    },
+    {
+      "instance": "dut",
+      "name": "R",
+      "type": "real",
+      "declared": "parameter real",
+      "value": "1.5"
+    },
+    {
+      "instance": "dut",
+      "name": "L",
+      "type": "",
+      "declared": "localparam",
+      "value": "00000000000000000000000000001000"
+    }
+  ]
+}

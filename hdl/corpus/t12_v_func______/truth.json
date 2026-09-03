@@ -1,0 +1,84 @@
+{
+  "case": "t12_v_func______",
+  "axis": "a function with an input and a local reg",
+  "differs_from": "t12_v_task______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.inc",
+      "name": "inc",
+      "width": 8,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.inc",
+      "name": "v",
+      "width": 8,
+      "type": "",
+      "port": "in",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.inc",
+      "name": "tmp",
+      "width": 8,
+      "type": "",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.inc.inc",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.inc.inc",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.inc.v",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.inc.v",
+      "value": "10100100"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.inc.tmp",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.inc.tmp",
+      "value": "10100101"
+    }
+  ]
+}

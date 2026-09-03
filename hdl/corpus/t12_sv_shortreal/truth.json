@@ -1,0 +1,27 @@
+{
+  "case": "t12_sv_shortreal",
+  "axis": "type: shortreal",
+  "differs_from": "t11_v_real______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "real",
+      "declared": "shortreal"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1.5"
+    }
+  ]
+}

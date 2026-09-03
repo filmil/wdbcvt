@@ -1,0 +1,98 @@
+{
+  "case": "t12_v_proc_order",
+  "axis": "process numbering across two modules",
+  "differs_from": "t11_v_hier1_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "t",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "u",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "t",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "t",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "u",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "u",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.w",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "t",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "u",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.w",
+      "value": "0"
+    }
+  ]
+}

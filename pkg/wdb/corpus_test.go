@@ -86,9 +86,11 @@ type truthVariable struct {
 
 // plainPath strips the extended identifier bars the database puts
 // around a generate iteration, so that `tb.\g(0)\.dut.s` compares with
-// the truth's `tb.g(0).dut.s`. Found by t7_gen_for.
+// the truth's `tb.g(0).dut.s`. Found by t7_gen_for. A Verilog escaped
+// identifier, `\g[0].r ` for a reg declared inside a generate block,
+// is a backslash and a closing space: t12_v_gen_reg.
 func plainPath(s string) string {
-	return strings.ReplaceAll(s, `\`, "")
+	return strings.ReplaceAll(strings.ReplaceAll(s, `\`, ""), " ", "")
 }
 
 type truth struct {
@@ -100,6 +102,12 @@ type truth struct {
 	Runs        []truthRun        `json:"transition_runs"`
 	Generics    []truthGeneric    `json:"generics"`
 	Variables   []truthVariable   `json:"variables"`
+	// FinalPerTime names signals whose changes are compared by the
+	// last value at each time only. The file keeps the write order of
+	// one arena and nothing orders two arenas against each other, so
+	// a value spanning two arenas and written in pieces at one time
+	// comes back in an order the source does not fix: t12_v_mem40_t0.
+	FinalPerTime []string `json:"final_per_time"`
 }
 
 // corpusCases lists every case directory that has a truth.json and a
@@ -280,6 +288,19 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 	return out, types
 }
 
+// finalPerTime keeps the last change at each time.
+func finalPerTime(ch []change) []change {
+	var out []change
+	for _, c := range ch {
+		if len(out) > 0 && out[len(out)-1].timePS == c.timePS {
+			out[len(out)-1] = c
+			continue
+		}
+		out = append(out, c)
+	}
+	return out
+}
+
 func TestCorpus(t *testing.T) {
 	for _, dir := range corpusCases(t) {
 		dir := dir
@@ -302,9 +323,13 @@ func TestCorpus(t *testing.T) {
 				objByPath[plainPath(f.ObjectPath(o))] = o
 				dc := f.Decls[o.Decl]
 				size, err := f.Size(dc)
+				// A real parameter declares 16 where a real variable
+				// declares 32: t12_v_params. The value is still one
+				// 8 byte float.
+				realParam := dc.Kind == DeclParam && f.Types[f.resolve(dc.Type)].Kind == KindReal && dc.Size == 16
 				if err != nil {
 					t.Errorf("%s: %v", f.ObjectPath(o), err)
-				} else if size != dc.Size {
+				} else if size != dc.Size && !realParam {
 					t.Errorf("%s: type table implies %d bytes, declaration says %d", f.ObjectPath(o), size, dc.Size)
 				}
 			}
@@ -387,6 +412,11 @@ func TestCorpus(t *testing.T) {
 				if !ok {
 					t.Errorf("truth has transitions for %s, the database has none", path)
 					continue
+				}
+				for _, name := range tr.FinalPerTime {
+					if path == name || path == "tb."+name {
+						g, w = finalPerTime(g), finalPerTime(w)
+					}
 				}
 				if len(g) != len(w) {
 					t.Errorf("%s: %d changes, truth lists %d: got %v, want %v", path, len(g), len(w), g, w)
