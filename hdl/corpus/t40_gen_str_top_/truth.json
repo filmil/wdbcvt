@@ -1,0 +1,46 @@
+{
+  "case": "t40_gen_str_top_",
+  "axis": "xelab --generic_top ks=hello over a string generic",
+  "differs_from": "t40_gen_uncons__",
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "ks",
+      "type": "string",
+      "value": "hello",
+      "width": 5,
+      "range": "1 to 5"
+    },
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "kv",
+      "type": "std_ulogic_vector",
+      "value": "1010",
+      "width": 4,
+      "range": "0 to 3"
+    }
+  ],
+  "end_time_ns": 20
+}

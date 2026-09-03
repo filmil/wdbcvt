@@ -80,6 +80,10 @@ type truthGeneric struct {
 	Type     string `json:"type"`
 	Value    string `json:"value"`
 	Width    int    `json:"width"`
+	// Range is the declared range of an array generic, spelled the way
+	// the decoder renders it: t40_gen_uncons gives an unconstrained
+	// generic the ascending range of its literal.
+	Range string `json:"range"`
 	// Scope names the scope of a parameter that is not under an
 	// instance of tb: the package p of t13_sv_pkg holds p.W.
 	Scope string `json:"scope"`
@@ -555,6 +559,11 @@ func TestCorpus(t *testing.T) {
 				}
 				if g.Width != 0 && dc.Size != g.Width {
 					t.Errorf("%s: %d bytes, truth says %d elements", path, dc.Size, g.Width)
+				}
+				if g.Range != "" {
+					if len(dc.Ranges) != 1 || dc.Ranges[0].String() != g.Range {
+						t.Errorf("%s: ranges %v, truth says (%s)", path, dc.Ranges, g.Range)
+					}
 				}
 				ch, err := f.Changes(o)
 				if err != nil {

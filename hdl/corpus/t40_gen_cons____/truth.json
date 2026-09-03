@@ -1,0 +1,46 @@
+{
+  "case": "t40_gen_cons____",
+  "axis": "constrained vector generic",
+  "differs_from": "t40_gen_uncons__",
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "ks",
+      "type": "string",
+      "value": "abc",
+      "width": 3,
+      "range": "1 to 3"
+    },
+    {
+      "scope": "tb",
+      "instance": "",
+      "name": "kv",
+      "type": "std_ulogic_vector",
+      "value": "1010",
+      "width": 4,
+      "range": "3 downto 0"
+    }
+  ],
+  "end_time_ns": 20
+}
