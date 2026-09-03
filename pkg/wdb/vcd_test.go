@@ -9,7 +9,6 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -55,19 +54,17 @@ type vcdFile struct {
 	timescaleFS float64
 }
 
-// plainIdent matches the identifiers go-vcd-parser 0.1.0 reads. xsim
-// also writes VHDL extended identifiers such as `\g(0)\`, Verilog
-// escaped ones such as `\g.r `, and generate scope names such as
-// `g[0].dut`. hideNames swaps every other identifier of a $scope or
-// $var line for a plain one before parsing, and returns the map back.
-var plainIdent = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
-
+// hideNames swaps every identifier of a $scope or $var line for a
+// plain one before parsing, and returns the map back. go-vcd-parser
+// 0.1.0 reads plain identifiers only, and xsim also writes VHDL
+// extended identifiers such as `\g(0)\`, Verilog escaped ones such as
+// `\g.r `, generate scope names such as `g[0].dut`, and a top named
+// with its parameter, `tb(memfile="...")` in //hdl/serv:sim. The same
+// design has a scope named `bufreg`, which the parser rejects at the
+// `b` as a binary value, so no identifier is left as it is.
 func hideNames(src []byte) ([]byte, map[string]string) {
 	names := map[string]string{}
 	hide := func(id string) string {
-		if plainIdent.MatchString(id) {
-			return id
-		}
 		key := fmt.Sprintf("hidden%d", len(names))
 		names[key] = id
 		return key
@@ -277,7 +274,9 @@ func sameVCDValue(kind string, size int, got, want string) bool {
 // over the corpus; see docs/format/vcd.md.
 func (f *File) vcdOmitted(o Object) string {
 	dc := f.Decls[o.Decl]
-	if !strings.HasPrefix(plainPath(f.ObjectPath(o)), "tb.") {
+	// A Verilog top with a parameter set on the command line is named
+	// with it, `tb(memfile="...")` in //hdl/serv:sim.
+	if p := plainPath(f.ObjectPath(o)); !strings.HasPrefix(p, "tb.") && !strings.HasPrefix(p, "tb(") {
 		return "outside the tb hierarchy that the script logs"
 	}
 	ty := &f.Types[f.resolve(dc.Type)]
@@ -320,7 +319,21 @@ var vcdDeviations = map[string]string{
 // that have a database and a VCD but no truth.json. The VCD is their
 // only check. //hdl/counter:sim is a record port with per field
 // assignments, and its ctl record found the VHDL partial write.
-var designs = []string{"hdl/counter", "hdl/uart"}
+// //hdl/serv:sim is SERV, a RISC-V core of 281 scopes, and found the
+// bit offsets of Verilog ports bound to slices.
+var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv"}
+
+// changesOnly drops the records that repeat the value before them.
+func changesOnly(ch []change) []change {
+	var out []change
+	for _, c := range ch {
+		if len(out) > 0 && out[len(out)-1].value == c.value {
+			continue
+		}
+		out = append(out, c)
+	}
+	return out
+}
 
 func TestVCD(t *testing.T) {
 	dirs := corpusCases(t)
@@ -371,8 +384,17 @@ func TestVCD(t *testing.T) {
 					}
 					want = append(want, change{c.Time, f.vcdSpell(val)})
 				}
-				want = finalPerTime(want)
-				got := v.changes[vv.code]
+				// The database holds the writes of the value held,
+				// tier 36: a clocked nonblocking assignment on its first
+				// run and after an event on an operand, and a net with a
+				// reader on every evaluation of its assign. The VCD keeps
+				// a few of them and drops the rest: rf_wen in //hdl/serv
+				// is X three times in the database, at 0, 31000 and
+				// 93000 ps, and twice in the VCD, at 0 and 93000. So the
+				// comparison is of the changes on both sides. TestCorpus
+				// pins the count of records through records.
+				want = changesOnly(finalPerTime(want))
+				got := changesOnly(v.changes[vv.code])
 				if reason := f.vcdOmitted(o); reason != "" {
 					t.Errorf("%s is in the VCD but vcdOmitted says it is %s", vv.path, reason)
 				}
