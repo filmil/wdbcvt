@@ -37,7 +37,6 @@ const (
 	arenaCount   = 0x4b8       // uint64 number of pages
 	arenaMax     = 100         // pages one arena record can name
 	pageLen      = 10240       // every value page inflates to this many bytes
-	chunkLen     = 146         // a value wider than this is written as chunks; see Changes
 	markerLen    = 16
 )
 
