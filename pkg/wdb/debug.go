@@ -38,6 +38,11 @@ const (
 	UnitModule   UnitKind = 0x00
 	UnitBlock    UnitKind = 0x05
 	UnitVProcess UnitKind = 0x07
+	// A task and a function, each a scope of its own holding its
+	// arguments and local variables, and for a function its return
+	// variable first: t12_v_task, t12_v_func.
+	UnitTask     UnitKind = 0x03
+	UnitFunction UnitKind = 0x04
 )
 
 func (k UnitKind) String() string {
@@ -56,6 +61,10 @@ func (k UnitKind) String() string {
 		return "block"
 	case UnitVProcess:
 		return "vprocess"
+	case UnitTask:
+		return "task"
+	case UnitFunction:
+		return "function"
 	}
 	return fmt.Sprintf("unit(%#x)", uint32(k))
 }

@@ -23,9 +23,23 @@ import (
 
 // resolve follows typedef aliases to the entry they name.
 func (f *File) resolve(t int) int {
+	return f.resolveRanges(t, nil)
+}
+
+// resolveRanges follows typedef aliases to the entry they name. When an
+// alias carries a constraint of its own, that constraint replaces the
+// range list the target reads: t12_sv_typedef declares s as byte_t, an
+// alias of the unnamed vector entry with (7, 0, downto), and the
+// declaration of s carries no range of its own. The caller's list is
+// left alone; the alias's copy is returned through rs.
+func (f *File) resolveRanges(t int, rs **[]Range) int {
 	for i := 0; i < len(f.Types); i++ {
 		if t < 0 || t >= len(f.Types) || f.Types[t].Kind != KindAlias {
 			return t
+		}
+		if rs != nil && len(f.Types[t].Ranges) > 0 {
+			own := append([]Range(nil), f.Types[t].Ranges...)
+			*rs = &own
 		}
 		t = f.Types[t].Target
 	}
@@ -63,7 +77,7 @@ func (f *File) arrayDims(ty *Type, rs *[]Range) ([]Range, error) {
 // declares 96 for 1 + 4 + 8 bits, t11_sv_struct40 declares 96 for
 // 40 + 1.
 func (f *File) bitsOf(t int, rs *[]Range) (int, error) {
-	t = f.resolve(t)
+	t = f.resolveRanges(t, &rs)
 	if t < 0 || t >= len(f.Types) {
 		return 0, fmt.Errorf("type index %d of %d", t, len(f.Types))
 	}
@@ -201,7 +215,7 @@ func unpackBits(data []byte, nbits int) ([]byte, error) {
 // A real takes one pair holding the float: t11_sv_struct_r. Everything
 // else is a string of bits decoded by decodeBits.
 func (f *File) decodeVerilog(t int, data []byte, rs *[]Range) (Value, error) {
-	rt := f.resolve(t)
+	rt := f.resolveRanges(t, &rs)
 	ty := &f.Types[rt]
 	v := Value{Type: t}
 	switch {
@@ -253,7 +267,7 @@ func (f *File) decodeVerilog(t int, data []byte, rs *[]Range) (Value, error) {
 // same at bit granularity: t11_v_vec8_asc, t11_sv_struct, t11_v_mem4,
 // t11_v_mem4_desc, t11_v_mem4w5.
 func (f *File) decodeBits(t int, bits []byte, rs *[]Range) (Value, error) {
-	rt := f.resolve(t)
+	rt := f.resolveRanges(t, &rs)
 	ty := &f.Types[rt]
 	v := Value{Type: t}
 	switch ty.Kind {

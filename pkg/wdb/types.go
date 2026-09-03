@@ -148,7 +148,9 @@ type Type struct {
 	// type is Elem, constrained by Ranges. Found by t11_sv_enum.
 	Values []NamedValue
 	// Target is the entry an alias names. Found by t11_sv_enum, whose
-	// typedef state_t is an alias of the unnamed values entry.
+	// typedef state_t is an alias of the unnamed values entry. An alias
+	// of an unnamed vector carries the vector's constraint in Ranges:
+	// t12_sv_typedef, whose byte_t lists (7, 0, downto).
 	Target int
 
 	// Low and High bound an integer type.
@@ -397,7 +399,10 @@ func readType(kind Kind, body []byte) (Type, error) {
 	case KindAlias:
 		t.Origin = c.origin()
 		t.Target = int(c.u32())
-		c.expect(0, "alias trailer")
+		nr := int(c.u32())
+		for j := 0; j < nr && c.err == nil; j++ {
+			t.Ranges = append(t.Ranges, Range{Left: c.i32(), Right: c.i32(), Dir: c.i32()})
+		}
 	case KindPhysical:
 		t.Origin = c.origin()
 		n := int(c.u32())

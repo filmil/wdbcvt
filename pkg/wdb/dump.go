@@ -46,6 +46,9 @@ func (f *File) Dump(w io.Writer) error {
 			}
 		case KindAlias:
 			p(" of [%d]", t.Target)
+			for _, r := range t.Ranges {
+				p(" (%s)", r)
+			}
 		case KindInteger:
 			p(" %d to %d", t.Low, t.High)
 		case KindReal:
