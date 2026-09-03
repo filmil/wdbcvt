@@ -97,6 +97,10 @@ func (f *File) layoutOf(t int, rs *[]Range) (layout, error) {
 			off = roundUp(off, l.align) + l.size
 		}
 		return layout{roundUp(off, 8), 8}, nil
+	case KindFile:
+		// A file variable declares 0 bytes and never has a record:
+		// INPUT and OUTPUT of textio in t22_dbg_all.
+		return layout{}, nil
 	}
 	return layout{}, fmt.Errorf("type %q has kind %s", ty.Name, ty.Kind)
 }

@@ -20,6 +20,7 @@ const (
 	KindInteger  Kind = 0x05 // integer with bounds
 	KindReal     Kind = 0x06 // floating point with bounds
 	KindAlias    Kind = 0x07 // SystemVerilog typedef: a name for another entry
+	KindFile     Kind = 0x0c // VHDL file type: TEXT, seen only under -debug all
 	KindPhysical Kind = 0x0d // physical type with units: TIME
 	KindArray    Kind = 0x10 // array, constrained or not
 	KindRecord   Kind = 0x11 // record with named fields
@@ -167,6 +168,11 @@ type Type struct {
 
 	// Units lists a physical type's units.
 	Units []TimeUnit
+
+	// Words holds the two words after the element type of a file
+	// type. What they mean is open: TEXT of t22_dbg_all holds 8 and
+	// 40.
+	Words []uint32
 
 	// Elem is the type index of an array's element type. Dims is its
 	// dimension count and Indexes holds one index type per dimension:
@@ -423,6 +429,14 @@ func readType(kind Kind, body []byte) (Type, error) {
 		nr := int(c.u32())
 		for j := 0; j < nr && c.err == nil; j++ {
 			t.Ranges = append(t.Ranges, Range{Left: c.i32(), Right: c.i32(), Dir: c.i32()})
+		}
+	case KindFile:
+		// The element type, then two words whose meaning is open;
+		// TEXT of t22_dbg_all holds 8 and 40. See docs/format.md.
+		t.Origin = c.origin()
+		t.Elem = int(c.u32())
+		for i := 0; i < 2 && c.err == nil; i++ {
+			t.Words = append(t.Words, c.u32())
 		}
 	case KindPhysical:
 		t.Origin = c.origin()

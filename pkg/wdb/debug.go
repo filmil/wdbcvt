@@ -43,6 +43,20 @@ const (
 	// variable first: t12_v_task, t12_v_func.
 	UnitTask     UnitKind = 0x03
 	UnitFunction UnitKind = 0x04
+	// A SystemVerilog interface, modport and package: t13_sv_iface,
+	// t15_sv_iface_mp, t13_sv_pkg.
+	UnitInterface UnitKind = 0x01
+	UnitModport   UnitKind = 0x02
+	UnitSVPackage UnitKind = 0x08
+	// A VHDL package, a child of the root beside the top entity:
+	// t9_port_rec. Under -debug all the precompiled library packages
+	// appear the same way: t22_dbg_all.
+	UnitPackage UnitKind = 0x0a
+	// A VHDL function and procedure, present only under -debug
+	// subprogram or all, with the parameters and variables as
+	// declarations: inc of t22_dbg_subprog, bump of t22_dbg_sub_proc.
+	UnitVHDLFunction  UnitKind = 0x11
+	UnitVHDLProcedure UnitKind = 0x12
 )
 
 func (k UnitKind) String() string {
@@ -65,6 +79,18 @@ func (k UnitKind) String() string {
 		return "task"
 	case UnitFunction:
 		return "function"
+	case UnitInterface:
+		return "interface"
+	case UnitModport:
+		return "modport"
+	case UnitSVPackage:
+		return "svpackage"
+	case UnitPackage:
+		return "package"
+	case UnitVHDLFunction:
+		return "vhdl function"
+	case UnitVHDLProcedure:
+		return "vhdl procedure"
 	}
 	return fmt.Sprintf("unit(%#x)", uint32(k))
 }
@@ -78,6 +104,10 @@ const (
 	DeclVariable DeclKind = 0x0f // a variable declared in a process
 	DeclGeneric  DeclKind = 0x12
 	DeclConstant DeclKind = 0x13 // a constant, a for loop index or a generate index
+	// DeclLocal is a parameter or a variable of a VHDL subprogram, seen
+	// only under -debug subprogram or all. A parameter carries its mode
+	// as a port does. Found by t22_dbg_subprog against t22_base.
+	DeclLocal DeclKind = 0x14
 	// The Verilog declaration kinds: a variable (reg, logic, integer
 	// and the other variable types), a parameter, and a net (wire and
 	// every port of t11_v_port). Found by tier 11. The other net
@@ -126,6 +156,8 @@ func (k DeclKind) String() string {
 		return "variable"
 	case DeclConstant:
 		return "constant"
+	case DeclLocal:
+		return "local"
 	case DeclVar:
 		return "var"
 	case DeclParam:

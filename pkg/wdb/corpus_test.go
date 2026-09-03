@@ -83,14 +83,19 @@ type truthGeneric struct {
 }
 
 // truthVariable is a process variable: Kind is "variable" for a declared
-// one and "loop" for a for loop index. Initial is the declared initial
-// value, which the database does not record; see the test.
+// one, "loop" for a for loop index and "local" for a parameter or a
+// variable of a subprogram, which the file lists only under
+// -debug subprogram or all: t22_dbg_subprog. Initial is the declared
+// initial value, which the database does not record; see the test.
 type truthVariable struct {
 	Scope   string `json:"scope"`
 	Name    string `json:"name"`
 	Type    string `json:"type"`
 	Kind    string `json:"kind"`
 	Initial string `json:"initial"`
+	// Port is the mode of a subprogram parameter, "in", "out" or
+	// "inout", and empty for a local variable.
+	Port string `json:"port"`
 	// Value is what the one record of a loop index holds, when the
 	// truth states it: a generate index records its iteration value.
 	Value string `json:"value"`
@@ -292,7 +297,7 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 	out := map[string][]change{}
 	types := map[string]int{}
 	for _, o := range f.Objects {
-		if o.Generic {
+		if o.Generic || f.Decls[o.Decl].Kind == DeclLocal {
 			continue
 		}
 		dc := f.Decls[o.Decl]
@@ -368,9 +373,11 @@ func TestCorpus(t *testing.T) {
 			// entity instantiated n times is listed n times in each of
 			// the n process scopes, with the n handles. t9_mark_two,
 			// t9_var_inst3.
+			// A subprogram local has a second handle as a signal
+			// does, and is sorted by its declaration kind.
 			signals, others := map[string]bool{}, map[string]bool{}
 			for _, o := range f.Objects {
-				if !o.Generic {
+				if !o.Generic && f.Decls[o.Decl].Kind != DeclLocal {
 					signals[plainPath(f.ObjectPath(o))] = true
 				} else {
 					others[plainPath(f.ObjectPath(o))] = true
@@ -542,7 +549,7 @@ func TestCorpus(t *testing.T) {
 			for _, vr := range tr.Variables {
 				path := vr.Scope + "." + vr.Name
 				o, ok := objByPath[path]
-				if !ok || !o.Generic {
+				if !ok || (!o.Generic && f.Decls[o.Decl].Kind != DeclLocal) {
 					t.Errorf("truth variable %s is not a variable object", path)
 					continue
 				}
@@ -585,6 +592,16 @@ func TestCorpus(t *testing.T) {
 					}
 					if v.Scalar != vr.Value {
 						t.Errorf("%s = %s, truth says %s", path, v.Scalar, vr.Value)
+					}
+				case "local":
+					if dc.Kind != DeclLocal {
+						t.Errorf("%s: declaration kind %s, want local", path, dc.Kind)
+					}
+					if len(ch) != 0 || o.Logged {
+						t.Errorf("%s: %d records, a subprogram local has had none", path, len(ch))
+					}
+					if mode := dc.Mode.String(); mode != vr.Port && !(mode == "none" && vr.Port == "") {
+						t.Errorf("%s: mode %s, truth says %q", path, mode, vr.Port)
 					}
 				default:
 					t.Errorf("%s: unknown truth kind %q", path, vr.Kind)
