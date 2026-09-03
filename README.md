@@ -23,6 +23,9 @@ far and how the work proceeds.
 * `cmd/wdbcvt/` is the command line tool.
   Today it probes a `.wdb` and reports measurements; it grows into a
   converter as the format becomes known.
+  The first output format is VCD, written through
+  `github.com/filmil/go-vcd-parser`.
+  FST comes later, once there is something to write.
 * `pkg/wdb/` holds the library the tool is built on.
 * `docs/wdb-format.md` records the findings.
 

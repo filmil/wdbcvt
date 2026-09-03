@@ -91,15 +91,24 @@ reproduces it.
    second version has been measured.
 
 
-## Reading the answer key
+## What the conversion writes out
 
-The `.vcd` side needs no new code.
-`github.com/filmil/go-vcd-parser` already parses VCD, including the
-pragmatic extensions real simulators emit, and it is a Bazel module.
-Add it as a `bazel_dep` at the point where a decoder claim first has to
+VCD first, through `github.com/filmil/go-vcd-parser`.
+It already parses VCD, including the pragmatic extensions real simulators
+emit, and it is a Bazel module, so it serves both jobs at once: it reads
+the `sim.vcd` answer key, and it supplies the signal model that a `.wdb`
+decoder fills in.
+Add it as a `bazel_dep` at the point where the first decoder claim has to
 be checked against the VCD, not before.
-Until then the VCD can be read by eye: it is small, because the design is
-small.
+Until then the VCD can be read by eye, because the design is small.
+
+FST is the better output format and comes later.
+It is compressed, it holds large traces without the size blowup VCD
+suffers, and the waveform viewers read it.
+The reason to start with VCD anyway is that it is the format the answer
+key is already in, so the first end to end check compares like with like.
+Keep the decoder's output model separate from the VCD writer, so that
+adding an FST writer later is a new writer and not a rewrite.
 
 
 ## Method
