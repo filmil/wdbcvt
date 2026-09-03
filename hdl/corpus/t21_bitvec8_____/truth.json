@@ -1,0 +1,26 @@
+{
+  "case": "t21_bitvec8_____",
+  "axis": "bit_vector(7 downto 0) in place of std_ulogic_vector",
+  "differs_from": "t2_slv8_________",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "bit_vector"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

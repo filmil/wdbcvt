@@ -1,0 +1,26 @@
+{
+  "case": "t21_phys_user___",
+  "axis": "type dist_t is range 0 to 1e9 units um; mm = 1000 um; m = 1000 mm; end units",
+  "differs_from": "t2_time_________",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "dist_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0 um"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "3 mm"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "case": "t21_int_newtype_",
+  "axis": "type small_t is range 0 to 7, a new type rather than a subtype",
+  "differs_from": "t21_int_sub_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "small_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "5"
+    }
+  ]
+}

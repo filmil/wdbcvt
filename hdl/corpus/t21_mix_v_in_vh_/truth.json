@@ -1,0 +1,49 @@
+{
+  "case": "t21_mix_v_in_vh_",
+  "axis": "a Verilog child under a VHDL testbench",
+  "differs_from": "t9_comp_________",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.a",
+      "value": "1"
+    }
+  ]
+}

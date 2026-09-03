@@ -1,0 +1,70 @@
+{
+  "case": "t21_v_param_diff",
+  "axis": "two instances with different parameter values",
+  "differs_from": "t21_v_param_same",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.dut2",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut2.s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut2.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.dut2.s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "dut",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000000111"
+    },
+    {
+      "instance": "dut2",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000001001"
+    }
+  ]
+}

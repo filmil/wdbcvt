@@ -1,0 +1,36 @@
+{
+  "case": "t21_v_ts_1ps_1fs",
+  "axis": "timescale 1ps / 1fs with a half picosecond delay",
+  "differs_from": "t21_v_ts_1ps_1ps",
+  "end_time_ns": 0,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "time_ps": 50,
+      "time_fs": 500,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "end_time_ps": 100,
+  "end_time_fs": 0
+}

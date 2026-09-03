@@ -1,0 +1,26 @@
+{
+  "case": "t21_real_neg____",
+  "axis": "s <= -1.5 in place of 1.5",
+  "differs_from": "t2_real_________",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "real"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0.0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "-1.5"
+    }
+  ]
+}
