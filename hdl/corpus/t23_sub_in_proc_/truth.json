@@ -1,0 +1,42 @@
+{
+  "case": "t23_sub_in_proc_",
+  "axis": "the procedure declared in the process, as t9_proc_local, under -debug subprogram",
+  "differs_from": "t22_dbg_sub_proc",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.flip",
+      "name": "r",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.p.flip",
+      "name": "r",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": ""
+    }
+  ]
+}

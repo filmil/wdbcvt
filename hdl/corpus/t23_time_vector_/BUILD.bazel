@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("//build:wdb_case.bzl", "wdb_case")
+
+package(default_visibility = ["//visibility:public"])
+
+wdb_case(
+    name = "t23_time_vector_",
+    srcs = [
+        "tb.ent.vhdl",
+    ],
+)

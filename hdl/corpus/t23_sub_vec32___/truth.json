@@ -1,0 +1,79 @@
+{
+  "case": "t23_sub_vec32___",
+  "axis": "w : std_ulogic_vector(31 downto 0) in the function of t23_sub_sizes",
+  "differs_from": "t23_sub_vec16___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "n",
+      "width": 32,
+      "type": "integer"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "n",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "n",
+      "value": "3"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in"
+    },
+    {
+      "scope": "tb.f",
+      "name": "n",
+      "type": "integer",
+      "kind": "local",
+      "port": "in"
+    },
+    {
+      "scope": "tb.f",
+      "name": "r",
+      "type": "real",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.f",
+      "name": "w",
+      "type": "std_ulogic_vector",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.f",
+      "name": "m",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    }
+  ]
+}

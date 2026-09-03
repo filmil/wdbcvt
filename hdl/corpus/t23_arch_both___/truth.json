@@ -1,0 +1,42 @@
+{
+  "case": "t23_arch_both___",
+  "axis": "da: entity work.child(a) and db: entity work.child(b)",
+  "differs_from": "t23_arch_b______",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb.da",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.db",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.da.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.db.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.da.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 20,
+      "signal": "tb.db.s",
+      "value": "1"
+    }
+  ]
+}

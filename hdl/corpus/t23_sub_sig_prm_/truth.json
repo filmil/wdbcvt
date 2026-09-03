@@ -1,0 +1,42 @@
+{
+  "case": "t23_sub_sig_prm_",
+  "axis": "procedure drive(signal q : out std_ulogic; constant v : in std_ulogic) under -debug subprogram",
+  "differs_from": "t22_dbg_sub_proc",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.drive",
+      "name": "q",
+      "type": "std_ulogic",
+      "kind": "signal param",
+      "port": "out"
+    },
+    {
+      "scope": "tb.drive",
+      "name": "v",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in"
+    }
+  ]
+}
