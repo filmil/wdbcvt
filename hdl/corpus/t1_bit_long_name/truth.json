@@ -1,11 +1,26 @@
 {
   "case": "t1_bit_long_name",
   "axis": "name length 1 to 40",
-  "differs_from": "t1_bit_one_edge",
+  "differs_from": "t1_bit_one_edge_",
   "end_time_ns": 100,
-  "signals": [{"scope": "tb", "name": "ssssssssssssssssssssssssssssssssssssssss", "width": 1, "type": "std_ulogic"}],
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "ssssssssssssssssssssssssssssssssssssssss",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
   "transitions": [
-    {"time_ns": 0, "signal": "ssssssssssssssssssssssssssssssssssssssss", "value": "0"},
-    {"time_ns": 50, "signal": "ssssssssssssssssssssssssssssssssssssssss", "value": "1"}
+    {
+      "time_ns": 0,
+      "signal": "ssssssssssssssssssssssssssssssssssssssss",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "ssssssssssssssssssssssssssssssssssssssss",
+      "value": "1"
+    }
   ]
 }

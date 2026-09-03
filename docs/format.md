@@ -134,6 +134,14 @@ literal names.** Four independent measurements agree:
   is the difference in length between the strings `unsigned` and
   `signed`. Type names are stored one byte per character.
 
+  This one was measured twice. The first measurement was worthless,
+  because the two case directories also differed by two characters and
+  Vivado embeds the source path in the database, so the delta could have
+  been the directory names rather than the type names. Every case
+  directory is now padded to the same length, and the 2 byte difference
+  survives. The conclusion held; the first evidence for it did not. See
+  [corpus.md](corpus.md).
+
 Sizes relative to the one-bit baseline, all with a single signal and a
 single transition:
 

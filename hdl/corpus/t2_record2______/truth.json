@@ -1,0 +1,47 @@
+{
+  "case": "t2_record2______",
+  "axis": "record field count 3 to 2",
+  "differs_from": "t2_record_______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "bundle_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 8,
+          "type": "std_ulogic_vector"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.bravo",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.bravo",
+      "value": "10100101"
+    }
+  ]
+}

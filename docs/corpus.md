@@ -73,7 +73,35 @@ If the two files are byte for byte identical, say so explicitly.
 That is a strong and useful property, not an absence of a result.
 
 
-## Rule 2: hold everything constant except the axis
+## Rule 2: every case directory name is the same length
+
+Vivado embeds the absolute path of the source file in the database, once
+per file. So a case in a directory whose name is one character longer
+produces a database one byte longer, whatever the design does.
+
+That is a confound with teeth, because it is invisible and it is the
+right order of magnitude to be mistaken for a real result. It already
+produced one wrong measurement here. `t2_unsigned8` and `t2_signed8`
+differ by exactly two bytes, which was read as evidence that type names
+are stored one byte per character. The two directory names also differed
+by two characters, so the measurement said nothing. Padding every case
+name to the same length and repeating it gave the same two bytes, and
+only then was the conclusion earned.
+
+Every directory under `hdl/corpus` is therefore padded with trailing
+underscores to a common length. The padding is ugly on purpose: it is
+easier to keep than to remember.
+
+To check the invariant:
+
+```sh
+ls -d hdl/corpus/*/ | sed 's|.*/\([^/]*\)/|\1|' | awk '{print length($0)}' | sort -u
+```
+
+That must print exactly one number.
+
+
+## Rule 3: hold everything constant except the axis
 
 Every case in the corpus keeps these the same, so they cannot become
 confounds:
@@ -90,7 +118,7 @@ it. Whether that name reaches inside the file is itself one of the first
 questions to answer.
 
 
-## Rule 3: every case declares its own ground truth
+## Rule 4: every case declares its own ground truth
 
 Each case directory holds a `truth.json` stating what the simulation
 actually did: the signals, their widths and types, every transition with
@@ -146,7 +174,22 @@ For those six cases the independent simulator check does not apply, and
 the `truth.json` plus the VCD Vivado itself writes are the only guards.
 See [provenance.md](provenance.md).
 
-Tier 3 and beyond are not written yet. In order: wider vectors, 64 bits
+Tier 3 moves the value change data, holding one signal of one type
+fixed.
+
+| Case | Axis |
+| :--- | :--- |
+| `t3_tr1`, `t3_tr2`, `t3_tr4`, `t3_tr8`, `t3_tr16` | transition count, 1 to 16 |
+| `t3_late` | the same single transition at 1000 ns rather than 10 ns |
+| `t3_valz` | the same single transition to `'Z'` rather than `'1'` |
+
+The last two are the useful shape: they are the **same size** as the
+baseline and differ from it in exactly one thing, so a masked diff
+points at the field rather than at everything downstream of an insertion.
+Prefer that shape when designing a case, because a case that changes the
+file length moves every offset after the change and buries the answer.
+
+Tier 4 and beyond are not written yet. In order: wider vectors, 64 bits
 and past it; integer, boolean, real, time and user enumerations; records
 and multidimensional arrays; deeper and wider hierarchy, including
 for-generate; transition counts large enough to cross a block boundary

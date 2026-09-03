@@ -4,33 +4,47 @@
 #
 #     bazel build //hdl/corpus:all_wdb
 #
-# See //docs/corpus.md for what the cases are for and how to read the
-# differences between them.
+# Case directory names are all the same length, padded with trailing
+# underscores. That is deliberate: Vivado embeds the source file path in
+# the database, so a longer directory name makes a longer file, and a
+# size comparison between two cases would otherwise measure the names.
+# See //docs/corpus.md.
 filegroup(
     name = "all_wdb",
     srcs = [
-        "//hdl/corpus/t0_bit_const:sim",
-        "//hdl/corpus/t0_nosig:sim",
+        "//hdl/corpus/t0_bit_const____:sim",
+        "//hdl/corpus/t0_nosig________:sim",
         "//hdl/corpus/t1_bit_long_name:sim",
-        "//hdl/corpus/t1_bit_one_edge:sim",
+        "//hdl/corpus/t1_bit_one_edge_:sim",
         "//hdl/corpus/t1_bit_two_edges:sim",
-        "//hdl/corpus/t1_hier1:sim",
-        "//hdl/corpus/t1_nine_state:sim",
-        "//hdl/corpus/t1_two_bits:sim",
-        "//hdl/corpus/t1_vec8:sim",
-        "//hdl/corpus/t2_array2d:sim",
-        "//hdl/corpus/t2_bit:sim",
-        "//hdl/corpus/t2_boolean:sim",
-        "//hdl/corpus/t2_character:sim",
-        "//hdl/corpus/t2_enum:sim",
-        "//hdl/corpus/t2_hier3:sim",
-        "//hdl/corpus/t2_integer:sim",
-        "//hdl/corpus/t2_real:sim",
-        "//hdl/corpus/t2_record:sim",
-        "//hdl/corpus/t2_signed8:sim",
-        "//hdl/corpus/t2_slv8:sim",
-        "//hdl/corpus/t2_time:sim",
-        "//hdl/corpus/t2_unsigned8:sim",
+        "//hdl/corpus/t1_hier1________:sim",
+        "//hdl/corpus/t1_nine_state___:sim",
+        "//hdl/corpus/t1_two_bits_____:sim",
+        "//hdl/corpus/t1_vec8_________:sim",
+        "//hdl/corpus/t2_array2d______:sim",
+        "//hdl/corpus/t2_bit__________:sim",
+        "//hdl/corpus/t2_boolean______:sim",
+        "//hdl/corpus/t2_character____:sim",
+        "//hdl/corpus/t2_enum_________:sim",
+        "//hdl/corpus/t2_flat3________:sim",
+        "//hdl/corpus/t2_hier3________:sim",
+        "//hdl/corpus/t2_integer______:sim",
+        "//hdl/corpus/t2_real_________:sim",
+        "//hdl/corpus/t2_record2______:sim",
+        "//hdl/corpus/t2_record_______:sim",
+        "//hdl/corpus/t2_record_nested:sim",
+        "//hdl/corpus/t2_record_two___:sim",
+        "//hdl/corpus/t2_signed8______:sim",
+        "//hdl/corpus/t2_slv8_________:sim",
+        "//hdl/corpus/t2_time_________:sim",
+        "//hdl/corpus/t2_unsigned8____:sim",
+        "//hdl/corpus/t3_late_________:sim",
+        "//hdl/corpus/t3_tr16_________:sim",
+        "//hdl/corpus/t3_tr1__________:sim",
+        "//hdl/corpus/t3_tr2__________:sim",
+        "//hdl/corpus/t3_tr4__________:sim",
+        "//hdl/corpus/t3_tr8__________:sim",
+        "//hdl/corpus/t3_valz_________:sim",
     ],
     visibility = ["//visibility:public"],
 )

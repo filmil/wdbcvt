@@ -1,0 +1,38 @@
+{
+  "case": "t2_array2d______",
+  "axis": "aggregate: array of four 8-bit vectors",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "type": "row_array_t",
+      "elements": 4,
+      "element_width": 8,
+      "element_type": "std_ulogic_vector"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "00000000"
+      ]
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": [
+        "10100101",
+        "01011010",
+        "00001111",
+        "11110000"
+      ]
+    }
+  ]
+}
