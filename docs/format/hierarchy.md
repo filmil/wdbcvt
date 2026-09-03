@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 313 cases.
+They are the same in all 323 cases.
 
 
 ## Scope records
@@ -276,6 +276,13 @@ count 2, lines 21 and 22, and `leaf.ent.vhdl` at index 2 count 3, lines
 17 to 19.
 Region 15 is padded with zeros to a multiple of 8 bytes.
 Header word 11 is the number of lines before padding.
+
+Regions 14 and 15 are the `line` debugging ability.
+`t22_dbg_wave`, elaborated with `-debug wave` in place of the default
+`-debug typical`, has every region 14 entry at `-1 0` and region 15
+empty, and nothing else of the section changes but the 32 bytes the
+eight statement lines took.
+*Found by* `t22_dbg_wave` against `t22_base`.
 
 
 ## Instance records
@@ -680,6 +687,78 @@ where six were expected.
 *Confirmed by* `t9_var_inst3`.
 
 
+## Subprograms
+
+A VHDL function or procedure leaves nothing in the file under the
+default `-debug typical`: `t22_base` declares a function `inc` with a
+parameter and a variable and has no scope, unit or object for either.
+Under `-debug subprogram`, given beside `typical`, the subprogram
+becomes a unit and a scope under the entity that declares it, and its
+parameters and variables become declarations and objects.
+A function is a unit of kind `0x11` and a procedure one of kind
+`0x12`, each with the file and line of its declaration and the two
+entity words at 0, as a process.
+The scope is named after the subprogram: `tb.inc`, `tb.bump`.
+Each parameter and each variable is a declaration of kind `0x14`, a
+kind no other object has, and a parameter carries its mode in word 9
+as a port does: `x` of `inc` is `port in`, `a` and `d` of `bump` are
+`port inout` and `port in`, and the variables `v` and `w` have no
+mode.
+The objects have both handles, as a signal does, and are never logged.
+Their handles are small and step by the size of the value: `x` and `v`
+of `inc` are `0x40` and `0x44`, and `a`, `d` and `w` of `bump` are
+`0xd0`, `0xd4` and `0xd8`, so each subprogram numbers its locals from
+its own base, and the number looks like an offset into the
+subprogram's frame rather than a place in the handle space.
+They do not move the handle space: `t22_dbg_subprog` has `0x1468` as
+`t22_base` does.
+`-debug subprogram` on its own, `-debug line` and `-debug off` produce
+no database at all: xsim refuses `log_wave` with "compiled without
+trace information", and asks for `all` or `typical`.
+
+*Found by* `t22_dbg_subprog` against `t22_base`.
+*Confirmed by* `t22_dbg_sub_proc`, which adds the procedure, and
+`t22_dbg_all`.
+
+
+## Library packages under `-debug all`
+
+`-debug all` adds `xlibs`, visibility into the precompiled libraries,
+and the file grows from 6783 to 11814 bytes on the same source.
+The packages the design uses become children of the root beside `tb`,
+each a unit of kind `0x0a` as a user package is: `env`, `standard`,
+`textio` and `std_logic_1164`, pointing at the `package` line of the
+library source.
+Their constants and variables are declarations in the package's unit
+and objects in its scope, with one handle and no records, as a user
+package constant is: `env.DIR_SEPARATOR`, `textio.INPUT` and
+`textio.OUTPUT`, and the twelve tables and `NBSP` of
+`std_logic_1164`.
+`standard` has a unit and a scope with no declaration and no object.
+The function `resolved` of `std_logic_1164` is a scope of kind `0x11`
+under its package with its variable `result` as a local, and the type
+table grows from 3 to 19 entries with the types of those constants:
+`character` with all 256 literals, `STRING`, the `TEXT` file type and
+the nine element tables of the package.
+The value records and the handles of the design's own objects do not
+move.
+
+*Found by* `t22_dbg_all` against `t22_base`.
+
+
+## Elaboration options that change nothing
+
+`--O0` and `--mt off` produce a file byte identical to the default
+outside the noise mask.
+`--generic_top k=9` changes the value record of `k` from 7 to 9 and
+the record of `n`, which is computed from it, and nothing else: the
+same unit, the same declaration and the same handles as the default of
+7.
+
+*Found by* `t22_o0`, `t22_mt_off` and `t22_gen_top`, each against
+`t22_base`.
+
+
 ## Verilog modules, processes and nets
 
 Tier 11 repeats the hierarchy cases in Verilog.
@@ -739,6 +818,9 @@ The kinds seen so far are:
 | `0x05` | named block |
 | `0x07` | process |
 | `0x08` | SystemVerilog package |
+| `0x0a` | VHDL package |
+| `0x11` | VHDL function |
+| `0x12` | VHDL procedure |
 | `0x13` | root |
 
 *Found by* `t11_v_bit_edge` against `t1_bit_one_edge`.

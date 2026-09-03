@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 313 of 313 cases decoding with the entry lengths chaining
+*Confirmed by* 323 of 323 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -113,6 +113,13 @@ with: a `std_logic` signal gets an entry named `STD_LOGIC` with the nine
 `STD_ULOGIC` literals, `t8_port_inout` against `t8_port_in`, and
 nothing else in the file names `STD_ULOGIC`.
 
+**File.**
+A file type is kind `0xc`, seen only when `-debug all` brings the
+`textio` package in: `TEXT` of `t22_dbg_all` is origin `2`, the index
+of `STRING`, then the two words `8` and `40`, whose meaning is open.
+A `TEXT` variable declares 0 bytes and has no record.
+*Found by* `t22_dbg_all` against `t22_base`.
+
 **Integer.**
 `INTEGER` is `-2147483648 to 2147483647` and `NATURAL` is
 `0 to 2147483647`.
@@ -132,10 +139,15 @@ So `TIME` counts picoseconds, and `fs` rounds to zero.
 A user physical type lists its units in its own base unit:
 `t21_phys_user` declares `um`, `mm = 1000 um` and `m = 1000 mm`, and
 the entry holds `um=1 mm=1000 m=1000000`.
-Whether the `TIME` scales change under a femtosecond precision is open;
-tier 21 reached that precision from Verilog only, where `TIME` does not
-appear.
+The scales follow the simulation precision.
+`t22_vh_fs`, elaborated with `--timeprecision_vhdl 1fs`, lists
+`fs=1 ps=1000 ns=1000000` and so on up to `hr=3600000000000000000`,
+and `t22_vh_ns`, at `1ns`, lists `fs=0 ps=0 ns=1 us=1000`.
+So a `TIME` value counts the unit the DBG section names, and the entry
+gives every unit's size in it.
 There is no trailer word.
+*Found by* `t22_vh_fs` against `t22_base`.
+*Confirmed by* `t22_vh_ns`.
 
 The origin word of `TIME` is `0xa`, which no other VHDL type has.
 

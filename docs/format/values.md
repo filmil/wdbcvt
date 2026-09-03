@@ -190,6 +190,18 @@ reader refused the file over the word it had read as a constant `-12`.
 *Confirmed by* `t21_v_ts_1ps_1ps`, `t21_v_ts_10ns`, `t21_v_ts_1ns_100`,
 `t21_v_ts_1ps_1fs`, `t21_v_ts_none` and `t21_mix_ts_1ns`.
 
+A VHDL design follows `xelab --timeprecision_vhdl` the same way.
+`t22_vh_fs` at `1fs` holds `-15`, a change at 10000000 and an end time
+of 20001500, and its `wait for 1500 fs` is kept whole.
+`t22_vh_ns` at `1ns` holds `-9`, and the same wait rounds to nothing:
+`s` records `1` and then `0` at time 10, two records at one time in
+the order they were written, and the end time is 20.
+A `TIME` signal counts the same unit: `t <= 1500 fs` records 1500 in
+`t22_vh_fs`, 1 in `t22_base` at picoseconds, and nothing in
+`t22_vh_ns`, where 0 ns is the initial value.
+*Found by* `t22_vh_fs` against `t22_base`.
+*Confirmed by* `t22_vh_ns`.
+
 A net shared by a signal and the ports connected to it is one handle,
 see [hierarchy.md](hierarchy.md), and its records show the connection
 twice over.

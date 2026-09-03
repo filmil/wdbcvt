@@ -608,6 +608,29 @@ The time scale cases changed the reader's interface: the times it
 returns are in the file's own unit, `File.TimeUnit`, and the truth of a
 case may add `time_ps` and `time_fs` to `time_ns`.
 
+Tier 22 holds the source still and moves the elaboration.
+Every case but one compiles the same testbench, with a generic on
+`tb`, a `TIME` signal, a `1500 fs` wait and a function with a
+parameter and a variable, and passes different options to xelab
+through the `xelab_args` attribute of `wdb_case`.
+The default of every other case is `-debug typical`.
+Three options produce no database at all and are not cases: `-debug
+line`, `-debug off` and `-debug subprogram` on its own make xsim refuse
+`log_wave` with "compiled without trace information".
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t22_base` | the defaults | the baseline; `tb.k` a generic object; the function absent |
+| `t22_dbg_wave` | `-debug wave` | DBG regions 14 and 15 empty |
+| `t22_dbg_subprog` | `-debug typical -debug subprogram` | the function as a unit of kind `0x11`; locals of kind `0x14` |
+| `t22_dbg_sub_proc` | the same with a procedure beside the function | a unit of kind `0x12`; `inout` and `in` modes |
+| `t22_dbg_all` | `-debug all` | four library packages as root children; the `TEXT` file type |
+| `t22_vh_fs` | `--timeprecision_vhdl 1fs` | `-15`; `TIME` in femtoseconds |
+| `t22_vh_ns` | `--timeprecision_vhdl 1ns` | `-9`; the wait rounds to nothing |
+| `t22_o0` | `--O0` | nothing |
+| `t22_mt_off` | `--mt off` | nothing |
+| `t22_gen_top` | `--generic_top k=9` | the values of `k` and `n` |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -665,7 +688,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 313 cases through tier 21, and
+5. The reader now reproduces all 323 cases through tier 22, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
