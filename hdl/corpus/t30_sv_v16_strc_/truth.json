@@ -1,0 +1,27 @@
+{
+  "case": "t30_sv_v16_strc_",
+  "axis": "logic [15:0] s = {\"a\", \"b\"}, a concatenation of strings",
+  "differs_from": "t28_sv_v16_str__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 16,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0110000101100010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "0000000010100101"
+    }
+  ]
+}

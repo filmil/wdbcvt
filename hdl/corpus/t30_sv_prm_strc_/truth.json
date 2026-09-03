@@ -1,0 +1,38 @@
+{
+  "case": "t30_sv_prm_strc_",
+  "axis": "parameter K = {\"a\", \"b\"}",
+  "differs_from": "t27_sv_str_untyp",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "0110000101100010",
+      "width": 16
+    }
+  ]
+}

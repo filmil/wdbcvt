@@ -1,0 +1,38 @@
+{
+  "case": "t30_sv_prm_neg8_",
+  "axis": "parameter K = -8'd1",
+  "differs_from": "t28_sv_prm_neg__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "K",
+      "type": "",
+      "declared": "parameter",
+      "value": "11111111",
+      "width": 8
+    }
+  ]
+}

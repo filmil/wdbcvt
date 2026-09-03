@@ -1,0 +1,27 @@
+{
+  "case": "t30_sv_v8_str2__",
+  "axis": "logic [7:0] s = \"ab\", a string wider than the target",
+  "differs_from": "t26_sv_v8_str___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "01100010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}
