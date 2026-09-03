@@ -112,6 +112,11 @@ Three workflows live in `.forgejo/workflows/`, and all of them use
 The `vivado` runner must have `bazelisk` on its `PATH`, the installer
 archive at the path above, and write access to `/data/cache`.
 
+That label runs jobs directly on the host, and the host has no `node`.
+No JavaScript action can run there, `actions/checkout` included.
+Every workflow here checks out with plain `git` for that reason.
+`forgejo-release` is fine: it is a composite action built from bash steps.
+
 
 ## License
 

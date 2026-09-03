@@ -3,6 +3,10 @@
 # Publishes a rolling `nightly` release holding the wdbcvt binary and a
 # reference waveform database. The .wdb is the sample every format decoding
 # experiment starts from, so it is worth having a stable download for it.
+#
+# forgejo-release is a composite action made of bash steps, so it runs on
+# the node-less `vivado` host. The checkout still cannot use
+# actions/checkout for that same reason.
 name: Release
 
 on:
@@ -19,9 +23,20 @@ jobs:
     runs-on: vivado
     steps:
       - name: Checkout
-        uses: https://code.forgejo.org/actions/checkout@v4
-        with:
-          fetch-depth: 0
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          auth="$(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
+          git init -q .
+          git remote add origin "${SERVER_URL}/${REPOSITORY}.git"
+          git -c "http.extraheader=Authorization: Basic ${auth}" \
+              fetch -q --depth=1 origin "+${REF}:refs/ci/head"
+          git checkout -q refs/ci/head
+          git log --oneline -1
 
       - name: Build the release artifacts
         run: bazelisk build -c opt //cmd/wdbcvt //hdl/counter:sim

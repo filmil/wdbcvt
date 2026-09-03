@@ -3,6 +3,10 @@
 # Builds everything, including the Vivado simulation. It needs the `vivado`
 # runner: that host holds the AMD installer archive and the shared Vivado
 # install cache that MODULE.bazel points at.
+#
+# The `vivado` label runs jobs directly on the host, and that host has no
+# node, so no JavaScript action can run here. That is why the checkout is
+# done with plain git rather than with actions/checkout.
 name: Build
 
 on:
@@ -19,7 +23,20 @@ jobs:
     runs-on: vivado
     steps:
       - name: Checkout
-        uses: https://code.forgejo.org/actions/checkout@v4
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          auth="$(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
+          git init -q .
+          git remote add origin "${SERVER_URL}/${REPOSITORY}.git"
+          git -c "http.extraheader=Authorization: Basic ${auth}" \
+              fetch -q --depth=1 origin "+${REF}:refs/ci/head"
+          git checkout -q refs/ci/head
+          git log --oneline -1
 
       - name: Show the toolchain
         run: |

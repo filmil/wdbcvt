@@ -68,6 +68,19 @@ Hermetic mode does not exist in earlier releases.
   and xsim writes the waveform database out.
 
 
+# CI rules
+
+All three workflows use `runs-on: vivado`.
+That label runs the job directly on the runner host, which is the only way
+to reach the Vivado installation and the shared caches.
+
+The host has no `node`, so a JavaScript action cannot run in these
+workflows.
+Do not add `actions/checkout` or any other JavaScript action.
+Check out with plain `git`, the way the existing workflows do.
+A composite action made of bash steps is fine; `forgejo-release` is one.
+
+
 # Engineering standards
 
 * Every new piece of functionality documents its public interface.
