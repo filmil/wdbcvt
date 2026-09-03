@@ -1366,6 +1366,40 @@ The `range` field of a signal in `truth.json`, written since tier 11
 and never read, is checked by the corpus test from this tier on, and
 the 32 cases that had one pass.
 
+**Tier 42: VHDL 2008 composites and generics.**
+VHDL.
+No case had a record field declared without bounds, an array of an
+unconstrained element, a generic package or a type generic.
+The record cases follow `t2_record2`, the array cases `t2_array2d`,
+and the generic cases `t4_gen_explicit` and `t1_vec8`.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t42_rec_uncons__` | `t2_record2` | `bravo : std_ulogic_vector`, the signal `bundle_t(bravo(7 downto 0))` | the field triple `(0, 0, -2)`; the bounds in the declaration only; the reader misread the value |
+| `t42_rec_subtype_` | `t42_rec_uncons__` | `subtype b8_t is bundle_t(bravo(7 downto 0))` | the entry renamed, the field still unconstrained |
+| `t42_rec_two_cons` | `t42_rec_uncons__` | a second signal constrained `(3 downto 0)` | one entry, two declarations |
+| `t42_rec_two_unc_` | `t42_rec_uncons__` | both fields unconstrained | `(3 downto 0) (7 downto 0)` on the declaration |
+| `t42_rec_mix_unc_` | `t42_rec_two_unc_` | the first field constrained in the record | the same declaration list |
+| `t42_rec_unc_nest` | `t42_rec_uncons__` | the unconstrained field in an inner record | `(0, 0, -2)` on the outer field |
+| `t42_rec_unc_arr_` | `t42_rec_uncons__` | `array (0 to 1) of bundle_t`, `arr_t(open)(bravo(3 downto 0))` | the array's own index `(0, 0, -2)` |
+| `t42_rec_unc_2dim` | `t20_rec_2dim` | an unconstrained two dimensional field | two `(0, 0, -2)` triples |
+| `t42_arr_unc_elem` | `t2_array2d` | `array (0 to 1) of std_ulogic_vector` | both triples `(0, 0, -2)` |
+| `t42_arr_unc_both` | `t42_arr_unc_elem` | `array (natural range <>) of std_ulogic_vector` | the index word only |
+| `t42_gen_pkg_____` | `t1_vec8` | `package gp8 is new work.gp generic map (n => 8)` | a scope `gp`; no `n` |
+| `t42_pkg_subtype_` | `t42_gen_pkg_____` | the subtype in a plain package | the name and paths only |
+| `t42_gen_pkg_two_` | `t42_gen_pkg_____` | a second instance `gp4` | two scopes `gp` |
+| `t42_gen_pkg_cons` | `t42_gen_pkg_____` | `constant width : natural := n` | an unlogged object `gp.width` |
+| `t42_gen_type____` | `t4_gen_explicit` | `generic (type data_t; ...)` mapped to `integer` | the entry named `data_t` |
+| `t42_gen_type_enu` | `t42_gen_type____` | `data_t => std_ulogic` | `enum "data_t"` |
+
+A package instantiated inside an architecture was planned as a case
+and dropped: `xelab` reports `The "Vhdl 2008 Package Instantiation
+Declaration in Architecture Body" is not supported yet for simulation`.
+
+The record cases changed the reader: `Decode` now takes the bounds of
+a record's fields from the declaration's range list, and the field
+triples are a fallback.
+
 
 ## Record which comparison produced which finding
 
@@ -1404,7 +1438,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 684 cases through tier 41, and
+5. The reader now reproduces all 700 cases through tier 42, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

@@ -494,6 +494,24 @@ against `t40_gen_uncons`.
 *Confirmed by* the corpus test's range check on the three tier 40
 cases.
 
+A VHDL 2008 type generic is not a declaration and not an object.
+The type mapped to it enters the type table under the formal's name:
+`generic (type data_t; init : data_t; next_v : data_t)` mapped to
+`integer` in `t42_gen_type` gives one entry, `integer "data_t"
+-2147483648 to 2147483647`, and no `INTEGER` entry at all; mapped to
+`std_ulogic` in `t42_gen_type_enu` it gives `enum "data_t"` with the
+nine literals of `STD_ULOGIC` and no `STD_ULOGIC` entry.
+The signal and the two value generics of the child are declared with
+that entry, 4 bytes for the integer and 1 for the enumeration, and
+their records hold the values, `05 00 00 00` for `init => 5`.
+So the name of a type in the table is the name the design used at the
+declaration, and a reader that expects `INTEGER` for an integer has
+to look at the kind instead.
+*Found by* `t42_gen_type` against `t4_gen_explicit`, whose generic `k`
+is declared with an `INTEGER` entry.
+*Confirmed by* `t42_gen_type_enu`, and the corpus test's type check on
+both.
+
 
 ## Mixed language
 
@@ -695,7 +713,11 @@ object with handle `0xd40` and no records.
 `t9_mark_two` and `t9_mark_gap` have the same for an integer constant,
 and `t9_pkg_sig` has a package signal as an object with the first
 handle `0x768` and no records; see [values.md](values.md).
-A package with only a type in it, as in `t2_record`, gets no scope.
+A package with only a type in it gets the scope too, with no object:
+`trio_pkg` of `t34_pmap_field`, one record type, and `pp` of
+`t42_pkg_subtype`, one subtype.
+This was recorded until tier 42 as "no scope, as in `t2_record`", but
+`t2_record` declares its type in the architecture and has no package.
 
 A SystemVerilog package takes the same place: `p` of `t13_sv_pkg`,
 imported into `tb` for a typedef and a parameter, is the second child
@@ -724,6 +746,36 @@ object; see the Verilog section below.
 sat between `tb` and `tb.dut` in the scope list.
 *Confirmed by* `t13_sv_pkg` against `t12_sv_typedef`, and
 `t25_sv_pkg_prm` against `t25_sv_pkg_tdef` for the condition.
+
+A VHDL 2008 generic package instance is a package like any other, and
+the instance is invisible.
+`package gp8 is new work.gp generic map (n => 8)` in `t42_gen_pkg`,
+with `subtype word_t is std_ulogic_vector(n - 1 downto 0)` in `gp`,
+gives a scope named `gp`, not `gp8`, whose unit points at the file and
+line of `package gp is`, and a constrained `word_t` entry
+`(7 downto 0)`.
+The generic `n` is nowhere: no declaration, no object, no type entry.
+`t42_pkg_subtype`, a plain package `pp` with the same subtype written
+out, differs from it in the scope name and the file paths and in
+nothing else.
+Two instances, `gp8` and `gp4` in `t42_gen_pkg_two`, give two scopes
+both named `gp`, two package units both at the line of `package gp
+is`, and two entries both named `word_t`, one `(7 downto 0)` and one
+`(3 downto 0)`.
+A reader that keys packages by name sees one; the scope index and the
+type index tell them apart, and the declaration of a signal points at
+the right entry.
+A constant of the generic, `constant width : natural := n` in
+`t42_gen_pkg_cons`, is an object under `gp` like any package constant,
+not logged and with no record, so the value of `n` is not in the file
+even then.
+A package instantiated inside an architecture does not elaborate:
+`xelab` stops with `The "Vhdl 2008 Package Instantiation Declaration
+in Architecture Body" is not supported yet for simulation`, so the
+corpus has no such case.
+*Found by* `t42_gen_pkg` against `t42_pkg_subtype`, the same subtype
+in a plain package.
+*Confirmed by* `t42_gen_pkg_two` and `t42_gen_pkg_cons`.
 
 
 ## Implicit processes
@@ -1570,10 +1622,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 684 of 684 cases, and the
+*Confirmed by* the region length check in 700 of 700 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 684 of 684 cases and
+and *confirmed by* the reader's range check in 700 of 700 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

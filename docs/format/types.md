@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 684 of 684 cases decoding with the entry lengths chaining
+*Confirmed by* 700 of 700 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -226,6 +226,26 @@ three ranges `(0 to 1) (0 to 1) (0 to 2)`.
 *Found by* `t18_arr_2dim` against `t2_array2d`, where the reader ran
 out of bytes 4 words early on the entry.
 
+**An array of an unconstrained element.**
+An array type whose element is unconstrained writes every triple as
+`(0, 0, -2)`, its own index included, even when the index is written
+with bounds.
+`arr_t`, an `array (0 to 1) of std_ulogic_vector` in
+`t42_arr_unc_elem`, is an entry with `dims` `1` and two triples
+`(0, 0, -2) (0, 0, -2)`, and `array (natural range <>) of
+std_ulogic_vector` in `t42_arr_unc_both` is the same entry; the two
+files differ in the index word, an `INTEGER` entry for the `(0 to 1)`
+of the first and `NATURAL` for the second, and in nothing else.
+The declaration carries `(0 to 1) (3 downto 0)` in both, from
+`arr_t(open)(3 downto 0)` and `arr_t(0 to 1)(3 downto 0)`.
+An `array (0 to 1) of bundle_t` over a record with an unconstrained
+field, `t42_rec_unc_arr`, is the same shape, `(0, 0, -2) (0, 0, -2)`
+with the record as the element, and declares `(0 to 1) (3 downto 0)`.
+*Found by* `t42_arr_unc_elem` against `t2_array2d`, `array (0 to 3)
+of std_ulogic_vector(7 downto 0)`, whose entry holds `(0 to 3)
+(7 downto 0)`.
+*Confirmed by* `t42_arr_unc_both` and `t42_rec_unc_arr`.
+
 **Bounds below zero.**
 A bound is a signed 32 bit word in a triple and in a declaration
 range alike.
@@ -348,6 +368,61 @@ moved after the bounds, which made it a per field entry.
 became that scalar's range.
 *Confirmed by* `t7_rec_in2v`, whose two vectors and one scalar give
 exactly three triples in field order.
+
+**A field declared without bounds.**
+VHDL 2008 lets a record field be an unconstrained array, with the
+bounds given where a signal of the record is declared.
+The field then carries the unconstrained triple `(0, 0, -2)`, and the
+bounds are in the declaration record alone: `bravo : std_ulogic_vector`
+constrained as `bundle_t(bravo(7 downto 0))` in `t42_rec_uncons` gives
+`bravo:[3]((0, 0, dir -2))` in the entry and `(7 downto 0)` on the
+declaration, where `t2_record2` with the bounds in the field has
+`(7 downto 0)` in both places.
+The declaration keeps its 16 bytes and the page records hold the same
+bytes.
+Two signals that constrain the type differently share the one entry
+and differ only in their declarations: `s` with `(7 downto 0)` and 16
+bytes beside `t` with `(3 downto 0)` and 8 bytes in
+`t42_rec_two_cons`.
+A constrained subtype of the record, `subtype b8_t is
+bundle_t(bravo(7 downto 0))` in `t42_rec_subtype`, renames the entry
+`b8_t` and leaves the field triple unconstrained, so the subtype's
+bounds are still only in the declaration.
+That is the opposite of an array subtype, whose entry holds the bounds
+as its triple; see "Constrained subtype of an array" above.
+
+The declaration record lists the bounds of every array dimension in
+the record in field order, whether the field had them or not.
+`t42_rec_two_unc`, two unconstrained fields constrained
+`(alpha(3 downto 0), bravo(7 downto 0))`, and `t42_rec_mix_unc`, the
+first field constrained in the record and the second at the signal,
+both declare `(3 downto 0) (7 downto 0)`, and `t7_rec_in2v` with all
+bounds in the fields declares `(3 downto 0) (1 downto 0)` the same way.
+An unconstrained two dimensional field carries two `(0, 0, -2)`
+triples and the declaration carries both ranges, `(0 to 1) (0 to 2)`
+for `m : mat_t` constrained `rec_t(m(0 to 1, 0 to 2))` in
+`t42_rec_unc_2dim`.
+A field whose type is a record with an unconstrained field carries
+the inner field's `(0, 0, -2)` in its flattened list, `i:[1]((0, 0,
+dir -2))` in `t42_rec_unc_nest`, and the declaration carries the one
+range `(3 downto 0)`.
+The inner record is padded to 8 bytes on its own, so `outer_t` with a
+four element vector inside `inner_t` and one `std_ulogic` after it is
+16 bytes: `02 02 02 02 00 00 00 00 02 00 ...`.
+
+So a reader decodes a VHDL record from its declaration's range list,
+consuming one range per array dimension in field order, and uses the
+field triples only when the declaration gives none.
+`File.fieldConstraint` does that, and `Decode` reads `bravo` of
+`t42_rec_uncons` as `10100101` where the field triple alone made it
+one element.
+*Found by* `t42_rec_uncons` against `t2_record2`, where the value
+decoded as `bravo => 1`.
+`t42_rec_two_unc` against `t42_rec_mix_unc` showed the declaration
+list unchanged by where the bounds are written.
+*Confirmed by* `t42_rec_subtype`, `t42_rec_two_cons`,
+`t42_rec_unc_nest`, `t42_rec_unc_2dim` and `t42_rec_unc_arr`, each
+against `truth.json`, and by the 700 case corpus after the change.
 `t8_rec_realv` put a `real` beside the vector and got the vector's
 bounds alone, so a `real` has no range to contribute and is skipped.
 
