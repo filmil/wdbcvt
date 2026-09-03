@@ -613,14 +613,82 @@ stride.
 generics at `0x140`, again `0x640` past the last signal.
 The 109 cases of the corpus with both kinds of object all put every
 signal before every other object.
-Within the second region the strides vary, and they group by kind
-rather than by scope: `t7_gen_for` puts its three loop indexes at
-`0x1040`, `0x1070` and `0x10a0`, `0x30` apart, and then the three
+Within the second region the stride from one object to the next is
+the value's size, the next object starting on a multiple of its own
+size, and an array or a string takes 16 bytes more than its elements.
+Tier 52 declares `a : T` and then `b : integer` for eleven types, as
+two process variables, as two architecture constants and as two
+generics, and reads the distance from `a` to `b`:
+
+| Type of `a` | Stride | Cases |
+| :--- | ---: | :--- |
+| `std_ulogic`, `boolean`, `integer` | 4 | `t52_var_sul_____`, `t52_var_bool____`, `t52_var_int_____`, `t52_con_int_____`, `t52_gen_int_____` |
+| `real`, `time` | 8 | `t52_var_real____`, `t52_var_time____`, `t52_con_real____` |
+| a record of a `std_ulogic` and an `integer` | 8 | `t52_var_rec_____` |
+| `std_ulogic_vector(3 downto 0)`, `string(1 to 4)` | `0x14` | `t52_var_vec4____`, `t52_var_str4____` |
+| `std_ulogic_vector(7 downto 0)` | `0x18` | `t52_var_vec8____`, `t52_con_vec8____`, `t52_gen_vec8____` |
+| an array of four integers | `0x20` | `t52_var_arr4____` |
+
+The one byte types read 4 because `b` is an integer and starts on a
+multiple of 4.
+`t9_gen_types` has a `string(1 to 3)` 1 past a `boolean`, a four
+element vector 19 past the string and a `real` 20 past the vector, on
+a multiple of 8, which is the same rule with one byte neighbours.
+A constant and a generic have the strides of a variable, and the
+handle space grows with the stride: `0x11d8` with two integers, then
+`0x11e0`, `0x11e8`, `0x11f0` and `0x11f8` for the strides 8, `0x14`,
+`0x18` and `0x20`, which is the two sizes summed and rounded up to a
+multiple of 8.
+
+The larger strides between like objects of different scopes are the
+cost of the scopes between them.
+Tier 52 instantiates a `child` with a generic `k` twice, as `d0` and
+`d1`, and elaborates a two iteration generate with the index `i`, and
+varies the body of the child and of the iteration in step:
+
+| Body | `k` stride | `i` stride | Cases |
+| :--- | ---: | ---: | :--- |
+| nothing | `0x30` | no index at all | `t52_inst2_empty_`, `t52_gi2_empty___` |
+| a process | `0xc0` | `0xc0` | `t52_inst2_proc__`, `t52_gi2_proc____` |
+| an undriven signal | `0x68` | `0x68` | `t52_inst2_sig___`, `t52_gi2_sig_____` |
+| a signal driven by a process | `0x118` | `0x118` | `t52_inst2_sigprc`, `t52_gi2_sigprc__` |
+
+So an instance and a generate iteration cost the same: `0x2c` for the
+scope and 4 for its integer, a process `0x90` more, a signal `0x38`
+more in this region beside its own `0xc0` in the first, and the
+signal's driver `0x20` more beside its `0x30` in the first.
+That is the `0xf8` per signal and `0x50` per driver that tier 46 read
+off the handle space and could only half account for in the first
+region.
+Within a scope's block the signals come before the data objects and
+the process and the driver after them: `k` of `d0` sits at `0x1070`
+with the undriven signal, which is the `0xeb8` of the empty child
+plus the two `0xc0` of the first region plus one `0x38`, and at
+`0x10d0` with the driven signal, the same past two `0xf0`.
+The handle space of the four instance cases, `0x1288`, `0x13a8`,
+`0x1478` and `0x1638`, grows by twice `0x90`, twice `0xc0` plus
+`0x38`, and twice `0xf0` plus `0x38` plus `0x20` plus `0x90` from the
+empty child, the sum of both regions.
+The generate cases have `0x18` to `0x20` less handle space than the
+instance cases of the same body, `0x1390`, `0x1458` and `0x1620`,
+which the strides do not show, and that difference is open.
+
+The strides of the earlier cases fit the same costs.
+`t7_gen_for` puts its three loop indexes at `0x1040`, `0x1070` and
+`0x10a0`, `0x30` apart, a bare iteration each, and then the three
 generics of the children at `0x1130`, `0x1248` and `0x1360`, `0x118`
-apart; `t46_gen_70000___` has its indexes `0x118` apart, and
-`t6_proc2` the integer variables of its two processes 4 apart.
-No rule fits that yet, and none is needed: the handle is read from the
-record.
+apart, a child with a signal driven by a process each; the child
+instances follow the iterations because the scopes are laid out
+breadth first.
+`t46_gen_70000___` has its indexes `0x118` apart, and each iteration
+holds a signal driven by a process.
+`t46_deep_100____` has its generics `0x140` apart, `0x28` more than
+the signal, the process and the driver of each level, which is read
+as the if generate scope holding the next level, on that one point.
+`t6_proc2` has the integer variables of its two processes 4 apart,
+and where the region starts, `0xde0` with `tb` alone and `0xeb8` with
+two empty children, is open.
+None of it is needed: the handle is read from the record.
 
 The decoder exposes the fifth word as `Object.Generic`, because it is 2
 for exactly the objects that are not signals.
@@ -629,7 +697,8 @@ Generics of other types get handles the same way.
 `t9_gen_types` has `kb : boolean`, `ks : string(1 to 3)`,
 `kv : std_ulogic_vector(3 downto 0)` and `kr : real` at `0xe98`,
 `0xe99`, `0xeac` and `0xec0`: 1, 19 and 20 apart for values of 1, 3, 4
-and 8 bytes, so the stride is not the size.
+and 8 bytes, which is the size plus 16 for the string and the vector,
+the second region rule above.
 Each is a declaration of kind `0x12` with the type's size in word 4,
 and the corpus test checks name, type, size and recorded value against
 `truth.json`.
@@ -851,6 +920,16 @@ the pool's `tb.\g(0)\.dut.s` that way.
 *Found by* `t7_gen_for`, the first generate case, which failed on both
 the arena record order and the path spelling before the reader was
 taught both.
+
+A for generate whose body declares nothing and holds no statement
+elaborates to the plain label scope alone.
+`t52_gi2_empty___` has `g: for i in 0 to 1 generate end generate;`
+and the file holds `tb.g` with no children, one generate unit with no
+declarations, and no index object at all, where `t52_gi2_proc____`,
+whose iterations each hold a process, has `\g(0)\` and `\g(1)\`
+beside `g` with an index each.
+
+*Found by* `t52_gi2_empty___` against `t52_gi2_proc____`.
 
 
 ## Nested for generate
@@ -1944,10 +2023,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 779 of 779 cases, and the
+*Confirmed by* the region length check in 802 of 802 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 779 of 779 cases and
+and *confirmed by* the reader's range check in 802 of 802 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

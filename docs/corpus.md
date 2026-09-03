@@ -1602,6 +1602,35 @@ procedure.
 | `t51_sub_file_prm` | `t23_sub_sig_prm_` | a `file` parameter | absent, 8 bytes of frame; the file object a size 0 variable |
 | `t51_sub_pkg_proc` | `t23_sub_sig_prm_` | the procedure in a package | `pk.drive` under `pk` |
 
+**Tier 52: strides of the second handle region, and scope costs.**
+VHDL.
+Fifteen cases declare `a : T` and then `b : integer`, as process
+variables, as architecture constants or as generics, and read the
+distance from `a` to `b`.
+Eight cases put two instances of a `child` with a generic `k`, or two
+iterations of a generate with the index `i`, under `tb`, and vary the
+body of the child and of the iteration in step.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t52_var_int_____` | `t50_ord_proc_con` | a second integer variable | `b` 4 past `a` |
+| `t52_var_sul_____`, `t52_var_bool____` | `t52_var_int_____` | `a` one byte | 4, `b` on a multiple of 4 |
+| `t52_var_real____`, `t52_var_time____` | `t52_var_int_____` | `a` eight bytes | 8 |
+| `t52_var_rec_____` | `t52_var_int_____` | `a` a record of a `std_ulogic` and an `integer` | 8 |
+| `t52_var_vec4____`, `t52_var_str4____` | `t52_var_int_____` | `a` four elements | `0x14`, 16 more than the elements |
+| `t52_var_vec8____` | `t52_var_int_____` | `a` eight elements | `0x18` |
+| `t52_var_arr4____` | `t52_var_int_____` | `a` four integers | `0x20` |
+| `t52_con_int_____`, `t52_con_real____`, `t52_con_vec8____` | the `t52_var_` case of the type | constants | the same strides |
+| `t52_gen_int_____`, `t52_gen_vec8____` | the `t52_var_` case of the type | generics | the same strides |
+| `t52_inst2_empty_` | `t4_gen_diff_two_` | two empty children with a generic each | `k` `0x30` apart |
+| `t52_inst2_proc__` | `t52_inst2_empty_` | a process in the child | `0xc0` |
+| `t52_inst2_sig___` | `t52_inst2_empty_` | an undriven signal in the child | `0x68` |
+| `t52_inst2_sigprc` | `t52_inst2_sig___` | the process driving the signal | `0x118`, the `t7_gen_for` stride |
+| `t52_gi2_empty___` | `t7_gen_for______` | the iteration empty | no iteration scope and no index |
+| `t52_gi2_proc____` | `t52_inst2_proc__` | an iteration for the instance | `0xc0` |
+| `t52_gi2_sig_____` | `t52_inst2_sig___` | an iteration for the instance | `0x68` |
+| `t52_gi2_sigprc__` | `t52_inst2_sigprc` | an iteration for the instance | `0x118` |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1639,7 +1668,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 779 cases through tier 51, and
+5. The reader now reproduces all 802 cases through tier 52, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
