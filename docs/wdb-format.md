@@ -91,6 +91,17 @@ reproduces it.
    second version has been measured.
 
 
+## Reading the answer key
+
+The `.vcd` side needs no new code.
+`github.com/filmil/go-vcd-parser` already parses VCD, including the
+pragmatic extensions real simulators emit, and it is a Bazel module.
+Add it as a `bazel_dep` at the point where a decoder claim first has to
+be checked against the VCD, not before.
+Until then the VCD can be read by eye: it is small, because the design is
+small.
+
+
 ## Method
 
 Work one open question at a time, and in this order: container shape,
