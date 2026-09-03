@@ -1,0 +1,42 @@
+{
+  "case": "t55_prot_pkg_prc",
+  "axis": "a shared variable of a package protected type, its methods called from the process under -debug subprogram",
+  "differs_from": "t55_prot_pkg____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "ct",
+      "type": "counter_t",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "tb.p",
+      "name": "v",
+      "type": "integer",
+      "kind": "variable",
+      "port": ""
+    }
+  ]
+}

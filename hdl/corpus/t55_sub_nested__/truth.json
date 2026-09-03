@@ -1,0 +1,76 @@
+{
+  "case": "t55_sub_nested__",
+  "axis": "a function that declares a function of its own under -debug subprogram",
+  "differs_from": "t50_sub_func_prm",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    },
+    {
+      "scope": "tb.g",
+      "name": "n",
+      "type": "integer",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.g",
+      "name": "w",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f.g",
+      "name": "n",
+      "type": "integer",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f.g",
+      "name": "w",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    }
+  ]
+}

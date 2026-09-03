@@ -1,0 +1,52 @@
+{
+  "case": "t55_sub_con_nori",
+  "axis": "a function with a local integer constant read in the body alone under -debug subprogram",
+  "differs_from": "t55_sub_con_loc_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f",
+      "name": "k",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    },
+    {
+      "scope": "tb.f",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    }
+  ]
+}

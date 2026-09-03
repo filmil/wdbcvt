@@ -1,0 +1,49 @@
+{
+  "case": "t55_prot_arch_2p",
+  "axis": "a shared variable of an architecture protected type, its methods called from two processes under -debug subprogram",
+  "differs_from": "t55_prot_arch_pr",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "ct",
+      "type": "counter_t",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "tb.p",
+      "name": "v",
+      "type": "integer",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "tb.p2",
+      "name": "w",
+      "type": "integer",
+      "kind": "variable",
+      "port": ""
+    }
+  ]
+}

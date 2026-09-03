@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("//build:wdb_case.bzl", "wdb_case")
+
+package(default_visibility = ["//visibility:public"])
+
+wdb_case(
+    name = "t55_prot_pkg_2p_",
+    # Compilation order matters to xvhdl; do not sort.
+    # do not sort
+    srcs = [
+        "pk.pkg.vhdl",
+        "tb.ent.vhdl",
+    ],
+    xelab_args = [
+        "-debug",
+        "typical",
+        "-debug",
+        "subprogram",
+    ],
+)

@@ -1,0 +1,51 @@
+{
+  "case": "t55_prot_shared_",
+  "axis": "a shared variable of a protected type with two methods under -debug subprogram",
+  "differs_from": "t55_sub_prot_typ",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.drive",
+      "name": "q",
+      "type": "std_ulogic",
+      "kind": "signal param",
+      "port": "out",
+      "storage": 6
+    },
+    {
+      "scope": "tb.drive",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    },
+    {
+      "scope": "tb",
+      "name": "ct",
+      "type": "counter_t",
+      "kind": "variable",
+      "port": ""
+    }
+  ]
+}
