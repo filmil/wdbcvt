@@ -83,11 +83,11 @@ type Change struct {
 // variable in that state.
 func (f *File) Changes(o Object) ([]Change, error) {
 	a := o.Arena()
-	if a >= len(f.Arenas) {
+	if a >= len(f.Arenas) || f.Arenas[a].Offset == 0 {
 		if o.Generic {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("object handle %#x names arena %d of %d", o.Handle, a, len(f.Arenas))
+		return nil, fmt.Errorf("object handle %#x names arena %d, which was never written", o.Handle, a)
 	}
 	var out []Change
 	for _, pg := range f.Pages[a] {

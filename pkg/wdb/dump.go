@@ -20,6 +20,7 @@ func (f *File) Dump(w io.Writer) error {
 	p("header:\n")
 	p("  timestamp      %d\n", h.Timestamp)
 	p("  end time       %d ps\n", h.EndTimePS)
+	p("  handle space   %#x\n", h.HandleSpace)
 	p("  has signals    %v\n", h.HasSignals)
 	p("  marker         at %#x, %d\n", h.MarkerOffset, h.Marker)
 	p("  page size      %d\n", h.PageSize)
@@ -125,6 +126,10 @@ func (f *File) Dump(w io.Writer) error {
 
 	p("arenas (%d):\n", len(f.Arenas))
 	for i, a := range f.Arenas {
+		if a.Offset == 0 {
+			p("  [%d] unused\n", i)
+			continue
+		}
 		p("  [%d] record at %#x, %d pages\n", i, a.Offset, len(a.Pages))
 		for j, pg := range f.Pages[i] {
 			p("    page %d at %#x, %d bytes compressed, t0 %d t1 %d, %d records\n",

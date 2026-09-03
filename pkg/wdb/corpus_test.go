@@ -49,6 +49,16 @@ type truthVariable struct {
 	Type    string `json:"type"`
 	Kind    string `json:"kind"`
 	Initial string `json:"initial"`
+	// Value is what the one record of a loop index holds, when the
+	// truth states it: a generate index records its iteration value.
+	Value string `json:"value"`
+}
+
+// plainPath strips the extended identifier bars the database puts
+// around a generate iteration, so that `tb.\g(0)\.dut.s` compares with
+// the truth's `tb.g(0).dut.s`. Found by t7_gen_for.
+func plainPath(s string) string {
+	return strings.ReplaceAll(s, `\`, "")
 }
 
 type truth struct {
@@ -207,7 +217,7 @@ func decodedChanges(t *testing.T, f *File) (map[string][]change, map[string]int)
 			if err != nil {
 				t.Fatalf("%s at %d ps: %v", f.ObjectPath(o), c.TimePS, err)
 			}
-			for _, leaf := range f.Leaves(f.ObjectPath(o), v) {
+			for _, leaf := range f.Leaves(plainPath(f.ObjectPath(o)), v) {
 				s := f.String(leaf.Value)
 				prev := out[leaf.Path]
 				if len(prev) > 0 && prev[len(prev)-1].value == s {
@@ -240,7 +250,7 @@ func TestCorpus(t *testing.T) {
 			// with the size the type table implies.
 			objByPath := map[string]Object{}
 			for _, o := range f.Objects {
-				objByPath[f.ObjectPath(o)] = o
+				objByPath[plainPath(f.ObjectPath(o))] = o
 				dc := f.Decls[o.Decl]
 				size, err := f.Size(dc)
 				if err != nil {
@@ -378,6 +388,17 @@ func TestCorpus(t *testing.T) {
 					}
 					if len(ch) != 1 || ch[0].TimePS != 0 {
 						t.Errorf("%s: %d records, a loop index has had one at time zero", path, len(ch))
+						continue
+					}
+					if vr.Value == "" {
+						continue
+					}
+					v, err := f.Decode(dc, ch[0].Data)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if v.Scalar != vr.Value {
+						t.Errorf("%s = %s, truth says %s", path, v.Scalar, vr.Value)
 					}
 				default:
 					t.Errorf("%s: unknown truth kind %q", path, vr.Kind)

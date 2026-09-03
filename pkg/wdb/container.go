@@ -23,9 +23,10 @@ const (
 
 // Fixed offsets in the file header. See docs/format.md, "The container".
 const (
-	offDirPointers = 0x48 // three uint64 file offsets of directory entries
-	offArenas      = 0xc8 // first slot of the arena table
-	trailerLen     = 0x48 // the fixed words that end the header
+	offDirPointers = 0x48  // three uint64 file offsets of directory entries
+	offArenas      = 0xc8  // first slot of the arena table
+	trailerLen     = 0x48  // the fixed words that end the header
+	arenaSpan      = 0x800 // bytes of handle space per arena
 
 	dirEntryLen  = 48 // [24 byte name][uint64 count][uint64 offset][uint64 length]
 	dirNameLen   = 24
@@ -58,8 +59,9 @@ type DirEntry struct {
 // The header is fixed up to offset 0xc8. From there a table of uint64
 // arena record offsets runs to the trailer, and the trailer's position is
 // known from the first directory pointer, which names the WDB.Event entry
-// that follows it. The table has three slots in every corpus case but
-// one; t5_sig10, with ten signals, has four.
+// that follows it. The table has one slot per 0x800 bytes of handle
+// space, rounded up: three slots for a testbench of one signal, four for
+// seven to twelve one bit signals, six for twenty.
 type Header struct {
 	// Timestamp is the Unix time at which the database was written. It
 	// differs between two runs of the same design, so it is noise.
@@ -70,6 +72,11 @@ type Header struct {
 	// EndTimePS is the simulation end time in picoseconds, the first
 	// word of the trailer.
 	EndTimePS uint64
+	// HandleSpace is the trailer word at 0x18 from its start: the number
+	// of bytes of handle space the objects occupy. Each one bit signal
+	// costs 0xf0 of it, and the arena table has ceil(HandleSpace/0x800)
+	// slots. The trailer word at 0x0c repeats that slot count.
+	HandleSpace uint64
 	// HasSignals is the trailer word at 0x110 in a three slot header: 1
 	// when any object is logged.
 	HasSignals bool
@@ -99,9 +106,10 @@ type PageRef struct {
 // Arena is one record of the page directory. Objects are numbered by
 // handle, and handle>>11 selects the arena whose pages hold the object's
 // records. An arena starts a new page when the current one is full, so a
-// record names one page per 600 or so value changes.
+// record names one page per 10240 bytes of records.
 type Arena struct {
-	// Offset is the file offset of the record.
+	// Offset is the file offset of the record, 0 for an arena that was
+	// never written.
 	Offset uint64
 	// Pages are the arena's pages in the order they were written, which
 	// is time order.
@@ -139,6 +147,13 @@ func readHeader(d []byte) (Header, error) {
 	}
 	t := d[trailer:]
 	h.EndTimePS = binary.LittleEndian.Uint64(t[0x00:])
+	if n := binary.LittleEndian.Uint32(t[0x0c:]); int(n) != len(h.ArenaOffsets) {
+		return h, fmt.Errorf("trailer says %d arena table slots, the table has %d", n, len(h.ArenaOffsets))
+	}
+	h.HandleSpace = binary.LittleEndian.Uint64(t[0x18:])
+	if want := (h.HandleSpace + arenaSpan - 1) / arenaSpan; uint64(len(h.ArenaOffsets)) != want {
+		return h, fmt.Errorf("arena table has %d slots, handle space %#x wants %d", len(h.ArenaOffsets), h.HandleSpace, want)
+	}
 	h.HasSignals = binary.LittleEndian.Uint64(t[0x30:]) != 0
 	h.MarkerOffset = binary.LittleEndian.Uint64(t[0x38:])
 	h.PageSize = binary.LittleEndian.Uint32(t[0x40:])
@@ -181,24 +196,33 @@ func (h *Header) Dir(name string) (DirEntry, bool) {
 // readPageDir decodes the page directory. Every directory entry sits
 // right after the section it describes, so the Xilinx DBG entry is at
 // offset+length, and the arena records follow that entry: one
-// arenaRecLen byte record per arena. The header's arena table names the
-// records, and every record has been at pageDirStart plus a multiple of
-// arenaRecLen in every corpus case. A record lists its pages as uint64 offsets from arenaOffsets and
-// uint32 compressed lengths from arenaLens, with the page count at
-// arenaCount.
+// arenaRecLen byte record per arena in use. The header's arena table
+// names the records, and the records are laid out in the order the
+// arenas were first written, which is not always arena order:
+// t7_gen_for has arena 2 first. So the only check is that every named
+// record is at pageDirStart plus a multiple of arenaRecLen and that no
+// two slots share one. A record lists its pages as uint64 offsets from
+// arenaOffsets and uint32 compressed lengths from arenaLens, with the
+// page count at arenaCount; the slots past the count are zero.
+//
+// The result has one Arena per slot of the arena table. A slot that is
+// zero, an arena no object was written to, gives an Arena with a zero
+// Offset and no pages.
 func readPageDir(d []byte, h *Header, dbg DirEntry) ([]Arena, error) {
 	base := dbg.Offset + dbg.Length + pageDirStart
-	var arenas []Arena
+	arenas := make([]Arena, len(h.ArenaOffsets))
+	seen := map[uint64]int{}
 	for i, off := range h.ArenaOffsets {
 		if off == 0 {
 			continue
 		}
-		if i != len(arenas) {
-			return nil, fmt.Errorf("arena table slot %d is used after an empty slot", i)
+		if off < base || (off-base)%arenaRecLen != 0 {
+			return nil, fmt.Errorf("arena record %d at %#x is not %#x plus a multiple of %#x", i, off, base, arenaRecLen)
 		}
-		if off != base+uint64(i)*arenaRecLen {
-			return nil, fmt.Errorf("arena record %d at %#x, want %#x", i, off, base+uint64(i)*arenaRecLen)
+		if j, dup := seen[off]; dup {
+			return nil, fmt.Errorf("arena table slots %d and %d both name the record at %#x", j, i, off)
 		}
+		seen[off] = i
 		if off+arenaRecLen > uint64(len(d)) {
 			return nil, fmt.Errorf("arena record %d at %#x runs past the file", i, off)
 		}
@@ -228,7 +252,13 @@ func readPageDir(d []byte, h *Header, dbg DirEntry) ([]Arena, error) {
 				return nil, fmt.Errorf("arena record %d has a non-zero length slot past page %d", i, n)
 			}
 		}
-		arenas = append(arenas, a)
+		arenas[i] = a
+	}
+	// The records are contiguous: as many as there are used slots.
+	for k := 0; k < len(seen); k++ {
+		if _, ok := seen[base+uint64(k)*arenaRecLen]; !ok {
+			return nil, fmt.Errorf("no arena table slot names the record at %#x", base+uint64(k)*arenaRecLen)
+		}
 	}
 	return arenas, nil
 }

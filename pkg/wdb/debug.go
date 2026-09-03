@@ -28,6 +28,9 @@ const (
 	UnitTop     UnitKind = 0x13 // the root above the top level entity
 	UnitEntity  UnitKind = 0x09 // an entity and architecture pair
 	UnitProcess UnitKind = 0x0d // a process
+	// UnitGenerate is a generate statement, and also each iteration of
+	// a for generate: t7_gen_for has one for `g` and one per `\g(i)\`.
+	UnitGenerate UnitKind = 0x0c
 )
 
 func (k UnitKind) String() string {
@@ -38,6 +41,8 @@ func (k UnitKind) String() string {
 		return "entity"
 	case UnitProcess:
 		return "process"
+	case UnitGenerate:
+		return "generate"
 	}
 	return fmt.Sprintf("unit(%#x)", uint32(k))
 }
@@ -141,10 +146,10 @@ type Object struct {
 }
 
 // Arena selects the arena whose pages hold the object's records.
-func (o Object) Arena() int { return int(o.Handle >> 11) }
+func (o Object) Arena() int { return int(o.Handle / arenaSpan) }
 
 // Key is the record key the object has inside the arena's pages.
-func (o Object) Key() uint32 { return uint32(o.Handle & 0x7ff) }
+func (o Object) Key() uint32 { return uint32(o.Handle % arenaSpan) }
 
 // Debug is the decoded Xilinx ISim DBG 006 section.
 type Debug struct {
