@@ -58,7 +58,7 @@ func (f *File) Dump(w io.Writer) error {
 				p(" %s=%d", u.Name, u.Scale)
 			}
 		case KindArray:
-			p(" layout %d of [%d] indexed by [%d], %d dim", t.Layout, t.Elem, t.Index, t.Dims)
+			p(" layout %d of [%d] indexed by %v, %d dim", t.Layout, t.Elem, t.Indexes, t.Dims)
 			for _, r := range t.Ranges {
 				p(" (%s)", r)
 			}

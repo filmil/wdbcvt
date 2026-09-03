@@ -161,15 +161,18 @@ type Type struct {
 	// Units lists a physical type's units.
 	Units []TimeUnit
 
-	// Elem and Index are type indexes for an array's element and index
-	// types. Dims is its dimension count. Ranges holds one Range per
-	// dimension, then the element constraints in the order they appear;
-	// an unconstrained dimension is (0, 0, -2). The word before the
-	// ranges is their count: t5_int_arr has 1 for (0 to 3), t2_array2d
-	// has 2 for (0 to 3) (7 downto 0), t11_v_mem4 has 2 for two
-	// unconstrained triples.
+	// Elem is the type index of an array's element type. Dims is its
+	// dimension count and Indexes holds one index type per dimension:
+	// t18_arr_2dim has 2 dims and (1, 1) for a (0 to 1, 0 to 2) array,
+	// t2_array2d has 1 dim and (3) for an array of vectors. Index is
+	// Indexes[0]. Ranges holds one Range per dimension, then the element
+	// constraints in the order they appear; an unconstrained dimension is
+	// (0, 0, -2). The word before the ranges is their count: t5_int_arr
+	// has 1 for (0 to 3), t2_array2d has 2 for (0 to 3) (7 downto 0),
+	// t11_v_mem4 has 2 for two unconstrained triples.
 	Elem, Index int
 	Dims        int
+	Indexes     []int
 	Ranges      []Range
 
 	// Fields lists a record's fields in declaration order.
@@ -416,7 +419,12 @@ func readType(kind Kind, body []byte) (Type, error) {
 		c.expect16(0xa0, "array word 1 high half")
 		t.Elem = int(c.u32())
 		t.Dims = int(c.u32())
-		t.Index = int(c.u32())
+		for i := 0; i < t.Dims && c.err == nil; i++ {
+			t.Indexes = append(t.Indexes, int(c.u32()))
+		}
+		if len(t.Indexes) > 0 {
+			t.Index = t.Indexes[0]
+		}
 		nr := int(c.u32())
 		t.Ranges = c.ranges()
 		if c.err == nil && nr != len(t.Ranges) {
