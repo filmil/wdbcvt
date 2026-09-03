@@ -1,0 +1,38 @@
+{
+  "case": "t26_sv_v8_prm___",
+  "axis": "parameter logic [7:0] P = 8'h5a beside a logic",
+  "differs_from": "t26_sv_logic_prm",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "P",
+      "type": "",
+      "declared": "parameter logic [7:0]",
+      "value": "01011010",
+      "width": 8
+    }
+  ]
+}

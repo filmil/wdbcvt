@@ -1,0 +1,27 @@
+{
+  "case": "t26_sv_v8_str___",
+  "axis": "logic [7:0] s = \"a\", a string literal",
+  "differs_from": "t25_sv_vec8_sz__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "01100001"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

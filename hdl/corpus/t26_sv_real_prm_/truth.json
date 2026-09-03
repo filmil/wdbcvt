@@ -1,0 +1,37 @@
+{
+  "case": "t26_sv_real_prm_",
+  "axis": "parameter real R = 1.5 beside a logic",
+  "differs_from": "t25_v_prm_real__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "R",
+      "type": "real",
+      "declared": "parameter real",
+      "value": "1.5"
+    }
+  ]
+}

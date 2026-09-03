@@ -1,0 +1,26 @@
+{
+  "case": "t26_sv_lng_szd__",
+  "axis": "longint s = 64'h0",
+  "differs_from": "t11_sv_longint__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "longint"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

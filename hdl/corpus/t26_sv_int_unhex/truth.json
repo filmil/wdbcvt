@@ -1,0 +1,26 @@
+{
+  "case": "t26_sv_int_unhex",
+  "axis": "int s = 'h0, an unsized hex literal",
+  "differs_from": "t11_sv_int______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "int"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

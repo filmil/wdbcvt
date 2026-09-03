@@ -1,0 +1,27 @@
+{
+  "case": "t26_sv_logic_cnd",
+  "axis": "logic s = (1 > 0) ? 1'b0 : 1'b1",
+  "differs_from": "t25_sv_logic_exp",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

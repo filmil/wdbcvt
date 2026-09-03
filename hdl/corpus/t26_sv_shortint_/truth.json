@@ -1,0 +1,26 @@
+{
+  "case": "t26_sv_shortint_",
+  "axis": "shortint s = 0",
+  "differs_from": "t11_sv_int______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 16,
+      "type": "shortint"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

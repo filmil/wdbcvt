@@ -1,0 +1,27 @@
+{
+  "case": "t26_sv_v32_int__",
+  "axis": "logic [31:0] s = 0, as wide as the literal",
+  "differs_from": "t25_sv_vec8_int_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000000000000000000000000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "00000000000000000000000010100101"
+    }
+  ]
+}
