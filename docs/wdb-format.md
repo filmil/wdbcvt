@@ -61,13 +61,57 @@ parsing is attempted.
 
 ## Findings
 
-Nothing recorded yet.
-The table below gets one row per confirmed fact, with the command that
-reproduces it.
+Every row is a measurement that reproduces.
+All of them are from Vivado 2025.2, and are scoped to it.
+See [provenance.md](provenance.md) for what guards these claims.
 
 | Offset | Length | Meaning | How it was confirmed |
 | :--- | :--- | :--- | :--- |
-| | | | |
+| `0x00` | 24 | ASCII `Xilinx WAVE DATABASE 01`, NUL terminated | `head -c 24 sim.wdb`. Present in all ten databases. |
+| `0x18` | 17 | ASCII `Xilinx Simulator`, NUL terminated | Same hex dump. |
+| `0x30` | 8 | `uint64` little endian, value `0x40` | Constant across all ten databases. |
+| `0x38` | 4 | `uint32` little endian, Unix epoch seconds, the time the database was written | Decoded `1788417066` as `2026-09-03 08:31:06 CEST`, equal to the file's own mtime to the second. Differs between two runs of one design, which is how it was found. |
+| `0x158` | 26 | ASCII `Xilinx ISim TYPE FILE 001`, NUL terminated | A nested section with its own magic. |
+
+Whole file properties, also measured:
+
+* **The payload is not compressed.** Mean entropy is 3.508 bits per byte
+  over the whole file. A compressed payload sits near 8.
+* **Signal names are stored in the clear, as plain ASCII.** The 40
+  character name in `t1_bit_long_name` appears verbatim at `0x3db`.
+* **Absolute source paths are stored in the clear**, including the path
+  of the Vivado installation that produced the file and the build
+  machine paths AMD compiled the standard libraries on.
+* **Adding one transition grows the file by 15 bytes and perturbs 83
+  places.** Many of the perturbed bytes change by exactly `+8`
+  (`0x2b` to `0x33`, `0xeb` to `0xf3`, `0xc0` to `0xc8`), which is the
+  signature of internal offset fields moving because a record grew.
+  That, with the low entropy, says the format is a structured file full
+  of internal offsets rather than an opaque blob.
+
+
+## The noise mask
+
+Two runs of `t1_bit_one_edge` differ in about 11 bytes across five
+regions, and the regions are stable across pairs:
+
+| Offset | Bytes | What it holds |
+| :--- | :--- | :--- |
+| `0x38` | 4 | Unix timestamp, confirmed above |
+| `0xc4` | 4 | a per-run duration; `32194` and `28919` in two runs |
+| `0x172` | 6 | two varying bytes followed by the same timestamp as `0x217` |
+| `0x217` | 4 | a second Unix timestamp, a few seconds before `0x38` |
+| `0x3c4` | 4 | a second per-run duration |
+
+Every one of them is a clock or a duration.
+Nothing else in the file varies between runs, which is a strong
+property: **outside these five regions the format is deterministic.**
+
+One caveat that matters. The two pairs measured so far reported 11 and
+10 differing bytes at the same five regions. A byte of a timestamp only
+shows up as noise when its two values happen to differ, so a mask built
+from a single pair understates the true noise. Build the mask from
+several pairs and take the union before trusting it.
 
 
 ## Open questions

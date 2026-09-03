@@ -33,6 +33,15 @@ It is the same design, simulated twice:
 tools/noise_mask.sh //hdl/corpus/t1_bit_one_edge:sim /tmp/mask
 ```
 
+Note what the script had to do to be correct.
+An earlier version passed a changing `--action_env` value, on the theory
+that it would change the action key. It does not, for this rule: two
+builds with different values both reported `1 total action` with nothing
+executed, and produced identical files. That looked like a perfectly
+deterministic format, and was really one cached file compared with
+itself. The script now runs `bazel clean` and disables the disk cache,
+which forces a genuine re-simulation.
+
 Every offset it reports is noise.
 Pass the two files it keeps to `wdbdiff` as `-mask-a` and `-mask-b` for
 every later comparison:

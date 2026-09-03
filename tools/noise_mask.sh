@@ -10,12 +10,20 @@
 # design. Comparing two different designs without excluding them
 # identifies a run timestamp as a signal count, confidently and wrongly.
 #
-# Bazel is the obstacle here rather than the help: a second build of an
+# Bazel is the obstacle here rather than the help. A second build of an
 # unchanged target returns the cached file, so the naive "build it twice"
-# compares a file with itself and reports perfect determinism. Passing a
-# different WDB_NONCE changes the action key, so the simulation actually
-# runs again. The variable reaches xsim's environment and nothing reads
-# it, so it does not change what is simulated.
+# compares a file with itself and reports perfect determinism.
+#
+# `--action_env` does NOT solve this. It changes the action key only for
+# actions that declare the variable in their environment, and the Vivado
+# simulation action does not. Measured: two builds with different
+# WDB_NONCE values both reported "1 total action" with no process run,
+# and produced identical files, which looked like a deterministic format
+# and was really one cached file compared with itself.
+#
+# What does work is removing both places the result can be cached: the
+# output tree, with `bazel clean`, and the shared disk cache, with an
+# empty `--disk_cache=`. Then the simulation genuinely runs again.
 #
 # Usage:
 #     tools/noise_mask.sh //hdl/corpus/t1_bit_one_edge:sim [outdir]
@@ -34,11 +42,12 @@ readonly rel="${pkg#//}/${name}.wdb"
 mkdir -p "${outdir}"
 
 run() {
-    local nonce="$1" dest="$2"
-    echo "run ${nonce}: building ${target}" >&2
-    bazelisk build --action_env="WDB_NONCE=${nonce}" "${target}" >&2
+    local label="$1" dest="$2"
+    echo "run ${label}: forcing a genuine re-simulation of ${target}" >&2
+    bazelisk clean >/dev/null 2>&1
+    bazelisk build --disk_cache= "${target}" >&2
     local produced
-    produced="$(bazelisk info bazel-bin)/${rel}"
+    produced="$(bazelisk info --disk_cache= bazel-bin)/${rel}"
     if [[ ! -s "${produced}" ]]; then
         echo "noise_mask.sh: missing or empty: ${produced}" >&2
         exit 1
