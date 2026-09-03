@@ -316,8 +316,19 @@ var vcdDeviations = map[string]string{
 	"t11_sv_struct_r_ tb.s": "a real field of an unpacked struct is written as a 32 bit slot of bits that are not the value",
 }
 
+// designs lists the directories of the designs outside the corpus
+// that have a database and a VCD but no truth.json. The VCD is their
+// only check. //hdl/counter:sim is a record port with per field
+// assignments, and its ctl record found the VHDL partial write.
+var designs = []string{"hdl/counter"}
+
 func TestVCD(t *testing.T) {
-	for _, dir := range corpusCases(t) {
+	dirs := corpusCases(t)
+	root := filepath.Join(os.Getenv("TEST_SRCDIR"), os.Getenv("TEST_WORKSPACE"))
+	for _, d := range designs {
+		dirs = append(dirs, filepath.Join(root, d))
+	}
+	for _, dir := range dirs {
 		dir := dir
 		t.Run(filepath.Base(dir), func(t *testing.T) {
 			f, err := ReadFile(filepath.Join(dir, "sim.wdb"))

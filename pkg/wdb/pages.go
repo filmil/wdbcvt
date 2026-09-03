@@ -80,19 +80,28 @@ type Change struct {
 	Data []byte
 }
 
-// Changes returns every recorded value of the object, in page order,
-// which is time order in every observed file. An object whose arena
-// was never written has no changes; t6_var_int shows a declared process
-// variable in that state.
+// Changes returns every recorded value of the object, one per write,
+// in time order. An object whose arena was never written has no
+// changes; t6_var_int shows a declared process variable in that state.
 //
-// A value of chunkWhole bytes or more is not one record. It is written
-// as the run of chunks Chunks describes, each a record of its own whose
-// key is the byte address of the chunk within the handle space, and a
-// chunk that would cross an arena boundary is split there and goes on
-// in the next arena at key 0. Changes reassembles the run into one
-// value per change, and checks that the run is the one Chunks predicts
-// when the object owns the whole value. Found by t9_vec292 and
-// t9_vec12000, the rule by the t10_vec sizes.
+// A VHDL record is one write of a contiguous part of the value, keyed
+// by the byte address of its first byte within the handle space: the
+// whole value at time 0 and after a whole assignment, or the bytes of
+// a field, slice or element after a partial assignment, with the parts
+// one delta assigns merged when they are adjacent. Found by the ctl
+// record of //hdl/counter:sim, the offsets by the t32 cases. A write
+// of chunkWhole bytes or more is not one record. It is written as the
+// run of chunks Chunks describes for its own length from its own
+// address, each a record of its own, and a chunk that would cross an
+// arena boundary is split there and goes on in the next arena at key
+// 0. Found by t9_vec292 and t9_vec12000, the rule by the t10_vec sizes,
+// and its use for a partial write by t32_wide_slice__.
+//
+// Changes overlays every write onto the value in file order, which is
+// time order in every observed file, and emits one value per write.
+// It checks that the first write covers the object, and that every
+// write of chunkWhole bytes or more is the run of chunks the rule
+// predicts.
 //
 // A Verilog object is written by word pairs instead; see changesVerilog.
 func (f *File) Changes(o Object) ([]Change, error) {
@@ -119,16 +128,16 @@ func (f *File) Changes(o Object) ([]Change, error) {
 	if f.verilog(dc.Type) {
 		return f.changesVerilog(o, start, end)
 	}
-	// Collect every record that overlaps the object, by chunk address,
-	// in page order. A wide value is written as a run of chunks, each a
-	// record keyed by its byte address, and a chunk never crosses an
-	// arena boundary: t9_vec292, t9_vec4096.
-	type chunk struct {
+	// Collect every record that overlaps the object, in file order, and
+	// order them by time. A record keeps its place among those of its
+	// time, so two writes of one byte in two deltas of one time stay in
+	// write order: t32_rec_delta___.
+	type rec struct {
 		time uint64
+		addr uint64
 		data []byte
 	}
-	runs := map[uint64][]chunk{}
-	var addrs []uint64
+	var recs []rec
 	for k := first; k <= last; k++ {
 		if f.Arenas[k].Offset == 0 {
 			return nil, fmt.Errorf("object handle %#x with %d bytes spans arena %d, which was never written", o.Handle, size, k)
@@ -139,53 +148,68 @@ func (f *File) Changes(o Object) ([]Change, error) {
 				if addr >= end || addr+uint64(len(r.Data)) <= start {
 					continue
 				}
-				if _, seen := runs[addr]; !seen {
-					addrs = append(addrs, addr)
-				}
-				runs[addr] = append(runs[addr], chunk{r.Time, r.Data})
+				recs = append(recs, rec{r.Time, addr, r.Data})
 			}
 		}
 	}
-	sort.Slice(addrs, func(i, j int) bool { return addrs[i] < addrs[j] })
-	if len(addrs) == 0 {
+	if len(recs) == 0 {
 		return nil, fmt.Errorf("object handle %#x is logged but has no records", o.Handle)
 	}
-	if o.Offset == 0 {
-		if err = checkChunks(o.Handle, size, addrs); err != nil {
+	sort.SliceStable(recs, func(i, j int) bool { return recs[i].time < recs[j].time })
+	// A write is the longest run of records of one time, each starting
+	// where the previous one ends, whose addresses are the chunks the
+	// rule predicts for the run's length; a record that starts no such
+	// run is a write of its own and is shorter than a chunked write.
+	write := func(i int) (int, uint64, error) {
+		total := uint64(len(recs[i].data))
+		j := i + 1
+		for j < len(recs) && recs[j].time == recs[i].time && recs[j].addr == recs[j-1].addr+uint64(len(recs[j-1].data)) {
+			total += uint64(len(recs[j].data))
+			j++
+		}
+		for ; j > i+1; j-- {
+			want := chunkStarts(recs[i].addr, total)
+			if len(want) == j-i {
+				ok := true
+				for k, w := range want {
+					ok = ok && w == recs[i+k].addr
+				}
+				if ok {
+					return j, total, nil
+				}
+			}
+			total -= uint64(len(recs[j-1].data))
+		}
+		if total >= chunkWhole {
+			return 0, 0, fmt.Errorf("object handle %#x: a record of %d bytes at %#x, time %d, is not a run of chunks", o.Handle, total, recs[i].addr, recs[i].time)
+		}
+		return j, total, nil
+	}
+	cur := make([]byte, size)
+	var out []Change
+	for i := 0; i < len(recs); {
+		j, total, err := write(i)
+		if err != nil {
 			return nil, err
 		}
-	}
-	// The i-th record at each address belongs to the i-th change.
-	n = len(runs[addrs[0]])
-	var out []Change
-	for i := 0; i < n; i++ {
-		c := Change{Time: runs[addrs[0]][i].time}
-		next := start
-		for _, addr := range addrs {
-			if len(runs[addr]) != n {
-				return nil, fmt.Errorf("object handle %#x: chunk at %#x has %d records, the first chunk has %d", o.Handle, addr, len(runs[addr]), n)
-			}
-			ch := runs[addr][i]
-			if ch.time != c.Time {
-				return nil, fmt.Errorf("object handle %#x: change %d: chunk at %#x is at %d, the first chunk at %d", o.Handle, i, addr, ch.time, c.Time)
-			}
-			lo, hi := addr, addr+uint64(len(ch.data))
+		// The first write is the initial value of the whole signal;
+		// a port bound to a slice at its start, t9_port_sliceto_,
+		// sees a first write longer than its own value.
+		if len(out) == 0 && (recs[i].addr > start || recs[i].addr+total < end) {
+			return nil, fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", o.Handle, size, total, recs[i].addr)
+		}
+		for ; i < j; i++ {
+			r := recs[i]
+			lo, hi := r.addr, r.addr+uint64(len(r.data))
 			if lo < start {
 				lo = start
 			}
 			if hi > end {
 				hi = end
 			}
-			if lo != next {
-				return nil, fmt.Errorf("object handle %#x: change %d: chunk at %#x follows one ending at %#x", o.Handle, i, addr, next)
-			}
-			c.Data = append(c.Data, ch.data[lo-addr:hi-addr]...)
-			next = hi
+			copy(cur[lo-start:hi-start], r.data[lo-r.addr:hi-r.addr])
 		}
-		if next != end {
-			return nil, fmt.Errorf("object handle %#x: change %d: chunks end at %#x, the value ends at %#x", o.Handle, i, next, end)
-		}
-		out = append(out, c)
+		out = append(out, Change{Time: recs[i-1].time, Data: append([]byte(nil), cur...)})
 	}
 	return out, nil
 }
@@ -235,20 +259,4 @@ func chunkStarts(handle, size uint64) []uint64 {
 		want = append(want, b)
 	}
 	return want
-}
-
-// checkChunks refuses a run of record addresses that is not the one
-// Chunks predicts for a value of size bytes at handle.
-func checkChunks(handle, size uint64, addrs []uint64) error {
-	count, length := Chunks(size)
-	want := chunkStarts(handle, size)
-	if len(want) != len(addrs) {
-		return fmt.Errorf("object handle %#x with %d bytes has records at %d addresses, the chunk rule predicts %d (%d chunks of %d)", handle, size, len(addrs), len(want), count, length)
-	}
-	for i := range want {
-		if want[i] != addrs[i] {
-			return fmt.Errorf("object handle %#x with %d bytes has a record at %#x where the chunk rule predicts %#x", handle, size, addrs[i], want[i])
-		}
-	}
-	return nil
 }

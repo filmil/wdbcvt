@@ -30,6 +30,7 @@ go_test(
     data = [
         "//hdl/corpus:all_truth",
         "//hdl/corpus:all_wdb",
+        "//hdl/counter:sim",
     ],
     embed = [":wdb"],
     deps = ["@com_github_filmil_go_vcd_parser//vcd"],
