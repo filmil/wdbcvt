@@ -985,6 +985,43 @@ the top to the bottom.
 sweep from 9 to 64 bits per element, and by `t13_sv_struct_ar`,
 `t13_sv_tdef_ua` and `t13_sv_real_arr` for the array forms above.
 
+**A memory loaded from a file.**
+`$readmemh` and `$readmemb` write the memory one element per line of
+the file, and each write is the 8 byte record of one element at the
+element's pair, all at time 0 after the whole `X` write, in file
+order.
+`t38_v_rmh_4w____`, `reg [31:0] m [0:3]` loaded from a four line
+file, holds the same six records as `t38_v_mem4w32___`, which writes
+the four elements from an `initial` block: `X`, one element after
+another, then `m[2]` at 50 ns.
+`t38_v_rmb_4w____` reads the binary spelling of the same file and
+holds the same records.
+A two line file writes two elements, `t38_v_rmh_2of4__`; a file that
+starts with `@2` writes `m[2]` and `m[3]`, `t38_v_rmh_at2___`; and
+the range arguments `1, 2` put the first two lines of the four line
+file into `m[1]` and `m[2]`, `t38_v_rmh_rng___`.
+xsim starts at the lowest address whatever the declared direction:
+`reg [31:0] m [3:0]` in `t38_v_rmh_desc__` gets the first line in
+`m[0]`, the pair at the bottom, and the fourth in `m[3]`, the pair at
+the top.
+A second load of the same file writes the values held and records
+nothing, `t38_v_rmh_twice_`, as tier 17 says of an element write.
+The RAM of `//hdl/serv:sim`, `reg [31:0] mem [0:2047]`, holds its
+whole `X` write in 110 chunks, 109 of 148 bytes and one of 252, split
+at the eight arena boundaries it crosses, then 24 records of 8 bytes,
+one per line of `hello_uart.hex`, and the 24 words read back equal
+to the file.
+`t38_v_mem512____` pins the shape: `reg [31:0] m [0:511]`, 4096
+record bytes in 28 chunks over three arenas, `m[0]` in the last pair
+of arena 2 and `m[511]` at the handle in arena 0, written at 50 ns as
+one 8 byte record there.
+
+*Found by* `//hdl/serv:sim` against `t12_v_mem40_t0`, 25 records for
+a 24 line file, then `t38_v_rmh_4w____` against `t38_v_mem4w32___`,
+the same records.
+*Confirmed by* the other seven tier 38 cases, and by the 24 words of
+the SERV RAM against `hello_uart.hex`.
+
 **Integral types and real.**
 `integer`, `int`, `byte`, `longint` and `time` are vectors of their
 width and record as such; `t11_v_integer` stores 165 as

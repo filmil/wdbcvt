@@ -1236,6 +1236,29 @@ The tier moves the slice through a 40 bit net.
 The reader's `Changes` gained the bit offset for a Verilog port: it
 reads the pairs the bits fall in and shifts them down.
 
+**Tier 38: a memory loaded from a file.**
+Verilog only.
+The RAM of SERV is loaded by `$readmemh` and spans nine arenas, and
+neither had a corpus case.
+The bench names the file by its path from the workspace root, and the
+new `data` attribute of `wdb_case` makes it a run time input of the
+simulation.
+
+| Case | Differs from | In | Records |
+| :--- | :--- | :--- | :--- |
+| `t38_v_mem4w32___` | `t11_v_mem2w32` | four words written one per statement at time 0 | 6 |
+| `t38_v_rmh_4w____` | `t38_v_mem4w32___` | `$readmemh` from a four line file | 6, the same |
+| `t38_v_rmb_4w____` | `t38_v_rmh_4w____` | `$readmemb` | 6, the same |
+| `t38_v_rmh_2of4__` | `t38_v_rmh_4w____` | a two line file | 4 |
+| `t38_v_rmh_at2___` | `t38_v_rmh_2of4__` | the file starts with `@2` | 4, `m[2]` and `m[3]` |
+| `t38_v_rmh_rng___` | `t38_v_rmh_4w____` | `$readmemh(f, m, 1, 2)` | 4, `m[1]` and `m[2]` |
+| `t38_v_rmh_desc__` | `t38_v_rmh_4w____` | `m [3:0]` | 6, `m[0]` first |
+| `t38_v_rmh_twice_` | `t38_v_rmh_4w____` | the file loaded twice | 6: the second load records nothing |
+| `t38_v_mem512____` | `t38_v_rmh_4w____` | 512 words, three arenas | 6; 28 chunks for the `X` write |
+
+A load from a file is one element write per line, and the reader
+changed nothing for the tier.
+
 
 ## Record which comparison produced which finding
 
@@ -1274,7 +1297,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 649 cases through tier 37, and
+5. The reader now reproduces all 658 cases through tier 38, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim` and `//hdl/serv:sim`, where the VCD holds
    anything.
