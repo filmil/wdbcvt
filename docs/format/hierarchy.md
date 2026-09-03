@@ -28,7 +28,7 @@ which is the byte the `Xilinx DBG` directory entry points at.
 | ---: | ---: | :--- |
 | `0` | 20 | `Xilinx ISim DBG 006` and a NUL |
 | `20` | 4 | uint32 timestamp, noise |
-| `24` | 4 | int32 `-12` in every case |
+| `24` | 4 | int32 power of ten of the time unit in seconds: `-12` for the picosecond of every VHDL case and of `timescale 1ns / 1ps`, `-9`, `-10` and `-15` under a Verilog precision of `1ns`, `100ps` and `1fs`, tier 21 |
 | `28` | 72 | 18 uint32 region offsets, relative to the section start |
 | `100` | 16 | 4 uint32 counts: scopes, units, objects, declarations |
 | `116` | 68 | 17 uint32 header words, below |
@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 296 cases.
+They are the same in all 313 cases.
 
 
 ## Scope records
@@ -423,6 +423,42 @@ A generic is an object: it has an instance record with the fifth word
 set to 2, a declaration of kind `0x12`, and one value record at time 0.
 The default and the explicit value produce the same layout, found by
 `t4_gen_default` against `t4_gen_explicit`.
+
+A Verilog module does not repeat its unit for a second parameter set.
+`t21_v_param_diff` instantiates `child` with `K` 7 and with `K` 9 and
+has one `child()` unit, two declarations and four objects, the same
+counts as `t21_v_param_same` with 7 and 7.
+The two `K` objects hold their own values.
+So the VHDL repetition of `t4_gen_diff_two` is a VHDL property, not a
+rule of the section.
+*Found by* `t21_v_param_diff` against `t21_v_param_same`.
+
+
+## Mixed language
+
+A VHDL testbench over a Verilog child, `t21_mix_v_in_vh`, and a Verilog
+testbench over a VHDL child, `t21_mix_vh_in_v`, put both languages in
+one file.
+Each unit keeps its own kind: `entity tb(sim)` beside `module child()`,
+and `process` beside `vprocess`.
+Each declaration keeps its own language: the Verilog port is a `net`
+of `logic` sized in bits, the VHDL port a `signal` of `STD_ULOGIC`
+sized in bytes, and the type table holds an origin `2` entry beside an
+origin `5` entry.
+The child's source is in the file table, and the Verilog file numbers
+land after the VHDL library files.
+
+The port at the language boundary is not on the signal's handle.
+`t9_comp` joins a VHDL signal and the VHDL port it drives on one
+handle; both mixed cases give the port a handle of its own, and the
+port's records are its own history.
+A VHDL port under a Verilog testbench holds `U` at time 0 before the
+driven `0`, the VHDL default of `STD_ULOGIC`, where the same port under
+a VHDL testbench, `t9_comp`, holds the driven value only.
+A Verilog port under a VHDL testbench holds `X` then `0`, as a Verilog
+net with a driver does.
+*Found by* `t21_mix_vh_in_v` against `t11_v_port` and `t9_comp`.
+*Confirmed by* `t21_mix_v_in_vh` against `t9_comp`.
 
 
 ## For generate

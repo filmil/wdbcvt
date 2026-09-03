@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 296 of 296 cases decoding with the entry lengths chaining
+*Confirmed by* 313 of 313 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -116,7 +116,10 @@ nothing else in the file names `STD_ULOGIC`.
 **Integer.**
 `INTEGER` is `-2147483648 to 2147483647` and `NATURAL` is
 `0 to 2147483647`.
-A subtype with its own bounds is a separate entry.
+A subtype with its own bounds is a separate entry under the subtype's
+name, `small_t` `0 to 7` in `t21_int_sub`, and a new integer type of
+the same range, `t21_int_newtype`, produces the same entry.
+The value stays 4 bytes.
 
 **Real.**
 `REAL` is `-1e308 to 1e308`.
@@ -125,7 +128,13 @@ A subtype with its own bounds is a separate entry.
 `TIME` lists eight units with their size in picoseconds:
 `fs=0 ps=1 ns=1000 us=1000000 ms=1000000000 sec=1000000000000
 min=60000000000000 hr=3600000000000000`.
-So the database's time unit is the picosecond, and `fs` rounds to zero.
+So `TIME` counts picoseconds, and `fs` rounds to zero.
+A user physical type lists its units in its own base unit:
+`t21_phys_user` declares `um`, `mm = 1000 um` and `m = 1000 mm`, and
+the entry holds `um=1 mm=1000 m=1000000`.
+Whether the `TIME` scales change under a femtosecond precision is open;
+tier 21 reached that precision from Verilog only, where `TIME` does not
+appear.
 There is no trailer word.
 
 The origin word of `TIME` is `0xa`, which no other VHDL type has.

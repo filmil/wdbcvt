@@ -70,7 +70,7 @@ trailer:
 
 | Offset | Size | Meaning |
 | ---: | ---: | :--- |
-| `0` | 8 | `t0`, the time of the first record, in ps |
+| `0` | 8 | `t0`, the time of the first record, in the file's time unit |
 | `8` | 8 | `t1`, the time of the last record minus `t0` |
 | `16` | 4 | `n`, the number of records |
 | `20` | | `n` records, then zero padding to 10240 |
@@ -79,7 +79,7 @@ A record is:
 
 | Offset | Size | Meaning |
 | ---: | ---: | :--- |
-| `0` | 8 | time in ps |
+| `0` | 8 | time, in the file's time unit |
 | `8` | 4 | key |
 | `12` | 4 | length of the value in bytes |
 | `16` | | the value |
@@ -156,14 +156,39 @@ whichever of the two is declared first.
 in the last page; `t14_v_spill_d` and `t14_v_spill_dfst` against
 `t13_v_tr430_2`, the `X` of `d` kept in the spilling arena.
 
-The time unit is the picosecond, and nothing finer is kept.
+The time unit is the simulation precision, and nothing finer is kept.
 `t8_ps` waits `1 ps`, `998 ps` and `1500 fs`, and its records sit at
 1, 999 and 1000, so the third wait was cut to 1 ps, and the end time is
 11000.
 That is the simulator's resolution as much as the file's: xsim runs the
-corpus at its default 1 ps precision, and the VCD it writes agrees.
+VHDL corpus at its default 1 ps precision, and the VCD it writes agrees.
 
 *Found by* `t8_ps` against `t1_bit_two_edges`.
+
+The unit is written in the DBG section, as the power of ten of a
+second after the timestamp, and it follows the Verilog precision.
+`t21_v_ts_1ns_1ns` holds its change at 50 and its end time at 100
+under `-9`, `t21_v_ts_1ns_100` holds 506 and 1001 under `-10`, for a
+delay of `50.55` rounded to `50.6 ns` and an end of `100.1 ns`, and
+`t21_v_ts_1ps_1fs` holds 50500 and 100000 under `-15`, for a delay of
+`50.5 ps`.
+The page bounds `t0` and `t1` are in the same unit.
+The VCD is written in the same precision, `$timescale 1ns`, `100ps`
+and `1fs`, so the two agree without conversion.
+A source without a `timescale` directive, `t21_v_ts_none`, is at
+picoseconds, and a VHDL child under a `1ns / 1ns` testbench,
+`t21_mix_ts_1ns`, is at picoseconds as well: the finest precision in
+the design wins.
+The time scale unit, `10ns` in `t21_v_ts_10ns`, does not reach the
+file; `#5` there is 50 under `-9`.
+So the picosecond of the earlier tiers was the precision of every case,
+not a property of the format, and the reader now takes the unit from
+the section.
+
+*Found by* `t21_v_ts_1ns_1ns` against `t11_v_bit_edge`, where the
+reader refused the file over the word it had read as a constant `-12`.
+*Confirmed by* `t21_v_ts_1ps_1ps`, `t21_v_ts_10ns`, `t21_v_ts_1ns_100`,
+`t21_v_ts_1ps_1fs`, `t21_v_ts_none` and `t21_mix_ts_1ns`.
 
 A net shared by a signal and the ports connected to it is one handle,
 see [hierarchy.md](hierarchy.md), and its records show the connection
@@ -334,7 +359,7 @@ records; see the Verilog section below.
 | enumeration | the literal's index in the type's list, 1 byte up to 256 literals and 4 bytes from 257 on |
 | `integer` and its subtypes | int32 |
 | `real` | float64 |
-| `time` | int64 in ps |
+| `time` | int64, in the unit whose scale is 1: `ps` for `TIME`, `um` for `dist_t` of `t21_phys_user` |
 | array | elements back to back, left index first |
 | record | fields in declaration order, aligned, total rounded up to 8 |
 
@@ -345,6 +370,17 @@ The integer encoding was found by `t2_integer`, with 165 stored as
 `a5 00 00 00`.
 `t2_real` stores 1.5 as `0x3ff8000000000000`.
 `t2_time` stores `7 ns` as 7000.
+`t21_phys_user` declares `units um; mm = 1000 um; m = 1000 mm` and
+stores `3 mm` as 3000, so a physical value counts the base unit and the
+type entry gives every unit's scale in it.
+`t21_int_neg` stores -165 as `5b ff ff ff`, two's complement, and
+`t21_real_neg` stores -1.5 as `0xbff8000000000000`.
+An integer subtype `range 0 to 7`, `t21_int_sub`, and a new integer
+type of the same range, `t21_int_newtype`, are 4 bytes like `INTEGER`,
+and their entries carry the narrow bounds under the subtype's name;
+the two cases are byte identical outside the noise mask.
+`bit_vector(7 downto 0)`, `t21_bitvec8`, is one byte per `BIT` like a
+`std_ulogic_vector`.
 Arrays were found by `t1_vec8`, `t2_array2d` and `t5_int_arr`.
 Records were found by `t2_record`, `t5_rec_real` and `t5_arr_rec`.
 

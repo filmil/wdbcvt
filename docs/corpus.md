@@ -107,7 +107,9 @@ Every case in the corpus keeps these the same, so they cannot become
 confounds:
 
 * the top level entity is always named `tb`,
-* the Vivado library name is always `corpus`,
+* the Vivado library name is always `corpus`, except that a mixed
+  language case compiles its child into a library named `child`,
+  because `rules_vivado` compiles one language per library,
 * the simulation ends through `std.env.stop`, at 100 ns unless the case
   is about a longer run,
 * the source files use the same header, the same libraries and the same
@@ -574,6 +576,38 @@ value and keyword.
 | `t20_v_realp_big` | `parameter real R = 123456.789` | 16 bits |
 | `t20_v_realp_lp` | `localparam real R = 1.5` | 16 bits |
 
+Tier 21 turns to what every earlier case held constant.
+It moves the Verilog time scale, since every case so far ran at 1 ps
+and the DBG word `-12` had never moved; puts two parameter sets on one
+Verilog module, as tier 4 did for VHDL generics; crosses the language
+boundary in both directions; and spells values the earlier cases only
+spelled one way: a negative integer, a negative real, an integer
+subtype, a user physical type and a `bit_vector`.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t21_int_neg` | `s <= -165` | `5b ff ff ff` |
+| `t21_int_sub` | `subtype small_t is integer range 0 to 7` | an entry `small_t` `0 to 7`; 4 bytes |
+| `t21_int_newtype` | `type small_t is range 0 to 7` | byte identical to the subtype |
+| `t21_real_neg` | `s <= -1.5` | `0xbff8000000000000` |
+| `t21_phys_user` | `units um; mm = 1000 um; m = 1000 mm` | `um=1 mm=1000 m=1000000`; `3 mm` as 3000 |
+| `t21_bitvec8` | `bit_vector(7 downto 0)` | `BIT_VECTOR` over `BIT`, 8 bytes |
+| `t21_v_param_same` | two instances, `K` 7 and 7 | one unit, two `K` objects |
+| `t21_v_param_diff` | two instances, `K` 7 and 9 | still one unit |
+| `t21_v_ts_1ns_1ns` | `timescale 1ns / 1ns` | the DBG word `-9`; times in ns |
+| `t21_v_ts_1ps_1ps` | `timescale 1ps / 1ps` | `-12` |
+| `t21_v_ts_10ns` | `timescale 10ns / 1ns`, `#5` | `-9`; 50 |
+| `t21_v_ts_1ns_100` | `timescale 1ns / 100ps`, `#50.55` | `-10`; 506, end 1001 |
+| `t21_v_ts_1ps_1fs` | `timescale 1ps / 1fs`, `#50.5` | `-15`; 50500 |
+| `t21_v_ts_none` | no `timescale` | `-12` |
+| `t21_mix_v_in_vh` | a Verilog child under a VHDL testbench | both languages' units and declarations; the port on its own handle |
+| `t21_mix_vh_in_v` | a VHDL child under a Verilog testbench | the VHDL port holds `U` then `0` |
+| `t21_mix_ts_1ns` | the same under `timescale 1ns / 1ns` | `-12`; the VHDL precision wins |
+
+The time scale cases changed the reader's interface: the times it
+returns are in the file's own unit, `File.TimeUnit`, and the truth of a
+case may add `time_ps` and `time_fs` to `time_ns`.
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -631,7 +665,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 296 cases through tier 20, and
+5. The reader now reproduces all 313 cases through tier 21, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
