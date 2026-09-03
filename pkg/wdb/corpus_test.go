@@ -28,8 +28,24 @@ type truthSignal struct {
 	ElementType  string        `json:"element_type"`
 	ElementWidth int           `json:"element_width"`
 	// Port is the mode of a signal declared in a port list: in, out,
-	// inout or buffer. Empty for a signal declared in an architecture.
+	// inout, buffer or linkage. Empty for a signal declared in an
+	// architecture.
 	Port string `json:"port"`
+	// Logged is false for a signal the simulation declares but never
+	// logs, such as a package signal outside the logged hierarchy:
+	// t9_pkg_sig. Absent means logged.
+	Logged *bool `json:"logged"`
+}
+
+// truthRun is a long train of transitions written as a rule rather than
+// listed: count changes from start_ns, step_ns apart, cycling through
+// values. t9_tr70000 has one.
+type truthRun struct {
+	Signal  string   `json:"signal"`
+	StartNS int64    `json:"start_ns"`
+	StepNS  int64    `json:"step_ns"`
+	Count   int      `json:"count"`
+	Values  []string `json:"values"`
 }
 
 type truthTransition struct {
@@ -39,9 +55,16 @@ type truthTransition struct {
 	Value  json.RawMessage `json:"value"`
 }
 
+// truthGeneric is one generic of one instance. The early cases name it
+// k and give its integer value in K; t9_gen_types names generics of
+// other types and spells the value the way the decoder renders it.
 type truthGeneric struct {
 	Instance string `json:"instance"`
 	K        int    `json:"k"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Value    string `json:"value"`
+	Width    int    `json:"width"`
 }
 
 // truthVariable is a process variable: Kind is "variable" for a declared
@@ -56,6 +79,9 @@ type truthVariable struct {
 	// Value is what the one record of a loop index holds, when the
 	// truth states it: a generate index records its iteration value.
 	Value string `json:"value"`
+	// Logged is false for a constant that gets no record at all: one
+	// declared in a package, t9_port_rec and t9_mark_gap.
+	Logged *bool `json:"logged"`
 }
 
 // plainPath strips the extended identifier bars the database puts
@@ -71,6 +97,7 @@ type truth struct {
 	EndTimePS   int64             `json:"end_time_ps"`
 	Signals     []truthSignal     `json:"signals"`
 	Transitions []truthTransition `json:"transitions"`
+	Runs        []truthRun        `json:"transition_runs"`
 	Generics    []truthGeneric    `json:"generics"`
 	Variables   []truthVariable   `json:"variables"`
 }
@@ -264,19 +291,23 @@ func TestCorpus(t *testing.T) {
 					t.Errorf("%s: type table implies %d bytes, declaration says %d", f.ObjectPath(o), size, dc.Size)
 				}
 			}
-			var signals, others int
+			// Objects are counted by path: a process variable in an
+			// entity instantiated n times is listed n times in each of
+			// the n process scopes, with the n handles. t9_mark_two,
+			// t9_var_inst3.
+			signals, others := map[string]bool{}, map[string]bool{}
 			for _, o := range f.Objects {
 				if !o.Generic {
-					signals++
+					signals[plainPath(f.ObjectPath(o))] = true
 				} else {
-					others++
+					others[plainPath(f.ObjectPath(o))] = true
 				}
 			}
-			if signals != len(tr.Signals) {
-				t.Errorf("%d signal objects, truth lists %d", signals, len(tr.Signals))
+			if len(signals) != len(tr.Signals) {
+				t.Errorf("%d signal objects, truth lists %d", len(signals), len(tr.Signals))
 			}
-			if want := len(tr.Generics) + len(tr.Variables); others != want {
-				t.Errorf("%d generic and variable objects, truth lists %d", others, want)
+			if want := len(tr.Generics) + len(tr.Variables); len(others) != want {
+				t.Errorf("%d generic and variable objects, truth lists %d", len(others), want)
 			}
 			for _, s := range tr.Signals {
 				path := s.Scope + "." + s.Name
@@ -297,6 +328,9 @@ func TestCorpus(t *testing.T) {
 				}
 				if got := f.Decls[o.Decl].Mode.String(); got != mode {
 					t.Errorf("%s: port mode %s, truth says %s", path, got, mode)
+				}
+				if logged := s.Logged == nil || *s.Logged; o.Logged != logged {
+					t.Errorf("%s: logged %v, truth says %v", path, o.Logged, logged)
 				}
 			}
 
@@ -319,6 +353,17 @@ func TestCorpus(t *testing.T) {
 					t.Fatal(err)
 				}
 				want[path] = append(want[path], change{uint64(x.TimeNS)*1000 + uint64(x.TimePS), v})
+			}
+			for _, r := range tr.Runs {
+				path := r.Signal
+				if _, ok := got[path]; !ok {
+					path = "tb." + r.Signal
+				}
+				for i := 0; i < r.Count; i++ {
+					ps := uint64(r.StartNS+int64(i)*r.StepNS) * 1000
+					want[path] = append(want[path], change{ps, r.Values[i%len(r.Values)]})
+				}
+				sort.Slice(want[path], func(i, j int) bool { return want[path][i].timePS < want[path][j].timePS })
 			}
 			for path, w := range want {
 				g, ok := got[path]
@@ -344,11 +389,25 @@ func TestCorpus(t *testing.T) {
 
 			// Generics: one object per instance, valued at time zero.
 			for _, g := range tr.Generics {
-				path := "tb." + g.Instance + ".k"
+				name, value := g.Name, g.Value
+				if name == "" {
+					name, value = "k", strconv.Itoa(g.K)
+				}
+				path := "tb." + g.Instance + "." + name
 				o, ok := objByPath[path]
 				if !ok || !o.Generic {
 					t.Errorf("truth generic %s is not a generic object", path)
 					continue
+				}
+				dc := f.Decls[o.Decl]
+				if dc.Kind != DeclGeneric {
+					t.Errorf("%s: declaration kind %s, want generic", path, dc.Kind)
+				}
+				if g.Type != "" && !strings.EqualFold(f.Types[dc.Type].Name, g.Type) {
+					t.Errorf("%s: type %s, truth says %s", path, f.Types[dc.Type].Name, g.Type)
+				}
+				if g.Width != 0 && dc.Size != g.Width {
+					t.Errorf("%s: %d bytes, truth says %d elements", path, dc.Size, g.Width)
 				}
 				ch, err := f.Changes(o)
 				if err != nil {
@@ -358,12 +417,12 @@ func TestCorpus(t *testing.T) {
 					t.Errorf("%s: %d changes, want one at time zero", path, len(ch))
 					continue
 				}
-				v, err := f.Decode(f.Decls[o.Decl], ch[0].Data)
+				v, err := f.Decode(dc, ch[0].Data)
 				if err != nil {
 					t.Fatal(err)
 				}
-				if v.Scalar != strconv.Itoa(g.K) {
-					t.Errorf("%s = %s, truth says %d", path, v.Scalar, g.K)
+				if got := f.String(v); !sameValue(f, dc.Type, value, got) {
+					t.Errorf("%s = %s, truth says %s", path, got, value)
 				}
 			}
 
@@ -400,6 +459,12 @@ func TestCorpus(t *testing.T) {
 				case "loop", "constant":
 					if dc.Kind != DeclConstant {
 						t.Errorf("%s: declaration kind %s, want constant", path, dc.Kind)
+					}
+					if vr.Logged != nil && !*vr.Logged {
+						if len(ch) != 0 || o.Logged {
+							t.Errorf("%s: %d records, a package constant has had none", path, len(ch))
+						}
+						continue
 					}
 					if len(ch) != 1 || ch[0].TimePS != 0 {
 						t.Errorf("%s: %d records, a loop index has had one at time zero", path, len(ch))
