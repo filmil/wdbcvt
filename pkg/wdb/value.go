@@ -57,6 +57,23 @@ func (f *File) fieldRanges(fd Field) []Range {
 	return rs
 }
 
+// fieldConstraint picks the constraint list a record field decodes
+// with. The declaration record of a record object lists the bounds of
+// every array dimension inside it, in field order, and that list is the
+// only place the bounds of a VHDL 2008 field declared without them
+// live: t42_rec_uncons has bravo:[3]((0, 0, dir -2)) in the type and
+// (7 downto 0) on the declaration, and t42_rec_two_cons constrains one
+// record type two ways from two declarations. So the fields consume the
+// declaration list, and fall back to their own triples only when the
+// list is empty. See docs/format/types.md, "Record".
+func (f *File) fieldConstraint(fd Field, rs *[]Range) *[]Range {
+	if len(*rs) > 0 {
+		return rs
+	}
+	own := f.fieldRanges(fd)
+	return &own
+}
+
 // layoutOf computes the layout of type t, consuming index constraints
 // from rs for every array dimension it meets.
 func (f *File) layoutOf(t int, rs *[]Range) (layout, error) {
@@ -89,8 +106,7 @@ func (f *File) layoutOf(t int, rs *[]Range) (layout, error) {
 	case KindRecord:
 		off := 0
 		for _, fd := range ty.Fields {
-			frs := f.fieldRanges(fd)
-			l, err := f.layoutOf(fd.Type, &frs)
+			l, err := f.layoutOf(fd.Type, f.fieldConstraint(fd, rs))
 			if err != nil {
 				return layout{}, fmt.Errorf("%s.%s: %w", ty.Name, fd.Name, err)
 			}
@@ -232,8 +248,11 @@ func (f *File) decode(t int, data []byte, rs *[]Range) (Value, int, error) {
 	case KindRecord:
 		off := 0
 		for _, fd := range ty.Fields {
-			frs := f.fieldRanges(fd)
-			l, err := f.layoutOf(fd.Type, &frs)
+			// The layout pass and the decode pass consume the same
+			// constraints, so the second one starts from a copy.
+			frs := f.fieldConstraint(fd, rs)
+			saved := *frs
+			l, err := f.layoutOf(fd.Type, frs)
 			if err != nil {
 				return v, 0, fmt.Errorf("%s.%s: %w", ty.Name, fd.Name, err)
 			}
@@ -241,8 +260,8 @@ func (f *File) decode(t int, data []byte, rs *[]Range) (Value, int, error) {
 			if err := need(off + l.size); err != nil {
 				return v, 0, err
 			}
-			frs = f.fieldRanges(fd)
-			fv, _, err := f.decode(fd.Type, data[off:off+l.size], &frs)
+			*frs = saved
+			fv, _, err := f.decode(fd.Type, data[off:off+l.size], frs)
 			if err != nil {
 				return v, 0, fmt.Errorf("%s.%s: %w", ty.Name, fd.Name, err)
 			}
