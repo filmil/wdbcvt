@@ -80,11 +80,41 @@ const (
 	DeclConstant DeclKind = 0x13 // a constant, a for loop index or a generate index
 	// The Verilog declaration kinds: a variable (reg, logic, integer
 	// and the other variable types), a parameter, and a net (wire and
-	// every port of t11_v_port). Found by tier 11.
-	DeclVar   DeclKind = 0x00
-	DeclParam DeclKind = 0x01
-	DeclNet   DeclKind = 0x03
+	// every port of t11_v_port). Found by tier 11. The other net
+	// kinds follow wire in the order the Verilog standard lists them,
+	// with 0x0b unseen where trireg would sit, since xsim refuses a
+	// trireg. Found by tier 19. A uwire is a wire.
+	DeclVar     DeclKind = 0x00
+	DeclParam   DeclKind = 0x01
+	DeclNet     DeclKind = 0x03
+	DeclWand    DeclKind = 0x04
+	DeclWor     DeclKind = 0x05
+	DeclTri     DeclKind = 0x06
+	DeclTriand  DeclKind = 0x07
+	DeclTrior   DeclKind = 0x08
+	DeclTri0    DeclKind = 0x09
+	DeclTri1    DeclKind = 0x0a
+	DeclSupply0 DeclKind = 0x0c
+	DeclSupply1 DeclKind = 0x0d
 )
+
+// netKinds maps the Verilog net keyword to its declaration kind.
+var netKinds = map[string]DeclKind{
+	"wire": DeclNet, "uwire": DeclNet, "wand": DeclWand, "wor": DeclWor,
+	"tri": DeclTri, "triand": DeclTriand, "trior": DeclTrior,
+	"tri0": DeclTri0, "tri1": DeclTri1,
+	"supply0": DeclSupply0, "supply1": DeclSupply1,
+}
+
+// IsNet reports whether the kind is one of the Verilog net kinds.
+func (k DeclKind) IsNet() bool {
+	for _, n := range netKinds {
+		if n == k {
+			return true
+		}
+	}
+	return false
+}
 
 func (k DeclKind) String() string {
 	switch k {
@@ -102,6 +132,11 @@ func (k DeclKind) String() string {
 		return "parameter"
 	case DeclNet:
 		return "net"
+	}
+	for name, n := range netKinds {
+		if n == k && name != "uwire" {
+			return name
+		}
 	}
 	return fmt.Sprintf("decl(%#x)", uint32(k))
 }
