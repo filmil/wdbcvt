@@ -287,12 +287,24 @@ What it holds is open.
 
 A range record has 6 words.
 `t2_flat3` has one, for `bravo : std_ulogic_vector(7 downto 0)`:
-`[7][0][0][0][-1][8]`, which reads as left bound, right bound, two
-zeros, `-1`, and length.
-`t2_array2d` has two.
-The direction of the range is not in the record; it is in the type
-table.
-The record's own meaning beyond the bounds and length is open.
+`[7][0][0][0][-1][8]`.
+The words are the left bound as a 64 bit pair, low word first, the
+right bound as another, the direction, `1` for `to` and `-1` for
+`downto`, and the span of the bounds plus one.
+The high words are the sign: `array (-2 to 1)` of `t41_neg_arr_type`
+is `[-2][-1][1][0][1][4]`, and `reg [-4:3]` of `t12_v_neg_range` is
+`[-4][-1][3][0][1][8]`, so the record is the same for both languages.
+The direction is in the record, not only in the type table: the two
+ranges of `t2_array2d`, `(0 to 3)` and `(7 downto 0)`, hold `1` and
+`-1`, and the dump prints them from that word.
+The last word is not the element count: the null range `(0 downto 1)`
+of `t24_null_range` holds `[0][0][1][0][-1][2]` beside a declaration
+size of 0, so it is the distance between the bounds plus one, and the
+reader computes the length from the bounds and the direction instead.
+*Found by* `t41_neg_arr_type` against `t2_flat3` for the pairs,
+`t2_array2d` for the direction, `t24_null_range` for the span.
+*Confirmed by* `t43_port_unc_asc`, `(0 to 7)`; `t12_v_neg_range`;
+`t11_v_mem8`, `[0:7]` and `[7:0]`.
 
 
 ## The file table
