@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 79 cases.
+They are the same in all 116 cases.
 
 
 ## Scope records
@@ -135,7 +135,7 @@ The record has 9 words:
 | ---: | :--- |
 | 0 | entity name, offset into the scope name pool, `-1` if none |
 | 1 | architecture name, same pool, `-1` if none |
-| 2 | kind: `0x13` the root, `0x09` an entity, `0x0c` a generate, `0x0d` a process |
+| 2 | kind: `0x13` the root, `0x09` an entity, `0x0a` a package, `0x0c` a generate or a block, `0x0d` a process |
 | 3 | number of declarations |
 | 4 | 0, see below |
 | 5 | file index of the architecture |
@@ -204,7 +204,13 @@ It is the port mode:
 | 1 | `in` | `t8_port_in`, `t8_port_open`, `t8_port_vec8` |
 | 2 | `out` | `t8_port_out`, `t8_port_open` |
 | 3 | `buffer` | `t8_port_buffer` |
+| 4 | `linkage` | `t9_port_lnk` |
 | 5 | not a port | every declaration through tier 7 |
+
+The five modes are in the order the VHDL standard lists them.
+A `linkage` port connected to a signal shares the signal's handle
+like any other port, and `t9_port_lnk` is otherwise byte for byte the
+layout of `t8_port_in`.
 
 The reader exposes it as `Decl.Mode`, and the corpus test checks it
 against the `port` field of each signal in `truth.json`.
@@ -271,11 +277,27 @@ variable that the simulator gave storage.
 | ---: | ---: | :--- |
 | `0` | 8 | handle |
 | `8` | 8 | second handle for a signal, 0 for the others |
-| `16` | 8 | scope index |
+| `16` | 4 | scope index |
+| `20` | 4 | byte offset into the value at the handle, 0 unless the object is a port bound to a slice |
 | `24` | 4 | 0 |
 | `28` | 4 | 0 for a signal, 2 when the second handle is 0 |
 | `32` | 8 | declaration index |
-| `40` | 16 | 0 |
+| `40` | 4 | 0 |
+| `44` | 4 | `-1`, 0, or a value that differs between runs; open |
+| `48` | 8 | 0 |
+
+The word at `16` was read as a `uint64` scope index through tier 8,
+where the upper half was always 0.
+`t9_port_slice` binds a `std_ulogic` port to `x(0)` of a
+`std_ulogic_vector(1 downto 0)`, and the port's record holds scope 2
+and `1` in the upper half: the byte offset of `x(0)`, the right and
+therefore second element, in the signal's value.
+`t9_port_slice2` binds a 2 bit port to `x(2 downto 1)` of a 4 bit
+vector and holds 1 again, the offset of `x(2)`, and `t9_port_sliceto`
+binds `x(0)` of a `0 to 1` vector and holds 0.
+So the port's value is `size` bytes of the signal's value from that
+offset, and the reader decodes it from the signal's records.
+See [values.md](values.md).
 
 The handle is the number a value record in a page carries, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
@@ -340,6 +362,26 @@ handle is read from the record.
 
 The decoder exposes the fifth word as `Object.Generic`, because it is 2
 for exactly the objects that are not signals.
+
+Generics of other types get handles the same way.
+`t9_gen_types` has `kb : boolean`, `ks : string(1 to 3)`,
+`kv : std_ulogic_vector(3 downto 0)` and `kr : real` at `0xe98`,
+`0xe99`, `0xeac` and `0xec0`: 1, 19 and 20 apart for values of 1, 3, 4
+and 8 bytes, so the stride is not the size.
+Each is a declaration of kind `0x12` with the type's size in word 4,
+and the corpus test checks name, type, size and recorded value against
+`truth.json`.
+
+A port bound to a literal, `a => '1'` in `t9_port_expr`, gets its own
+handle `0x858` like an open port, in a second arena, at `0x1380` of
+handle space against the `0x1288` of `t8_port_in`.
+A component declaration with default binding, `t9_comp`, an alias of a
+signal, `t9_alias`, a function with a variable, `t9_func`, and a
+procedure with a variable declared in the process, `t9_proc_local`,
+add no unit, scope, declaration or object.
+The subprograms cost 8 bytes of handle space each, a procedure with a
+`signal` parameter costs `0x48`, and none of that space shows up as
+an object; see [container.md](container.md).
 
 
 ## Generics and entity naming
@@ -484,6 +526,46 @@ That is what made `0x13` a constant kind rather than a loop index kind.
 *Found by* `t8_gen_if` against `t7_gen_for` and `t4_gen_explicit`.
 
 
+## Blocks
+
+A `block` statement is a scope of unit kind `0x0c`, the kind of a
+generate, under the architecture that holds it.
+`t9_block` has `b: block` with a signal `y` and a concurrent
+assignment, and the file holds scopes `tb`, `tb.b`, `tb.p` and
+`tb.b.line__20`, with `y` an object of `tb.b` on its own handle.
+A block and a generate are not told apart by the unit kind.
+The unit's file and line point at the `block` line.
+
+*Found by* `t9_block` against `t7_gen_for`.
+
+
+## Packages
+
+A package that declares an object is a scope of its own.
+`t9_port_rec` uses a package `pair_pkg` with a record type and a
+constant `zero` of that type, and the file holds:
+
+| Scope | Parent | Unit kind | First object |
+| :--- | ---: | ---: | ---: |
+| `_top` | `-1` | `0x13` | none |
+| `tb` | 0 | `0x09` | 0 |
+| `pair_pkg` | 0 | `0x0a` | 1 |
+| `tb.dut` | 1 | `0x09` | 2 |
+| `tb.p` | 1 | `0x0d` | none |
+
+The package is a child of the root next to `tb`, not under it, and its
+unit has no entity file or line.
+Its constant is a declaration of kind `0x13`, the constant kind, and an
+object with handle `0xd40` and no records.
+`t9_mark_two` and `t9_mark_gap` have the same for an integer constant,
+and `t9_pkg_sig` has a package signal as an object with the first
+handle `0x768` and no records; see [values.md](values.md).
+A package with only a type in it, as in `t2_record`, gets no scope.
+
+*Found by* `t9_port_rec` against `t2_record`, where the extra scope
+sat between `tb` and `tb.dut` in the scope list.
+
+
 ## Implicit processes
 
 A concurrent signal assignment such as `q <= a;` in an architecture is
@@ -515,3 +597,27 @@ and record their value instead; see above.
 
 Both kinds count toward the marker only when they have a record.
 See the marker section of [container.md](container.md).
+
+The objects of a process variable multiply with the instances of its
+entity.
+`t9_var_inst3` instantiates `child` three times, and `child` has one
+process with one variable `v`.
+The variable is one declaration in the process's unit, unit 4, shared
+by the three process scopes `tb.d0.p`, `tb.d1.p` and `tb.d2.p`.
+Each of those scopes lists three objects for `v`, on the three handles
+`0x11c0`, `0x12d8` and `0x13f0`, `0x118` apart, so the file holds nine
+objects for three variables.
+`t9_mark_two` does the same with two instances: four objects, on
+`0x1100` and `0x1218`, two per scope.
+`t8_gen_nest`, whose four instances take different generics and so get
+four units and four declarations each, lists one object per variable.
+So the multiplication happens when instances share a unit, and which
+of the shared handles belongs to which scope cannot be told from the
+file.
+It does not matter to the reader, because a variable has no records,
+and the corpus test counts objects by distinct path.
+
+*Found by* `t9_mark_two` against `t6_var_int`, written to put a
+second logged range after an unlogged object, and showing eight objects
+where six were expected.
+*Confirmed by* `t9_var_inst3`.

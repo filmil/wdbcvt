@@ -45,13 +45,13 @@ See [values.md](values.md).
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 79 cases |
-| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 79 cases |
-| `0x30` | 8 | `uint64` `0x40` | same | constant in all 79 cases |
+| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 116 cases |
+| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 116 cases |
+| `0x30` | 8 | `uint64` `0x40` | same | constant in all 116 cases |
 | `0x38` | 4 | `uint32` Unix time the database was written | the noise mask, two runs of `t3_tr1` | decodes to the file's own mtime |
-| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 79 cases |
-| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 79 cases |
-| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 79 cases |
+| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 116 cases |
+| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 116 cases |
+| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 116 cases |
 | `0xc4` | 4 | `uint32` per run duration, noise | the noise mask | differs between two runs of one case |
 
 The three `uint32` at `0x98` and the `3` at `0xc0` have not moved in any
@@ -86,11 +86,22 @@ so the table's length is `(pointer - 0x48 - 0xc8) / 8`.
 | `t7_sig16` | 16 | `0x2518` | 3 | 5 |
 | `t6_sig20` | 20 | `0x2a38` | 4 | 6 |
 | `t7_sig24` | 24 | `0x2f60` | 4 | 6 |
+| `t9_vec4096` | 2 | `0x72d8` | 6 | 15 |
+| `t9_vec12000` | 1 | `0x9e50` | 7 | 20 |
+
+A slot can be `0` in the middle of the table as well as at its end.
+`t9_pkg_sig` declares a signal in a package, and that signal takes the
+first handle `0x768` but is never logged, so arena 0 is never written
+and slot 0 is `0` while slot 1 names the arena of the testbench's own
+signal.
+A wide value spans arenas, see [values.md](values.md): the 12000 byte
+signal of `t9_vec12000` sits on handle `0x768` and its chunks fill
+arenas 0 to 6, while slots 7 to 19 are `0`.
 
 The slot count is `ceil(handle space / 0x800)`, where the handle space
 is the trailer word at `0x18`, described below.
 The reader checks that rule on every file it opens, and it holds in all
-79 corpus cases.
+116 corpus cases.
 
 *Found by* `t5_sig10` against `t2_flat3`: the trailer and every
 directory entry sat 8 bytes later, and the `0x48` pointer said so.
@@ -99,7 +110,8 @@ through tier 6 and failed on `t7_sig07`, which has four slots for seven
 objects.
 `t7_sig14`, `t7_sig16` and `t7_sig24` then pinned the boundaries at
 `0x1800`, `0x2000` and `0x2800` of handle space.
-*Confirmed by* the reader's check across all 79 cases.
+*Confirmed by* the reader's check across all 116 cases, including
+`t9_vec12000`, whose one object spans 20 slots.
 
 The slot count is not the arena count: `t6_sig05` has two arenas and
 three slots, `t5_sig10` two arenas and four.
@@ -131,18 +143,18 @@ three slot header.
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 8 | `uint64` simulation end time in picoseconds | the correlation sweep across all cases | 79 of 79 against `end_time_ns` in `truth.json` |
-| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 79 cases |
-| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 79 of 79 cases |
-| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 79 cases; the arena span, by its value |
-| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 79 of 79 cases |
-| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 79 cases; the arena table's offset, by its value |
-| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 79 cases |
-| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 79 cases |
-| `0x30` | 8 | `uint64` `1` when any object is logged, `0` in `t0_nosig` | the correlation sweep | `0` for `t0_nosig` alone |
-| `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 62 of 62 cases with a marker |
+| `0x00` | 8 | `uint64` simulation end time in picoseconds | the correlation sweep across all cases | 116 of 116 against `end_time_ns` in `truth.json` |
+| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 116 cases |
+| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 116 of 116 cases |
+| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 116 cases; the arena span, by its value |
+| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 116 of 116 cases |
+| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 116 cases; the arena table's offset, by its value |
+| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 116 cases |
+| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 116 cases |
+| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 116 of 116 cases, checked against the marker |
+| `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 115 of 115 cases with a marker |
 | `0x40` | 4 | `uint32` `0x2800`, the size a value page inflates to | inflating a page | every page in every case inflates to 10240 bytes |
-| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 79 cases |
+| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 116 cases |
 
 The word at `0x18` is `0x11d0` for one bit with one edge, `0x1318` for
 two bits, and `0x2a38` for twenty.
@@ -159,6 +171,25 @@ signal of `t1_bit_one_edge`, and `t8_port_open`, two open ports and no
 signal, has `0x1418`.
 The connected port takes no handle and still takes handle space, so the
 word counts something more than handles.
+
+Tier 9 adds a few more prices, each against the `0x11d0` of
+`t1_bit_one_edge` or the `0x1288` of `t8_port_in`:
+
+| Case | Handle space | Cost | Of what |
+| :--- | ---: | ---: | :--- |
+| `t9_alias` | `0x11d0` | `0` | an alias of the signal |
+| `t9_func` | `0x11d8` | `0x8` | a function with a variable |
+| `t9_proc_local` | `0x11d8` | `0x8` | a procedure with a variable, inside the process |
+| `t9_proc_sig` | `0x1218` | `0x48` | a procedure with a `signal` parameter |
+| `t9_comp` | `0x1288` | as `t8_port_in` | a component declaration and default binding |
+| `t9_port_lnk` | `0x1288` | as `t8_port_in` | a `linkage` port |
+| `t9_port_slice` | `0x1280` | | an `in` port bound to one element of a 2 bit vector |
+| `t9_port_slice2` | `0x1274` | | a 2 bit `in` port bound to a slice of a 4 bit vector |
+| `t9_pkg_sig` | `0x1430` | | a signal in a package, on handle `0x768`, never logged |
+| `t9_port_expr` | `0x1380` | `0x1b0` | an `in` port bound to the literal `'1'`, on its own handle |
+| `t9_block` | `0x13d8` | `0x208` | a block with a signal and an implicit process |
+| `t9_vec4096` | `0x72d8` | | two 4096 byte signals, 15 slots |
+| `t9_vec12000` | `0x9e50` | | one 12000 byte signal, 20 slots |
 
 Three trailer words describe the arena table together: `0xc8` at `0x20`
 is where it starts, the word at `0x0c` is how many slots it has, and
@@ -190,24 +221,67 @@ pointer in the header is filled in when the entry is known.
 The page directory follows the `Xilinx DBG` entry directly.
 Arena record `i` has been at `entry + 48 + 0x4c0 * i` in every case.
 
+An arena record is `0x4c0` bytes:
 
-## The marker
+| Offset | Len | Content |
+| :--- | ---: | :--- |
+| `0x000` | 8 | `uint64` file offset of a continuation record, `0` when there is none |
+| `0x008` | 800 | 100 `uint64` page file offsets |
+| `0x328` | 400 | 100 `uint32` compressed page lengths |
+| `0x4b8` | 8 | `uint64` number of pages listed in this record |
 
-Sixteen bytes, `[uint64 0][uint64 N]`, at the offset the trailer word
-`0x38` names.
+An arena with more than 100 pages continues in another record of the
+same layout, named by word 0.
+The continuation is written among the pages, right after the hundredth
+page, and a record with a continuation lists exactly 100 pages.
+`t9_tr70000`, 70001 records over 117 pages, has its arena record at
+`0x9bb` with word 0 `0x35a4d`, page 100 at `0x351fc`, the continuation
+at `0x35a4d` listing 17 pages with word 0 `0`, and page 101 at
+`0x35f0d`.
+The last page again follows the marker, as in `t5_tr1000`.
 
-`N` was first read as the object count minus one, which held for 43
-cases.
-`t6_var_int` broke it: two objects, one a declared process variable
-with no records, and `N` is `0`.
-`N` is the number of objects that have at least one record, minus one,
-in all 62 cases with a marker.
-The decoder checks that and refuses a file where it does not hold.
+*Found by* `t9_tr70000` against `t6_tr1300`: the reader refused a page
+count of 100 with a nonzero word 0.
+*Confirmed by* the reader reading the case back, 70001 records against
+the truth's transition run.
+
+
+## The marker: the logged ranges
+
+At the offset the trailer word `0x38` names sits a list of 16 byte
+entries, as many as the trailer word `0x30` counts.
+Each entry is `[uint64 first][uint64 last]`, a closed range of object
+indices into the instance records of [hierarchy.md](hierarchy.md).
+Every object inside a range has at least one value record.
+No object outside has any.
+
+| Case | Objects | Entries | Why |
+| :--- | ---: | :--- | :--- |
+| `t1_bit_one_edge` | 1 | `[0, 0]` | one signal |
+| `t2_flat3` | 3 | `[0, 2]` | three signals |
+| `t6_var_int` | 2 | `[0, 0]` | a signal, then a process variable with no records |
+| `t9_pkg_sig` | 2 | `[0, 0]` | a signal, then a package signal that is not logged |
+| `t9_mark_gap` | 3 | `[1, 1]` | a package constant, a signal, a process variable |
+| `t9_port_rec` | 3 | `[0, 0]`, `[2, 2]` | a signal, a package constant, a port |
+| `t9_mark_two` | 8 | `[0, 0]`, `[2, 3]` | a signal, a package constant, two signals, four variable objects |
+| `t9_var_inst3` | 13 | `[0, 3]` | four signals, then nine variable objects |
+
+The list was first read as one record `[0][N]` with `N` the object
+count minus one, which held for 43 cases.
+`t6_var_int` moved the reading to the logged object count minus one,
+which held for 79.
+`t9_port_rec` broke that with two entries and a trailer word of `2`,
+and `t9_mark_gap`, written to put an unlogged object first, showed
+that the first word is an index and not a zero.
+The reader marks each object in a range as logged, and refuses a file
+where an object's records disagree with its range.
 
 *Found by* `t2_flat3` against `t1_two_bits`: `N` was `2` and `1`.
-*Corrected by* `t6_var_int`.
-*Confirmed by* `t5_tr1000`, where the marker is not before the first
-page but after it.
+*Corrected by* `t6_var_int`, then by `t9_port_rec` and `t9_mark_gap`.
+*Confirmed by* `t9_mark_two` and `t9_var_inst3`, and by the reader's
+check across 115 of 115 cases with a marker.
+`t5_tr1000` shows the list is not before the first page but after a
+page flushed mid simulation.
 
 
 ## Sizes, for orientation

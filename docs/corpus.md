@@ -145,6 +145,16 @@ either does or it does not.
 `sim.vcd`, written by the same simulation run, is the independent check
 that the truth file is itself correct.
 
+The fields grew with the ladder, and `//pkg/wdb:corpus_test.go` reads
+them all.
+A signal or a variable can say `"logged": false`, and the test then
+expects an object with no records and outside every logged range.
+A generic can carry `name`, `type`, `value` and `width`, and the test
+checks the declaration and the recorded value against them.
+`transition_runs` lists a signal, a start, a step, a count and the
+values the run cycles through, and the test expands it into
+transitions.
+
 
 ## The ladder
 
@@ -287,10 +297,40 @@ And `t8_ps` first claimed a change at 1001 ps for a wait of 1500 fs,
 which the simulator cut to 1 ps, so the truth was wrong and the file
 was right; the xsim VCD settled it.
 
-Not written yet, in order: a `linkage` port, to fill mode 4; a
-generic of a type other than integer; and then the same ladder in
-Verilog and SystemVerilog, to find out whether the source language
-reaches the database at all.
+Tier 9 has three strands: the two cases tier 8 listed as not written
+yet, the language constructs no tier had touched, and a size sweep
+after the first wide value came back in pieces.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t9_port_lnk` | a `linkage` port | port mode 4 |
+| `t9_gen_types` | generics of `boolean`, `string`, vector and `real` | each records in its type's encoding |
+| `t9_port_slice`, `t9_port_slice2`, `t9_port_sliceto` | a port bound to an element or slice of a signal | instance word `+20` is a byte offset from the left element |
+| `t9_port_expr` | a port bound to `'1'` | the port owns a handle, as an open port |
+| `t9_port_rec` | a record port with a package constant as the default | a package scope of kind `0x0a`; an unlogged object; the marker is a list of ranges |
+| `t9_mark_gap`, `t9_mark_two` | an unlogged object first, then two logged ranges | the ranges hold indices; variable objects multiply per instance |
+| `t9_var_inst3` | three instances of an entity with a process variable | nine objects for three variables |
+| `t9_pkg_sig` | a signal in a package | takes the first handle and is not logged; arena 0 unwritten |
+| `t9_block` | a `block` with a signal | unit kind `0x0c`, as a generate |
+| `t9_comp`, `t9_alias`, `t9_func`, `t9_proc_local` | a component, an alias, a function, a procedure | nothing in the file but handle space |
+| `t9_proc_sig` | a procedure with a `signal` parameter | the change is recorded twice |
+| `t9_vec200` to `t9_vec12000`, 18 sizes | the value size | values over 257 bytes are chunked; the chunk size table |
+| `t9_int73` | 73 integers, the 292 bytes of `t9_vec292` | chunks split bytes, not elements |
+| `t9_tr70000` | 70000 transitions | arena records continue past 100 pages |
+
+The `t9_vec*` sizes were chosen after the first three: 200, 256 and
+257 stayed whole, 292 split, and the rest walk the powers of two, the
+multiples of 146 and a few odd sizes between to find the rule.
+The rule was not found; the table is the result.
+`t9_tr70000` is the one case whose truth is not a value list but a
+`transition_runs` entry, a start, a step and a count, because 70001
+values do not belong in a JSON file.
+
+Not written yet, in order: the same ladder in Verilog and
+SystemVerilog, to find out whether the source language reaches the
+database at all; a `log_wave` that covers a package, to see a package
+signal logged; and a VCD cross-check of every case through
+`go-vcd-parser`.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -345,7 +385,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 79 cases through tier 8.
+5. The reader now reproduces all 116 cases through tier 9.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

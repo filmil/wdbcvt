@@ -61,7 +61,9 @@ the first in the page directory; see [container.md](container.md).
 The page directory has one `0x4c0` byte record per arena, described in
 [container.md](container.md).
 The record lists the file offset and the compressed length of each page
-of that arena, up to 100 pages.
+of that arena, 100 pages per record, and names a continuation record
+when the arena has more.
+`t9_tr70000` has 117 pages in two records.
 
 A page inflates to exactly 10240 bytes, the page size named in the
 trailer:
@@ -149,8 +151,102 @@ After time 0 a change is one record, whichever object drove it.
 
 *Found by* `t8_port_chain` and `t8_port_in` against `t1_hier1`.
 
+A procedure with a `signal` parameter writes the change twice.
+`t9_proc_sig` declares `procedure set(signal s : out std_ulogic)` in
+the process and calls it once at 10 ns, and the page holds `t=0 02`,
+`t=10000 03`, `t=10000 03`.
+The value is the same in both, so it is not a delta with a change, see
+`t8_delta_same`, and the VCD holds one edge.
+It costs `0x48` of handle space, where a procedure with a variable
+costs `0x8`, so the parameter has some object of its own that is not
+listed and that writes on the signal's handle.
 
-## Overflow
+*Found by* `t9_proc_sig` against `t9_proc_local`.
+
+
+## Wide values: chunks
+
+A value longer than 146 bytes is not one record.
+It is written as a run of records with consecutive keys, each carrying
+a chunk of the value, and a chunk is addressed by its handle: the
+object's handle plus the chunk's byte offset in the value.
+So a wide object occupies a range of handle space as long as its value,
+and its chunks land in whichever arenas that range crosses.
+
+`t9_vec292`, one `std_ulogic_vector(291 downto 0)` on handle `0x768`,
+holds at time 0:
+
+| Arena | Key | Bytes | Value bytes |
+| ---: | ---: | ---: | ---: |
+| 0 | `0x768` | 73 | 0 to 72 |
+| 0 | `0x7b1` | 73 | 73 to 145 |
+| 0 | `0x7fa` | 6 | 146 to 151 |
+| 1 | `0x000` | 67 | 152 to 218 |
+| 1 | `0x043` | 73 | 219 to 291 |
+
+The logical chunks are four of 73 bytes.
+The third is split at the arena boundary `0x800`, 6 bytes in arena 0
+and 67 in arena 1, which is the only reason arena 1 exists in that
+file.
+A reader joins the pieces by address: it collects every record whose
+key range overlaps the object's `[handle, handle + size)` from every
+arena the range crosses, sorts them by address, and concatenates the
+i-th record at each address into the i-th value.
+The reader checks that the pieces are contiguous, that every address
+holds the same number of records, and that the records joined into one
+value carry the same time.
+
+The split is in bytes and does not respect elements.
+`t9_int73`, an array of 73 `integer`, 292 bytes, is chunked exactly as
+`t9_vec292`: four chunks of 73 bytes, so a chunk boundary falls inside
+an integer.
+
+The chunk sizes depend on the value size alone, and the same chunking
+is used at every time, including the duplicate time 0 records of a net
+with several objects.
+The corpus sweep over `t9_vec*` and `t9_int73`:
+
+| Value bytes | Chunks | Sizes |
+| ---: | ---: | :--- |
+| 200 | 1 | 200 |
+| 256 | 1 | 256 |
+| 257 | 1 | 257 |
+| 292 | 4 | 73, 73, 73, 73 |
+| 300 | 4 | 75, 75, 75, 75 |
+| 584 | 6 | 97 five times, then 99 |
+| 730 | 6 | 121 five times, then 125 |
+| 1024 | 8 | 128 eight times |
+| 1100 | 8 | 137 seven times, then 141 |
+| 1168 | 8 | 146 eight times |
+| 1300 | 10 | 130 ten times |
+| 1460 | 10 | 146 ten times |
+| 1600 | 12 | 133 eleven times, then 137 |
+| 2048 | 14 | 146 thirteen times, then 150 |
+| 2920 | 20 | 146 twenty times |
+| 3000 | 22 | 136 twenty one times, then 144 |
+| 4096 | 28 | 146 twenty seven times, then 154 |
+| 12000 | 82 | 146 eighty one times, then 174 |
+
+Three regularities hold across the table.
+A value of 257 bytes or less is one record.
+The chunk count is even.
+Every chunk but the last is at most 146 bytes, and the last absorbs a
+remainder of up to 28 bytes.
+The rule that picks 4 chunks for 292 bytes and 6 for 584 is not known:
+`ceil(size / 146)` gives 2 and 4, and a reader that needs the count
+must read it off the records.
+The reader here does not need it, because it joins by address.
+
+An arena is `0x800` handles and a value can be longer than that.
+`t9_vec12000` spans arenas 0 to 6, and the page directory lists seven
+arena records for one object.
+
+*Found by* `t9_vec292` against `t9_vec256` and `t9_vec257`: the
+widest value before tier 9 was the 32 bytes of `t2_array2d`, and the
+first records longer than 257 bytes came back in pieces.
+*Confirmed by* the sweep above and by the reader reading all of them
+back against the truth.
+`t9_int73` separates a byte split from an element split.
 
 A page holds 10240 bytes: 20 bytes of header and then whole records.
 The limit is the byte count, not the record count.
@@ -161,6 +257,7 @@ The limit is the byte count, not the record count.
 | `t6_tr1300` | 1 | 17 | 600 | 600, 600, 101 |
 | `t7_int700` | 4 | 20 | 510 | 510, 191 |
 | `t7_wide700` | 8 | 24 | 425 | 425, 276 |
+| `t9_tr70000` | 1 | 17 | 600 | 600 times 116, then 401 |
 
 `20 + 600 * 17` is 10220, `20 + 510 * 20` is 10220, and `20 + 425 * 24`
 is 10220: in each case the next record would not fit in 10240.
@@ -249,7 +346,13 @@ See [types.md](types.md).
 | constant of an architecture | one at time 0 with the value |
 | loop index of a process `for` loop | one at time 0 holding 0 |
 | loop index of a `for generate` | one at time 0 holding the iteration's value |
+| port bound to a slice of a signal | one at time 0 on the signal's handle plus the slice's byte offset, then nothing of its own |
+| port bound to a literal | as a signal, on its own handle |
+| signal of a block | as a signal |
 | variable declared in a process | none |
+| constant of a package | none |
+| signal of a package | none, under `log_wave -r /tb` |
+| a `signal` parameter of a procedure | the change twice, on the signal's handle |
 
 A signal that never changes has exactly one record, found by
 `t0_bit_const`.
@@ -267,6 +370,50 @@ same declaration kind `0x13`.
 `03` at time 0 and the open `out` port it drives recording `00`, the
 `'U'` it starts from, and then `03` in the first delta, each on its own
 handle.
+
+`t9_gen_types` has generics of `boolean`, `string(1 to 3)`,
+`std_ulogic_vector(3 downto 0)` and `real`, and each is an object with
+one record at time 0 in the encoding of its type: `01`, `61 62 63`,
+`03 02 03 02` and `0x3ff8000000000000`.
+A generic is not an integer only thing.
+`t9_port_expr` binds an `in` port to `'1'` and the port takes a handle
+of its own with a record `03` at time 0, as an open port with a default
+does.
+`t9_block` puts a signal inside a `block` and it records like any
+signal of an architecture.
+
+The tier 9 slice cases bind a port to part of a signal:
+
+| Case | Signal | Binding | Port | Offset |
+| :--- | :--- | :--- | :--- | ---: |
+| `t9_port_slice` | `std_ulogic_vector(1 downto 0)` | `a => x(0)` | `std_ulogic` | 1 |
+| `t9_port_slice2` | `std_ulogic_vector(3 downto 0)` | `a => x(2 downto 1)` | `std_ulogic_vector(1 downto 0)` | 1 |
+| `t9_port_sliceto` | `std_ulogic_vector(0 to 1)` | `a => x(0)` | `std_ulogic` | 0 |
+
+The port carries the signal's handle and, in the instance record word
+at `+20`, the byte offset of its first element from the signal's left
+element, see [hierarchy.md](hierarchy.md).
+The offset counts bytes from the left, not index values: `x(0)` of
+`1 downto 0` is byte 1, and `x(0)` of `0 to 1` is byte 0.
+The port's value is the signal's record bytes `[offset, offset +
+size)`, and the reader reads it out of the signal's records.
+
+*Found by* `t9_port_slice` against `t8_port_in`: the port's value came
+back as the whole vector until the word at `+20` was read.
+*Confirmed by* `t9_port_slice2` and `t9_port_sliceto`.
+
+A package constant and a package signal are objects without records.
+`t9_port_rec` declares `constant zero : pair_t` in a package, and the
+object is listed with a handle and no record, and the logged ranges of
+[container.md](container.md) skip it.
+`t9_pkg_sig` declares `signal g : std_ulogic` in a package, and it
+takes the first handle `0x768` and no record, because
+`log_wave -r /tb` covers the design under `/tb` and a package is not
+under it.
+Whether a wider `log_wave` records it is not tested.
+
+*Found by* `t9_port_rec` and `t9_pkg_sig` against `t2_record`, which
+uses a package type but declares no package object.
 
 The initial value at time 0 is the declared default or the type's
 leftmost literal.
