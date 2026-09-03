@@ -91,11 +91,18 @@ type Change struct {
 // value per change, and checks that the run is the one Chunks predicts
 // when the object owns the whole value. Found by t9_vec292 and
 // t9_vec12000, the rule by the t10_vec sizes.
+//
+// A Verilog object is written by word pairs instead; see changesVerilog.
 func (f *File) Changes(o Object) ([]Change, error) {
 	if !o.Logged {
 		return nil, nil
 	}
-	size := uint64(f.Decls[o.Decl].Size)
+	dc := f.Decls[o.Decl]
+	n, err := f.recordBytes(dc)
+	if err != nil {
+		return nil, err
+	}
+	size := uint64(n)
 	if size == 0 {
 		size = 1
 	}
@@ -106,6 +113,9 @@ func (f *File) Changes(o Object) ([]Change, error) {
 	first, last := int(start/arenaSpan), int((end-1)/arenaSpan)
 	if last >= len(f.Arenas) {
 		return nil, fmt.Errorf("object handle %#x with %d bytes reaches arena %d of %d", o.Handle, size, last, len(f.Arenas))
+	}
+	if f.verilog(dc.Type) {
+		return f.changesVerilog(o, start, end)
 	}
 	// Collect every record that overlaps the object, by chunk address,
 	// in page order. A wide value is written as a run of chunks, each a
@@ -139,12 +149,12 @@ func (f *File) Changes(o Object) ([]Change, error) {
 		return nil, fmt.Errorf("object handle %#x is logged but has no records", o.Handle)
 	}
 	if o.Offset == 0 {
-		if err := checkChunks(o.Handle, size, addrs); err != nil {
+		if err = checkChunks(o.Handle, size, addrs); err != nil {
 			return nil, err
 		}
 	}
 	// The i-th record at each address belongs to the i-th change.
-	n := len(runs[addrs[0]])
+	n = len(runs[addrs[0]])
 	var out []Change
 	for i := 0; i < n; i++ {
 		c := Change{TimePS: runs[addrs[0]][i].time}

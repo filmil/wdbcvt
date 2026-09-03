@@ -100,11 +100,18 @@ func (f *File) layoutOf(t int, rs *[]Range) (layout, error) {
 	return layout{}, fmt.Errorf("type %q has kind %s", ty.Name, ty.Kind)
 }
 
-// Size is the number of bytes a value of the declaration takes in a page
-// record, computed from the type table. It is checked against Decl.Size
-// by the corpus test.
+// Size is the declared size of the object as the type table implies it:
+// bytes of a page record for a VHDL object, bits for a Verilog one. It
+// is checked against Decl.Size by the corpus test. See docs/format/values.md.
 func (f *File) Size(dc Decl) (int, error) {
 	rs := dc.Ranges
+	if f.verilog(dc.Type) {
+		n, err := f.bitsOf(dc.Type, &rs)
+		if err != nil {
+			return 0, fmt.Errorf("%s: %w", dc.Name, err)
+		}
+		return n, nil
+	}
 	l, err := f.layoutOf(dc.Type, &rs)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", dc.Name, err)
@@ -116,6 +123,13 @@ func (f *File) Size(dc Decl) (int, error) {
 // declaration's type and index constraints.
 func (f *File) Decode(dc Decl, data []byte) (Value, error) {
 	rs := dc.Ranges
+	if f.verilog(dc.Type) {
+		v, err := f.decodeVerilog(dc.Type, data, &rs)
+		if err != nil {
+			return v, fmt.Errorf("%s: %w", dc.Name, err)
+		}
+		return v, nil
+	}
 	v, n, err := f.decode(dc.Type, data, &rs)
 	if err != nil {
 		return v, fmt.Errorf("%s: %w", dc.Name, err)
@@ -226,12 +240,16 @@ func (f *File) decode(t int, data []byte, rs *[]Range) (Value, int, error) {
 // String renders a value the way the corpus truth files write it: an
 // array of enumeration literals as one string of literal characters
 // (`10100101`), other arrays in parentheses, records as
-// `(name => value, ...)`.
+// `(name => value, ...)`. A Verilog value that decoded to a scalar
+// spelling, a decimal integer or a named enum value, prints that.
 func (f *File) String(v Value) string {
-	ty := &f.Types[v.Type]
+	ty := &f.Types[f.resolve(v.Type)]
+	if v.Scalar != "" {
+		return v.Scalar
+	}
 	switch ty.Kind {
 	case KindArray:
-		if f.Types[ty.Elem].Kind == KindEnum {
+		if f.Types[f.resolve(ty.Elem)].Kind == KindEnum {
 			var b strings.Builder
 			for _, e := range v.Elems {
 				b.WriteString(e.Scalar)
@@ -263,7 +281,7 @@ type Leaf struct {
 // Leaves flattens records into their fields, recursively, the way the
 // truth files name them: `s.delta_f.bravo`. Arrays stay whole.
 func (f *File) Leaves(path string, v Value) []Leaf {
-	ty := &f.Types[v.Type]
+	ty := &f.Types[f.resolve(v.Type)]
 	if ty.Kind != KindRecord {
 		return []Leaf{{Path: path, Type: v.Type, Value: v}}
 	}

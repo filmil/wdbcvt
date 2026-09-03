@@ -12,6 +12,7 @@ go_library(
         "probe.go",
         "types.go",
         "value.go",
+        "verilog.go",
     ],
     importpath = "git.hdlfactory.com/HDL/wdbcvt/pkg/wdb",
     visibility = ["//visibility:public"],

@@ -15,7 +15,7 @@ import (
 
 // The corpus test decodes every database under //hdl/corpus and compares
 // what it reads with the case's truth.json, which was written from the
-// VHDL source before the database was ever opened. Nothing here asserts
+// VHDL or Verilog source before the database was ever opened. Nothing here asserts
 // against bytes the decoder produced. See docs/provenance.md.
 
 type truthSignal struct {
@@ -210,6 +210,9 @@ func checkType(t *testing.T, f *File, path string, want truthSignal, typ int) {
 	if !strings.EqualFold(ty.Name, want.Type) {
 		t.Errorf("%s: type %q, truth says %q", path, ty.Name, want.Type)
 	}
+	// A SystemVerilog typedef names an alias entry; the struct or enum
+	// itself is the entry it points at: t11_sv_struct.
+	ty = f.Types[f.resolve(typ)]
 	if len(want.Fields) > 0 {
 		if ty.Kind != KindRecord {
 			t.Errorf("%s: truth lists fields but the type is %s", path, ty.Kind)
@@ -414,8 +417,10 @@ func TestCorpus(t *testing.T) {
 					continue
 				}
 				dc := f.Decls[o.Decl]
-				if dc.Kind != DeclGeneric {
-					t.Errorf("%s: declaration kind %s, want generic", path, dc.Kind)
+				// A Verilog parameter is the same kind of object with
+				// its own declaration kind: t11_v_param.
+				if dc.Kind != DeclGeneric && dc.Kind != DeclParam {
+					t.Errorf("%s: declaration kind %s, want generic or parameter", path, dc.Kind)
 				}
 				if g.Type != "" && !strings.EqualFold(f.Types[dc.Type].Name, g.Type) {
 					t.Errorf("%s: type %s, truth says %s", path, f.Types[dc.Type].Name, g.Type)

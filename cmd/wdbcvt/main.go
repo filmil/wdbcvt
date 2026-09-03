@@ -52,8 +52,8 @@ The .wdb format is undocumented. What this tool knows about it was
 worked out by an AI agent running experiments on files that Vivado
 2025.2 wrote for small designs, and reading the bytes that came out.
 No AMD documentation, source or binary was used. The decoding is
-checked against a truth file written per design from its VHDL source,
-and every claim is scoped to Vivado 2025.2.
+checked against a truth file written per design from its VHDL or
+Verilog source, and every claim is scoped to Vivado 2025.2.
 It is not a specification. Where a wrong answer would be silent and
 expensive, open the database in Vivado instead.
 `

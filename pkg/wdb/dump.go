@@ -112,7 +112,11 @@ func (f *File) Dump(w io.Writer) error {
 
 	p("declarations (%d):\n", len(f.Decls))
 	for i, dc := range f.Decls {
-		p("  [%d] %s %s : [%d] %s, %d bytes, file %d line %d", i, dc.Kind, dc.Name, dc.Type, f.Types[dc.Type].Name, dc.Size, dc.File, dc.Line)
+		unit := "bytes"
+		if f.verilog(dc.Type) {
+			unit = "bits"
+		}
+		p("  [%d] %s %s : [%d] %s, %d %s, file %d line %d", i, dc.Kind, dc.Name, dc.Type, f.Types[dc.Type].Name, dc.Size, unit, dc.File, dc.Line)
 		if dc.Mode != PortNone {
 			p(" port %s", dc.Mode)
 		}
