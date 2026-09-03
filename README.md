@@ -57,6 +57,10 @@ where the tool should not be used.
   this repository.
   `third_party/serv/` holds the build file and the patch for the
   pinned SERV archive fetched in `MODULE.bazel`.
+* `hdl/potato/` holds the VHDL counterpart: Potato, a RV32I processor
+  in VHDL, under its own bench and a hand assembled program.
+  `third_party/potato/` holds the build file and the patch for the
+  pinned Potato archive.
 * `cmd/wdbcvt/` is the command line tool.
   Today it probes a `.wdb` and reports measurements; it grows into a
   converter as the format becomes known.

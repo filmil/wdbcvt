@@ -292,7 +292,7 @@ The rule, fitted to the 55 wide values of the `t9_vec*`, `t10_vec*`,
 | `size >= 275` | `n = 2 * ceil((size + 24) / 299)` | `floor(size / n)`, the last takes the rest |
 
 So the chunks of one value are equal, and the last is up to `n - 1`
-bytes longer.
+bytes longer, until the rest itself reaches 276 bytes; see below.
 The reader computes the run from the size and refuses a file whose
 records sit at other addresses, which is how the rule is checked on
 every case.
@@ -328,6 +328,53 @@ not because 146 divides anything.
 What 24 and 299 are is open.
 `t10_real40`, 40 reals of 8 bytes, is chunked exactly as
 `t10_vec320`, 80 bytes four times, so the element type does not enter.
+
+The last chunk takes the rest only while the rest is 275 bytes or
+less.
+The rest can be up to `n - 1` bytes longer than a chunk, and the count
+`n` grows with the size, so from about 20000 bytes on the rest can pass
+275.
+A rest of 276 bytes or more is chunked again by the same rule, as a
+value of its own length at its own address, and the pieces of that
+rest follow the equal chunks.
+A rest of exactly 275 bytes stays one chunk, where a value of 275 bytes
+is two chunks of 137 and 138: the threshold for the rest is one byte
+above the threshold for a value.
+The count of a value's chunks is then no longer even: `t39_vec20121`
+has 135 chunks of 147 and four of 69, 139 in all.
+
+| Case | Bytes | Equal chunks | Rest | Pieces of the rest |
+| :--- | ---: | :--- | ---: | :--- |
+| `t39_vec30022` | 30022 | 201 of 148 | 274 | 274 |
+| `t39_vec30023` | 30023 | 201 of 148 | 275 | 275 |
+| `t39_vec20120` | 20120 | 135 of 147 | 275 | 275 |
+| `t39_vec20121` | 20121 | 135 of 147 | 276 | 69 four times |
+| `t39_vec20125` | 20125 | 135 of 147 | 280 | 70 four times |
+| `t39_vec20561` | 20561 | 137 of 148 | 285 | 71 three times, then 72 |
+| `t39_vec22347` | 22347 | 149 of 148 | 295 | 73 three times, then 76 |
+| `t39_vec22199` | 22199 | 149 of 147 | 296 | 74 four times |
+| `t39_vec22348` | 22348 | 149 of 148 | 296 | 74 four times |
+| `t39_vec22349` | 22349 | 149 of 148 | 297 | 74 three times, then 75 |
+| `t39_vec22647` | 22647 | 151 of 148 | 299 | 74 three times, then 77 |
+| `t39_vec22791` | 22791 | 153 of 147 | 300 | 75 four times |
+| `t39_vec32768` | 32768 | 219 of 148 | 356 | 89 four times |
+
+The rest of 295 bytes is four chunks of 73 with a rest of 76, and 299
+is four of 74 with a rest of 77, both one record: the rule recurses,
+but a rest of the rest below 276 stays whole.
+The reader, `chunkLens` in `pkg/wdb/pages.go`, computes the pieces by
+that recursion and refuses a file whose records sit elsewhere.
+
+*Found by* `//hdl/potato:sim`, whose instruction memory of 32768 bytes
+came back with records at four addresses where the rule placed the
+last chunk of 356, and `t39_vec20120` against `t39_vec20121`, rests
+of 275 and 276, which pinned the threshold after `t39_vec30023`, a
+rest of exactly 275, had refused the first reading of 275 or more.
+*Confirmed by* the other tier 39 cases in the table, by
+`t39_mem4096`, an array of 4096 bytes whose loop over the elements
+256 to 4095 is one partial write of 30720 bytes at the handle plus
+2048 in 205 chunks of 149 and a rest of 175, and by the data memory
+of `//hdl/potato:sim`, chunked as its instruction memory.
 
 The rule applies to a write, not to the value the write lands in.
 A partial write, see the VHDL partial writes section, of 275 bytes or

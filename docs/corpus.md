@@ -1144,6 +1144,34 @@ name of a Verilog top elaborated with `-generic_top`,
 It also caught two names `go-vcd-parser` does not read, `bufreg` and
 the top's, so `TestVCD` now hides every name before parsing.
 
+`//hdl/potato:sim` is the VHDL counterpart: **Potato** 0.3, a RV32I
+processor in VHDL by Kristian Klomsten Skordal, as its own
+`tb_processor` bench with an instruction memory, a data memory and
+`textio` loading of both from hex files.
+The bench is the release's own; the sources come from a pinned
+`http_archive` with a build file in `third_party/potato` listing them
+in the order `xvhdl` needs, and one patch that renames a conversion
+function which VHDL-2008 makes a homograph of the one in
+`std_logic_1164`.
+The release's programs need a RISC-V tool chain the runner does not
+have, so `hdl/potato/imem.hex` is a nine instruction program assembled
+by hand: it stores a word, loads it back, counts it down and writes
+`mtohost`, on which the bench prints `Success!` and stops.
+The memory file names reach the top through `-generic_top`, the way
+SERV's does.
+The database holds 557 objects in 144 scopes, 136 units and 24 types,
+among them a `file` and an `access` type and a record with a vector
+field, and two 32768 byte memories; the reader reads every value and
+`TestVCD` agrees with Vivado's VCD.
+It is not a corpus case either.
+
+Potato taught two things, each then pinned by a tier: the rest of a
+chunked value is chunked again when it reaches 276 bytes, tier 39,
+which the reader had refused as records at the wrong address; and an
+array generic is declared with the range of its value, not of its
+subtype, tier 40, so a string generic set on the command line has the
+length of what was given.
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`.
 
@@ -1259,6 +1287,60 @@ simulation.
 A load from a file is one element write per line, and the reader
 changed nothing for the tier.
 
+**Tier 39: the rest of a chunked value.**
+VHDL.
+The instruction memory of Potato, 32768 bytes, is 220 chunks of 148
+by the chunk rule, and the reader found the last chunk of 356 bytes as
+four records of 89.
+No corpus value had a rest over 275 bytes: the rest is at most `n - 1`
+bytes over the chunk, and `n` passes 148 only above 20000 bytes.
+The tier is `std_ulogic_vector` signals sized to put the rest at the
+threshold and around it, in the `t10_vec*` bench, plus one array of
+4096 bytes whose loop writes a 30720 byte part.
+
+| Case | Differs from | Rest | Rest's records |
+| :--- | :--- | ---: | :--- |
+| `t39_vec30022____` | `t10_vec30000` | 274 | one |
+| `t39_vec30023____` | `t39_vec30022____` | 275 | one |
+| `t39_vec20120____` | `t39_vec30023____` | 275 | one |
+| `t39_vec20121____` | `t39_vec20120____` | 276 | four of 69 |
+| `t39_vec20125____` | `t39_vec20121____` | 280 | four of 70 |
+| `t39_vec20561____` | `t39_vec20125____` | 285 | 71, 71, 71, 72 |
+| `t39_vec22347____` | `t39_vec22348____` | 295 | 73, 73, 73, 76 |
+| `t39_vec22199____` | `t39_vec22348____` | 296 | four of 74, chunks of 147 |
+| `t39_vec22348____` | `t39_vec22349____` | 296 | four of 74, chunks of 148 |
+| `t39_vec22349____` | `t39_vec22348____` | 297 | 74, 74, 74, 75 |
+| `t39_vec22647____` | `t39_vec22349____` | 299 | 74, 74, 74, 77 |
+| `t39_vec22791____` | `t39_vec22647____` | 300 | four of 75 |
+| `t39_vec32768____` | `t39_vec22791____` | 356 | four of 89, as Potato |
+| `t39_mem4096_____` | `t39_vec32768____` | 175 | one; a 30720 byte part in 206 chunks |
+
+The threshold for a rest is 276 where the threshold for a value is
+275, and a rest of the rest below 276 stays whole.
+The reader's `chunkLens` recurses on the rest and the corpus test
+reads every case back.
+
+**Tier 40: the range of a generic.**
+VHDL.
+Potato declares `RESET_ADDRESS` as an unconstrained
+`std_logic_vector` with a literal default, and the file gives it
+`(0 to 31)`; its file name generics, set by `-generic_top`, are
+declared with the length of the path given.
+The tier is one bench with a string generic and a vector generic, run
+three ways.
+
+| Case | Differs from | Axis | Declared |
+| :--- | :--- | :--- | :--- |
+| `t40_gen_uncons__` | `t9_gen_types` | generics of the top, `kv` unconstrained | `ks (1 to 3)`, `kv (0 to 3)` |
+| `t40_gen_cons____` | `t40_gen_uncons__` | `kv : std_ulogic_vector(3 downto 0)` | `kv (3 downto 0)` |
+| `t40_gen_str_top_` | `t40_gen_uncons__` | `--generic_top ks=hello` | `ks (1 to 5)`, 5 bytes, `hello` |
+
+A vector generic set on the command line is not in the tier: `xelab`
+reads `kv=01010101` as an integer literal, and a quoted value reaches
+it with the quotes stripped.
+`truth.json` gained a `range` field for a generic, and the corpus test
+checks it.
+
 
 ## Record which comparison produced which finding
 
@@ -1297,10 +1379,10 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 658 cases through tier 38, and
+5. The reader now reproduces all 675 cases through tier 40, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
-   `//hdl/uart:sim` and `//hdl/serv:sim`, where the VCD holds
-   anything.
+   `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
+   the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

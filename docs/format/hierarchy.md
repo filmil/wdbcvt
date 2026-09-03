@@ -466,6 +466,34 @@ So the VHDL repetition of `t4_gen_diff_two` is a VHDL property, not a
 rule of the section.
 *Found by* `t21_v_param_diff` against `t21_v_param_same`.
 
+The declaration of an array generic carries the range of the value it
+ends up with, not the range of its subtype.
+A generic declared as the unconstrained `std_ulogic_vector` with the
+default `x"A"`, `t40_gen_uncons`, is declared with 4 bytes and the
+range `(0 to 3)`, the ascending range a literal takes; the same generic
+declared `std_ulogic_vector(3 downto 0)`, `t40_gen_cons`, is declared
+with `(3 downto 0)`, and the two files differ nowhere else.
+A string generic overridden on the command line takes the length of
+the value given: `--generic_top ks=hello` over `ks : string := "abc"`,
+`t40_gen_str_top`, declares `ks` as 5 bytes with `(1 to 5)` where the
+default gives 3 bytes with `(1 to 3)`, and the one record holds
+`hello`.
+The handle of the next generic moves from `0xdf4` to `0xdf8` with it.
+`//hdl/potato:sim` shows both at once: `RESET_ADDRESS`, an
+unconstrained `std_logic_vector := x"00000200"` at the top, is
+declared `(0 to 31)`, and the constrained `(31 downto 0)` generics of
+the same name in `pp_core`, `pp_fetch` and `pp_decode` keep their
+range; `IMEM_FILENAME` and `DMEM_FILENAME`, set by `-generic_top` to
+paths of 19 and 44 characters over defaults of 17, are declared
+`(1 to 19)` and `(1 to 44)`.
+A reader that sizes a string generic from the source is wrong as soon
+as the command line sets it.
+*Found by* `//hdl/potato:sim` against `t9_gen_types`, then
+`t40_gen_uncons` against `t40_gen_cons` and `t40_gen_str_top`
+against `t40_gen_uncons`.
+*Confirmed by* the corpus test's range check on the three tier 40
+cases.
+
 
 ## Mixed language
 
@@ -1542,10 +1570,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 658 of 658 cases, and the
+*Confirmed by* the region length check in 675 of 675 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 658 of 658 cases and
+and *confirmed by* the reader's range check in 675 of 675 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

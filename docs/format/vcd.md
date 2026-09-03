@@ -33,9 +33,9 @@ the files by eye.
 
 ## What the VCD carries
 
-All 658 cases, `//hdl/counter:sim`, `//hdl/uart:sim` and
-`//hdl/serv:sim` pass, and every object of the database is either in
-its VCD or covered by one line of this table.
+All 675 cases, `//hdl/counter:sim`, `//hdl/uart:sim`, `//hdl/serv:sim`
+and `//hdl/potato:sim` pass, and every object of the database is either
+in its VCD or covered by one line of this table.
 
 | Object | In the VCD |
 | :--- | :--- |
@@ -43,7 +43,7 @@ its VCD or covered by one line of this table.
 | VHDL arrays of those with any number of index dimensions: `bit_vector`, `std_logic_vector`, `signed`, `unsigned`, the `(0 to 1, 0 to 2)` array of `t18_arr_2dim` | yes, `wire N` over all elements |
 | VHDL `boolean`, `integer`, `real`, `time`, `character`, a user enumeration, a record, an array of arrays such as `t2_array2d` | no |
 | VHDL generic or constant, of any type, including a generate index | no |
-| A signal outside `tb`, such as the package signal `sig_pkg.x` of `t13_pkg_log_all` | no; the script logs `/*` |
+| A signal outside the top, such as the package signal `sig_pkg.x` of `t13_pkg_log_all` | no; the script logs `/*` |
 | Verilog `reg`, `wire`, a vector, `integer`, `time`, `real`, `shortreal` | yes, as `reg`, `wire`, `integer`, `time` or `real` |
 | Verilog `wand`, `wor`, `tri`, `triand`, `trior`, `tri0`, `tri1`, `supply0`, `supply1` | yes, as that keyword; a `uwire` as `wire` |
 | Verilog `parameter`, including a string parameter | yes, as `parameter`; an untyped one with size `0` |
@@ -54,6 +54,13 @@ its VCD or covered by one line of this table.
 | Verilog memory or any unpacked array declared without a typedef, of vectors, reals or structs | no |
 | A typedef of an unpacked array, `t13_sv_tdef_ua` | yes, flattened to `reg 8` |
 | SystemVerilog `string` | no, and the database has no record either |
+
+The top is the first child of the root scope, and the packages are the
+root's other children: `tb` in every corpus case, `tb_processor` in
+`//hdl/potato:sim`, whose 383 VCD variables in 20 scopes all sit under
+it, where the database holds 557 objects in 144 scopes.
+*Found by* `//hdl/potato:sim`, whose objects `TestVCD` reported as
+outside `tb` until the rule read the top's name from the root scope.
 
 The VHDL rows repeat the tier 2 measurement in
 [../format.md](../format.md), now held by the test over every case.
