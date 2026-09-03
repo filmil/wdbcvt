@@ -23,8 +23,10 @@ type Record struct {
 type Page struct {
 	// Ref locates the page's zlib stream in the file.
 	Ref PageRef
-	// T0 and T1 are the two times the page header holds. T0 has been 0
-	// in every observed page; T1 has been the end time.
+	// T0 and T1 are the two times the page header holds. T0 is the time
+	// of the first record and T1 the time of the last record minus T0.
+	// The second page of t5_tr1000 shows the difference: its records run
+	// from 600000 to 1000000 ps and it holds T0 600000, T1 400000.
 	T0, T1  uint64
 	Records []Record
 }
@@ -76,16 +78,23 @@ type Change struct {
 }
 
 // Changes returns every recorded value of the object, in page order,
-// which is time order in every observed file.
+// which is time order in every observed file. An object whose arena
+// was never written has no changes; t6_var_int shows a declared process
+// variable in that state.
 func (f *File) Changes(o Object) ([]Change, error) {
-	p := o.Page()
-	if p >= len(f.Pages) {
-		return nil, fmt.Errorf("object handle %#x names page %d of %d", o.Handle, p, len(f.Pages))
+	a := o.Arena()
+	if a >= len(f.Arenas) {
+		if o.Generic {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("object handle %#x names arena %d of %d", o.Handle, a, len(f.Arenas))
 	}
 	var out []Change
-	for _, r := range f.Pages[p].Records {
-		if r.Key == o.Key() {
-			out = append(out, Change{TimePS: r.TimePS, Data: r.Data})
+	for _, pg := range f.Pages[a] {
+		for _, r := range pg.Records {
+			if r.Key == o.Key() {
+				out = append(out, Change{TimePS: r.TimePS, Data: r.Data})
+			}
 		}
 	}
 	return out, nil

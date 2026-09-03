@@ -21,7 +21,13 @@ func (f *File) Dump(w io.Writer) error {
 	p("  timestamp      %d\n", h.Timestamp)
 	p("  end time       %d ps\n", h.EndTimePS)
 	p("  has signals    %v\n", h.HasSignals)
+	p("  marker         at %#x, %d\n", h.MarkerOffset, h.Marker)
 	p("  page size      %d\n", h.PageSize)
+	p("  arena table    %d slots:", len(h.ArenaOffsets))
+	for _, a := range h.ArenaOffsets {
+		p(" %#x", a)
+	}
+	p("\n")
 	p("directory:\n")
 	for _, e := range h.Dirs {
 		p("  %-12q count %d  offset %#x  length %d\n", e.Name, e.Count, e.Offset, e.Length)
@@ -110,19 +116,22 @@ func (f *File) Dump(w io.Writer) error {
 
 	p("objects (%d):\n", len(f.Objects))
 	for i, o := range f.Objects {
-		p("  [%d] handle %#x page %d key %#x  %s", i, o.Handle, o.Page(), o.Key(), f.ObjectPath(o))
+		p("  [%d] handle %#x arena %d key %#x  %s", i, o.Handle, o.Arena(), o.Key(), f.ObjectPath(o))
 		if o.Generic {
-			p(" (generic)")
+			p(" (no second handle)")
 		}
 		p("\n")
 	}
 
-	p("pages (%d):\n", len(f.Pages))
-	for i, pg := range f.Pages {
-		p("  [%d] at %#x, %d bytes compressed, t0 %d t1 %d, %d records\n",
-			i, pg.Ref.Offset, pg.Ref.CompressedLen, pg.T0, pg.T1, len(pg.Records))
-		for _, r := range pg.Records {
-			p("    t=%-10d key %#05x  % x\n", r.TimePS, r.Key, r.Data)
+	p("arenas (%d):\n", len(f.Arenas))
+	for i, a := range f.Arenas {
+		p("  [%d] record at %#x, %d pages\n", i, a.Offset, len(a.Pages))
+		for j, pg := range f.Pages[i] {
+			p("    page %d at %#x, %d bytes compressed, t0 %d t1 %d, %d records\n",
+				j, pg.Ref.Offset, pg.Ref.CompressedLen, pg.T0, pg.T1, len(pg.Records))
+			for _, r := range pg.Records {
+				p("      t=%-10d key %#05x  % x\n", r.TimePS, r.Key, r.Data)
+			}
 		}
 	}
 

@@ -32,9 +32,10 @@ type File struct {
 	// Objects are the instantiated signals and generics, one per scope
 	// that declares them.
 	Objects []Object
-	// PageRefs locates the value pages; Pages holds them inflated.
-	PageRefs []PageRef
-	Pages    []Page
+	// Arenas is the page directory. Pages holds each arena's pages,
+	// inflated, in the same order.
+	Arenas []Arena
+	Pages  [][]Page
 }
 
 // Read decodes a whole database held in memory.
@@ -63,15 +64,38 @@ func Read(d []byte) (*File, error) {
 	if err = readDebug(f, d, dbg); err != nil {
 		return nil, err
 	}
-	if f.PageRefs, err = readPageDir(d, dbg); err != nil {
+	if f.Arenas, err = readPageDir(d, &f.Header, dbg); err != nil {
 		return nil, err
 	}
-	for _, ref := range f.PageRefs {
-		pg, err := readPage(d, ref)
+	for _, a := range f.Arenas {
+		var pages []Page
+		for _, ref := range a.Pages {
+			pg, err := readPage(d, ref)
+			if err != nil {
+				return nil, err
+			}
+			pages = append(pages, pg)
+		}
+		f.Pages = append(f.Pages, pages)
+	}
+	// The marker word has been the number of objects with at least one
+	// record, minus one, in every corpus case. t6_var_int fixes the
+	// reading: two objects, one with records, marker 0.
+	logged := 0
+	for _, o := range f.Objects {
+		ch, err := f.Changes(o)
 		if err != nil {
 			return nil, err
 		}
-		f.Pages = append(f.Pages, pg)
+		if len(ch) > 0 {
+			logged++
+		}
+	}
+	if f.Header.MarkerOffset != 0 && f.Header.Marker+1 != uint64(logged) {
+		return nil, fmt.Errorf("marker word %d, want one less than the %d logged objects", f.Header.Marker, logged)
+	}
+	if f.Header.MarkerOffset == 0 && logged != 0 {
+		return nil, fmt.Errorf("no marker, but %d logged objects", logged)
 	}
 	return f, nil
 }

@@ -40,12 +40,24 @@ type truthGeneric struct {
 	K        int    `json:"k"`
 }
 
+// truthVariable is a process variable: Kind is "variable" for a declared
+// one and "loop" for a for loop index. Initial is the declared initial
+// value, which the database does not record; see the test.
+type truthVariable struct {
+	Scope   string `json:"scope"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Kind    string `json:"kind"`
+	Initial string `json:"initial"`
+}
+
 type truth struct {
 	Case        string            `json:"case"`
 	EndTimeNS   int64             `json:"end_time_ns"`
 	Signals     []truthSignal     `json:"signals"`
 	Transitions []truthTransition `json:"transitions"`
 	Generics    []truthGeneric    `json:"generics"`
+	Variables   []truthVariable   `json:"variables"`
 }
 
 // corpusCases lists every case directory that has a truth.json and a
@@ -237,14 +249,19 @@ func TestCorpus(t *testing.T) {
 					t.Errorf("%s: type table implies %d bytes, declaration says %d", f.ObjectPath(o), size, dc.Size)
 				}
 			}
-			var signals int
+			var signals, others int
 			for _, o := range f.Objects {
 				if !o.Generic {
 					signals++
+				} else {
+					others++
 				}
 			}
 			if signals != len(tr.Signals) {
 				t.Errorf("%d signal objects, truth lists %d", signals, len(tr.Signals))
+			}
+			if want := len(tr.Generics) + len(tr.Variables); others != want {
+				t.Errorf("%d generic and variable objects, truth lists %d", others, want)
 			}
 			for _, s := range tr.Signals {
 				path := s.Scope + "." + s.Name
@@ -323,6 +340,47 @@ func TestCorpus(t *testing.T) {
 				}
 				if v.Scalar != strconv.Itoa(g.K) {
 					t.Errorf("%s = %s, truth says %d", path, v.Scalar, g.K)
+				}
+			}
+
+			// Variables: an object in the process scope, with no second
+			// handle. The database does not log a declared variable's
+			// changes, nor its initial value: t6_var_int changes v twice
+			// and holds no record for it. A loop index gets one record
+			// at time zero, holding zero rather than the loop's first
+			// value: t5_tr1000 iterates from 1 and records 0.
+			for _, vr := range tr.Variables {
+				path := vr.Scope + "." + vr.Name
+				o, ok := objByPath[path]
+				if !ok || !o.Generic {
+					t.Errorf("truth variable %s is not a variable object", path)
+					continue
+				}
+				dc := f.Decls[o.Decl]
+				if got := strings.ToLower(f.Types[dc.Type].Name); got != vr.Type {
+					t.Errorf("%s: type %s, truth says %s", path, got, vr.Type)
+				}
+				ch, err := f.Changes(o)
+				if err != nil {
+					t.Fatal(err)
+				}
+				switch vr.Kind {
+				case "variable":
+					if dc.Kind != DeclVariable {
+						t.Errorf("%s: declaration kind %s, want variable", path, dc.Kind)
+					}
+					if len(ch) != 0 {
+						t.Errorf("%s: %d records, a declared variable has had none", path, len(ch))
+					}
+				case "loop":
+					if dc.Kind != DeclLoopVar {
+						t.Errorf("%s: declaration kind %s, want loop variable", path, dc.Kind)
+					}
+					if len(ch) != 1 || ch[0].TimePS != 0 {
+						t.Errorf("%s: %d records, a loop index has had one at time zero", path, len(ch))
+					}
+				default:
+					t.Errorf("%s: unknown truth kind %q", path, vr.Kind)
 				}
 			}
 		})

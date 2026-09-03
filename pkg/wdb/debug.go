@@ -47,8 +47,10 @@ type DeclKind uint32
 
 // The declaration kinds observed so far.
 const (
-	DeclSignal  DeclKind = 0x0e
-	DeclGeneric DeclKind = 0x12
+	DeclSignal   DeclKind = 0x0e
+	DeclVariable DeclKind = 0x0f // a variable declared in a process
+	DeclGeneric  DeclKind = 0x12
+	DeclLoopVar  DeclKind = 0x13 // the index of a for loop
 )
 
 func (k DeclKind) String() string {
@@ -57,6 +59,10 @@ func (k DeclKind) String() string {
 		return "signal"
 	case DeclGeneric:
 		return "generic"
+	case DeclVariable:
+		return "variable"
+	case DeclLoopVar:
+		return "loop variable"
 	}
 	return fmt.Sprintf("decl(%#x)", uint32(k))
 }
@@ -121,17 +127,23 @@ type SourceFile struct {
 // value page refers to, through Handle.
 type Object struct {
 	// Handle is the number a page record uses to name the object: the
-	// page index in the upper bits and the record key in the low 11.
+	// arena index in the upper bits and the record key in the low 11.
+	// Handles step by 0xf0 within an arena.
 	Handle uint64
 	// Scope and Decl index File.Scopes and File.Decls.
 	Scope, Decl int
-	Generic     bool
+	// Generic is set for a generic and for a variable: objects with no
+	// second handle, whose instance record has 2 in its fifth word. A
+	// signal has 1 there. A generic and a loop variable get one record
+	// at time 0; a declared variable gets none, and its arena may not
+	// exist.
+	Generic bool
 }
 
-// Page selects the value page that holds the object's records.
-func (o Object) Page() int { return int(o.Handle >> 11) }
+// Arena selects the arena whose pages hold the object's records.
+func (o Object) Arena() int { return int(o.Handle >> 11) }
 
-// Key is the record key the object has inside its page.
+// Key is the record key the object has inside the arena's pages.
 func (o Object) Key() uint32 { return uint32(o.Handle & 0x7ff) }
 
 // Debug is the decoded Xilinx ISim DBG 006 section.

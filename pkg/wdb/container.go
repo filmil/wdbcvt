@@ -24,14 +24,19 @@ const (
 // Fixed offsets in the file header. See docs/format.md, "The container".
 const (
 	offDirPointers = 0x48 // three uint64 file offsets of directory entries
-	offEvent       = 0xe0 // the WDB.Event region
+	offArenas      = 0xc8 // first slot of the arena table
+	trailerLen     = 0x48 // the fixed words that end the header
 
 	dirEntryLen  = 48 // [24 byte name][uint64 count][uint64 offset][uint64 length]
 	dirNameLen   = 24
-	pageDirStart = 0x30 // page records start this far into the Xilinx DBG entry
-	pageDirLen   = 0x4c0
-	pageDirComp  = 0x328 // offset of the compressed length inside a page record
+	pageDirStart = 0x30  // arena records start this far into the Xilinx DBG entry
+	arenaRecLen  = 0x4c0 // one arena record
+	arenaOffsets = 0x8   // uint64 page offsets, one per page
+	arenaLens    = 0x328 // uint32 compressed lengths, one per page
+	arenaCount   = 0x4b8 // uint64 number of pages
+	arenaMax     = 100   // pages one arena record can name
 	pageLen      = 10240 // every value page inflates to this many bytes
+	markerLen    = 16
 )
 
 // DirEntry is one entry of the container directory. Three of them are
@@ -49,28 +54,58 @@ type DirEntry struct {
 }
 
 // Header is the fixed part of the file, up to the type table.
+//
+// The header is fixed up to offset 0xc8. From there a table of uint64
+// arena record offsets runs to the trailer, and the trailer's position is
+// known from the first directory pointer, which names the WDB.Event entry
+// that follows it. The table has three slots in every corpus case but
+// one; t5_sig10, with ten signals, has four.
 type Header struct {
 	// Timestamp is the Unix time at which the database was written. It
 	// differs between two runs of the same design, so it is noise.
 	Timestamp uint32
-	// EndTimePS is the simulation end time in picoseconds, from the
-	// WDB.Event region.
+	// ArenaOffsets are the slots of the arena table. Slot i is the file
+	// offset of arena record i, or 0 when there is no such arena.
+	ArenaOffsets []uint64
+	// EndTimePS is the simulation end time in picoseconds, the first
+	// word of the trailer.
 	EndTimePS uint64
-	// HasSignals is the flag at 0x110: 1 when any signal is logged.
+	// HasSignals is the trailer word at 0x110 in a three slot header: 1
+	// when any object is logged.
 	HasSignals bool
-	// PageSize is the value at 0x120, the size a value page inflates to.
+	// MarkerOffset is the trailer word at 0x118 in a three slot header:
+	// the file offset of a 16 byte record [uint64 0][uint64 objects-1],
+	// or 0 when no object is logged. It sits between the last arena
+	// record and the first page unless a page was flushed before the
+	// simulation ended, and then it follows that page.
+	MarkerOffset uint64
+	// Marker is the second word of that record.
+	Marker uint64
+	// PageSize is the trailer word at 0x120, the size a value page
+	// inflates to.
 	PageSize uint32
 	// Dirs holds the three directory entries in pointer order.
 	Dirs []DirEntry
 }
 
-// PageRef is one entry of the page directory that follows the Xilinx DBG
-// directory entry. Each one locates a compressed value page.
+// PageRef locates one compressed value page.
 type PageRef struct {
 	// Offset is the file offset of the zlib stream.
 	Offset uint64
 	// CompressedLen is the length of that stream in bytes.
 	CompressedLen uint64
+}
+
+// Arena is one record of the page directory. Objects are numbered by
+// handle, and handle>>11 selects the arena whose pages hold the object's
+// records. An arena starts a new page when the current one is full, so a
+// record names one page per 600 or so value changes.
+type Arena struct {
+	// Offset is the file offset of the record.
+	Offset uint64
+	// Pages are the arena's pages in the order they were written, which
+	// is time order.
+	Pages []PageRef
 }
 
 func cstring(b []byte) string {
@@ -93,9 +128,30 @@ func readHeader(d []byte) (Header, error) {
 		return h, fmt.Errorf("no %q producer name at offset 0x18", producerMagic)
 	}
 	h.Timestamp = binary.LittleEndian.Uint32(d[0x38:])
-	h.EndTimePS = binary.LittleEndian.Uint64(d[offEvent:])
-	h.HasSignals = binary.LittleEndian.Uint32(d[0x110:]) != 0
-	h.PageSize = binary.LittleEndian.Uint32(d[0x120:])
+	// The first directory pointer names the entry right after the
+	// trailer, so it fixes where the arena table ends.
+	trailer := binary.LittleEndian.Uint64(d[offDirPointers:]) - trailerLen
+	if trailer < offArenas || (trailer-offArenas)%8 != 0 || trailer+trailerLen > uint64(len(d)) {
+		return h, fmt.Errorf("header trailer at %#x does not follow the arena table at %#x", trailer, offArenas)
+	}
+	for p := uint64(offArenas); p < trailer; p += 8 {
+		h.ArenaOffsets = append(h.ArenaOffsets, binary.LittleEndian.Uint64(d[p:]))
+	}
+	t := d[trailer:]
+	h.EndTimePS = binary.LittleEndian.Uint64(t[0x00:])
+	h.HasSignals = binary.LittleEndian.Uint64(t[0x30:]) != 0
+	h.MarkerOffset = binary.LittleEndian.Uint64(t[0x38:])
+	h.PageSize = binary.LittleEndian.Uint32(t[0x40:])
+	if h.MarkerOffset != 0 {
+		if h.MarkerOffset+markerLen > uint64(len(d)) {
+			return h, fmt.Errorf("marker at %#x runs past the file", h.MarkerOffset)
+		}
+		m := d[h.MarkerOffset:]
+		if w := binary.LittleEndian.Uint64(m); w != 0 {
+			return h, fmt.Errorf("marker at %#x starts with %#x, want 0", h.MarkerOffset, w)
+		}
+		h.Marker = binary.LittleEndian.Uint64(m[8:])
+	}
 	for i := 0; i < 3; i++ {
 		p := binary.LittleEndian.Uint64(d[offDirPointers+8*i:])
 		if p+dirEntryLen > uint64(len(d)) {
@@ -123,37 +179,56 @@ func (h *Header) Dir(name string) (DirEntry, bool) {
 }
 
 // readPageDir decodes the page directory. It starts pageDirStart bytes
-// into the Xilinx DBG directory entry, which itself sits at the end of the
-// section it describes. The directory is a run of pageDirLen byte records
-// and a 16 byte trailer, and the first page follows the trailer directly,
-// so the first page offset fixes the record count.
-func readPageDir(d []byte, dbg DirEntry) ([]PageRef, error) {
-	p := dbg.Offset + dbg.Length + pageDirStart
-	if p > uint64(len(d)) {
-		return nil, fmt.Errorf("page directory at %#x runs past the file", p)
-	}
-	if p+pageDirLen > uint64(len(d)) {
-		// A database with no value pages ends here, with no trailer.
-		return nil, nil
-	}
-	first := binary.LittleEndian.Uint64(d[p+8:])
-	if first < p+16 || first > uint64(len(d)) {
-		return nil, fmt.Errorf("first page offset %#x is not after the page directory at %#x", first, p)
-	}
-	span := first - p - 16
-	if span%pageDirLen != 0 {
-		return nil, fmt.Errorf("page directory span %d is not a multiple of %d", span, pageDirLen)
-	}
-	n := int(span / pageDirLen)
-	refs := make([]PageRef, 0, n)
-	for i := 0; i < n; i++ {
-		r := d[p+uint64(i)*pageDirLen:]
-		off := binary.LittleEndian.Uint64(r[8:])
-		clen := binary.LittleEndian.Uint64(r[pageDirComp:])
-		if off+clen > uint64(len(d)) {
-			return nil, fmt.Errorf("page %d at %#x+%d runs past the file", i, off, clen)
+// into the Xilinx DBG directory entry, which itself sits at the end of
+// the section it describes, and holds one arenaRecLen byte record per
+// arena. The header's arena table names the records, and every record
+// has been at pageDirStart plus a multiple of arenaRecLen in every corpus
+// case. A record lists its pages as uint64 offsets from arenaOffsets and
+// uint32 compressed lengths from arenaLens, with the page count at
+// arenaCount.
+func readPageDir(d []byte, h *Header, dbg DirEntry) ([]Arena, error) {
+	base := dbg.Offset + dbg.Length + pageDirStart
+	var arenas []Arena
+	for i, off := range h.ArenaOffsets {
+		if off == 0 {
+			continue
 		}
-		refs = append(refs, PageRef{Offset: off, CompressedLen: clen})
+		if i != len(arenas) {
+			return nil, fmt.Errorf("arena table slot %d is used after an empty slot", i)
+		}
+		if off != base+uint64(i)*arenaRecLen {
+			return nil, fmt.Errorf("arena record %d at %#x, want %#x", i, off, base+uint64(i)*arenaRecLen)
+		}
+		if off+arenaRecLen > uint64(len(d)) {
+			return nil, fmt.Errorf("arena record %d at %#x runs past the file", i, off)
+		}
+		r := d[off : off+arenaRecLen]
+		n := binary.LittleEndian.Uint64(r[arenaCount:])
+		if n > arenaMax {
+			return nil, fmt.Errorf("arena record %d names %d pages, more than %d", i, n, arenaMax)
+		}
+		a := Arena{Offset: off}
+		for j := uint64(0); j < n; j++ {
+			ref := PageRef{
+				Offset:        binary.LittleEndian.Uint64(r[arenaOffsets+8*j:]),
+				CompressedLen: uint64(binary.LittleEndian.Uint32(r[arenaLens+4*j:])),
+			}
+			if ref.Offset+ref.CompressedLen > uint64(len(d)) {
+				return nil, fmt.Errorf("arena %d page %d at %#x+%d runs past the file", i, j, ref.Offset, ref.CompressedLen)
+			}
+			a.Pages = append(a.Pages, ref)
+		}
+		for _, b := range r[arenaOffsets+8*n : arenaLens] {
+			if b != 0 {
+				return nil, fmt.Errorf("arena record %d has a non-zero offset slot past page %d", i, n)
+			}
+		}
+		for _, b := range r[arenaLens+4*n : arenaCount] {
+			if b != 0 {
+				return nil, fmt.Errorf("arena record %d has a non-zero length slot past page %d", i, n)
+			}
+		}
+		arenas = append(arenas, a)
 	}
-	return refs, nil
+	return arenas, nil
 }
