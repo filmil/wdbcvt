@@ -1,0 +1,210 @@
+{
+  "case": "t57_log_var_all_",
+  "axis": "logging. log_wave names a process variable under -debug all, in a design with a scalar, a vector, a record, a constant, a shared variable, a generate with a signal, and a process with a variable and a loop, to see what the database logs.",
+  "differs_from": "t57_log_all_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "std_ulogic_vector",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "type": "rec_t",
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "n",
+          "width": 32,
+          "type": "integer"
+        }
+      ],
+      "logged": false
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    }
+  ],
+  "transitions": [],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "c",
+      "type": "integer",
+      "kind": "constant",
+      "value": "3",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "sv",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "0",
+      "logged": false
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "1",
+      "logged": false
+    },
+    {
+      "scope": "tb.p",
+      "name": "w",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "tb.p",
+      "name": "k",
+      "type": "integer",
+      "kind": "loop",
+      "logged": false
+    },
+    {
+      "scope": "env",
+      "name": "DIR_SEPARATOR",
+      "type": "string",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "textio",
+      "name": "INPUT",
+      "type": "text",
+      "kind": "variable"
+    },
+    {
+      "scope": "textio",
+      "name": "OUTPUT",
+      "type": "text",
+      "kind": "variable"
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "resolution_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "and_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "or_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "xor_table",
+      "type": "stdlogic_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "not_table",
+      "type": "stdlogic_1d",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "cvt_to_x01",
+      "type": "logic_x01_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "cvt_to_x01z",
+      "type": "logic_x01z_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "cvt_to_ux01",
+      "type": "logic_ux01_table",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "MVL9_to_char",
+      "type": "char_indexed_by_mvl9",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "char_to_MVL9",
+      "type": "mvl9_indexed_by_char",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "char_to_MVL9plus",
+      "type": "mvl9plus_indexed_by_char",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164",
+      "name": "NBSP",
+      "type": "character",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "std_logic_1164.resolved",
+      "name": "result",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": ""
+    }
+  ]
+}

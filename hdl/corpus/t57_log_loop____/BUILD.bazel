@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("//build:wdb_case.bzl", "wdb_case")
+
+package(default_visibility = ["//visibility:public"])
+
+wdb_case(
+    name = "t57_log_loop____",
+    srcs = [
+        "tb.ent.vhdl",
+    ],
+    tcl = "xsim.tcl",
+)

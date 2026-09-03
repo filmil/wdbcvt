@@ -1,0 +1,137 @@
+{
+  "case": "t57_log_top_____",
+  "axis": "logging. log_wave names the top scope without -recursive, in a design with a scalar, a vector, a record, a constant, a shared variable, a generate with a signal, and a process with a variable and a loop, to see what the database logs.",
+  "differs_from": "t57_log_all_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "std_ulogic_vector"
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "type": "rec_t",
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "n",
+          "width": 32,
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "0101"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r.n",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "r.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "r.n",
+      "value": "5"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "c",
+      "type": "integer",
+      "kind": "constant",
+      "value": "3"
+    },
+    {
+      "scope": "tb",
+      "name": "sv",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "0",
+      "logged": false
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "1",
+      "logged": false
+    },
+    {
+      "scope": "tb.p",
+      "name": "w",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "tb.p",
+      "name": "k",
+      "type": "integer",
+      "kind": "loop",
+      "logged": false
+    }
+  ]
+}

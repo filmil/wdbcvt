@@ -1,0 +1,99 @@
+{
+  "case": "t57_log_loop____",
+  "axis": "logging. log_wave names a loop index, in a design with a scalar, a vector, a record, a constant, a shared variable, a generate with a signal, and a process with a variable and a loop, to see what the database logs.",
+  "differs_from": "t57_log_all_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "std_ulogic_vector",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "type": "rec_t",
+      "fields": [
+        {
+          "name": "a",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "n",
+          "width": 32,
+          "type": "integer"
+        }
+      ],
+      "logged": false
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    }
+  ],
+  "transitions": [],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "c",
+      "type": "integer",
+      "kind": "constant",
+      "value": "3",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "sv",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "0",
+      "logged": false
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "value": "1",
+      "logged": false
+    },
+    {
+      "scope": "tb.p",
+      "name": "w",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "tb.p",
+      "name": "k",
+      "type": "integer",
+      "kind": "loop"
+    }
+  ]
+}
