@@ -66,7 +66,8 @@ func (f *File) layoutOf(t int, rs *[]Range) (layout, error) {
 	ty := &f.Types[t]
 	switch ty.Kind {
 	case KindEnum:
-		return layout{1, 1}, nil
+		n := ty.enumSize()
+		return layout{n, n}, nil
 	case KindInteger:
 		return layout{4, 4}, nil
 	case KindReal, KindPhysical:
@@ -151,15 +152,19 @@ func (f *File) decode(t int, data []byte, rs *[]Range) (Value, int, error) {
 	}
 	switch ty.Kind {
 	case KindEnum:
-		if err := need(1); err != nil {
+		n := ty.enumSize()
+		if err := need(n); err != nil {
 			return v, 0, err
 		}
 		i := int(data[0])
+		if n == 4 {
+			i = int(binary.LittleEndian.Uint32(data))
+		}
 		if i >= len(ty.Literals) {
 			return v, 0, fmt.Errorf("%s: literal index %d of %d", ty.Name, i, len(ty.Literals))
 		}
 		v.Scalar = strings.Trim(ty.Literals[i], "'")
-		return v, 1, nil
+		return v, n, nil
 	case KindInteger:
 		if err := need(4); err != nil {
 			return v, 0, err
@@ -238,10 +243,27 @@ func (f *File) decode(t int, data []byte, rs *[]Range) (Value, int, error) {
 }
 
 // String renders a value the way the corpus truth files write it: an
-// array of enumeration literals as one string of literal characters
-// (`10100101`), other arrays in parentheses, records as
+// array of character literals as one string of them (`10100101`),
+// other arrays in parentheses, records as
 // `(name => value, ...)`. A Verilog value that decoded to a scalar
 // spelling, a decimal integer or a named enum value, prints that.
+// charEnum reports whether an enumeration type has character literals:
+// a VHDL literal written in quotes (`'0'`, and CHARACTER has those next
+// to identifiers such as `nul`) or a Verilog value spelling (`Z`). An
+// array of such a type prints as one string, an array of identifier
+// literals (t20_enum_300_arr) as a list.
+func (t *Type) charEnum() bool {
+	if t.Kind != KindEnum {
+		return false
+	}
+	for _, l := range t.Literals {
+		if len(l) == 1 || strings.HasPrefix(l, "'") {
+			return true
+		}
+	}
+	return false
+}
+
 func (f *File) String(v Value) string {
 	ty := &f.Types[f.resolve(v.Type)]
 	if v.Scalar != "" {
@@ -249,7 +271,7 @@ func (f *File) String(v Value) string {
 	}
 	switch ty.Kind {
 	case KindArray:
-		if f.Types[f.resolve(ty.Elem)].Kind == KindEnum {
+		if f.Types[f.resolve(ty.Elem)].charEnum() {
 			var b strings.Builder
 			for _, e := range v.Elems {
 				b.WriteString(e.Scalar)

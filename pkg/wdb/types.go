@@ -136,10 +136,17 @@ type Type struct {
 	// 2 for a VHDL enumeration, 0 for VHDL REAL, 0 for Verilog logic and
 	// 1 for Verilog bit and real. What it selects is open.
 	Variant uint32
-	// Class is the third word of an enumeration entry: 2 for BIT, 3 for
-	// STD_ULOGIC, 5 for BOOLEAN and user enumerations, 1 for Verilog
-	// logic and bit. What it selects is open.
+	// Class is the third word of an enumeration entry. It follows the
+	// literals, not the type name: 2 for '0' '1', 3 for the nine
+	// STD_ULOGIC literals, 4 for any other set with a character literal
+	// in it, 5 for identifiers only, tier 20. It is 1 for Verilog logic
+	// and bit.
 	Class uint32
+	// Trailer is the last word of an enumeration or real entry. For a
+	// VHDL enumeration it is the byte size of a value: 1 up to 256
+	// literals and 4 beyond, t20_enum_300. It is 1 for VHDL REAL and 0
+	// for the Verilog entries. See docs/format/types.md.
+	Trailer uint32
 	// Literals are the enumeration literals in declaration order.
 	// Character literals keep their quotes, as in `'U'`. Verilog logic
 	// lists 0 1 Z X and bit lists 0 1 0 0.
@@ -347,10 +354,21 @@ func (c *cursor) layout() uint16 {
 
 // trailer reads the last word of an enumeration or real entry, which is
 // 1 for a VHDL type and 0 for a Verilog one.
-func (c *cursor) trailer(what string) {
-	if got := c.u32(); c.err == nil && got != 0 && got != 1 {
-		c.err = fmt.Errorf("%s trailer: got %#x, want 0 or 1", what, got)
+func (c *cursor) trailer(what string) uint32 {
+	got := c.u32()
+	if c.err == nil && got != 0 && got != 1 && got != 4 {
+		c.err = fmt.Errorf("%s trailer: got %#x, want 0, 1 or 4", what, got)
 	}
+	return got
+}
+
+// enumSize is the byte size of one value of an enumeration type: the
+// trailer word when it is 4, else 1.
+func (t *Type) enumSize() int {
+	if t.Trailer == 4 {
+		return 4
+	}
+	return 1
 }
 
 // readType decodes one entry body: the name and the kind specific part.
@@ -367,7 +385,7 @@ func readType(kind Kind, body []byte) (Type, error) {
 		for i := 0; i < n && c.err == nil; i++ {
 			t.Literals = append(t.Literals, c.str())
 		}
-		c.trailer("enum")
+		t.Trailer = c.trailer("enum")
 	case KindValues:
 		// [u32 1][u32 base][u32 n][u32 8] then n times name NUL [u64
 		// value], then [u32 count] and count constraint triples for
@@ -398,7 +416,7 @@ func readType(kind Kind, body []byte) (Type, error) {
 		t.Variant = c.u32()
 		t.FLow = c.f64()
 		t.FHigh = c.f64()
-		c.trailer("real")
+		t.Trailer = c.trailer("real")
 	case KindAlias:
 		t.Origin = c.origin()
 		t.Target = int(c.u32())

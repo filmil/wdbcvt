@@ -38,7 +38,7 @@ func (f *File) Dump(w io.Writer) error {
 		p("  [%d] %s %q origin %#x", i, t.Kind, t.Name, t.Origin)
 		switch t.Kind {
 		case KindEnum:
-			p(" variant %d class %d: %s", t.Variant, t.Class, strings.Join(t.Literals, " "))
+			p(" variant %d class %d trailer %d: %s", t.Variant, t.Class, t.Trailer, strings.Join(t.Literals, " "))
 		case KindValues:
 			p(" of [%d]:", t.Elem)
 			for _, v := range t.Values {
@@ -52,7 +52,7 @@ func (f *File) Dump(w io.Writer) error {
 		case KindInteger:
 			p(" %d to %d", t.Low, t.High)
 		case KindReal:
-			p(" variant %d %g to %g", t.Variant, t.FLow, t.FHigh)
+			p(" variant %d %g to %g trailer %d", t.Variant, t.FLow, t.FHigh, t.Trailer)
 		case KindPhysical:
 			for _, u := range t.Units {
 				p(" %s=%d", u.Name, u.Scale)
