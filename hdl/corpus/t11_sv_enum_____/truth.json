@@ -1,0 +1,26 @@
+{
+  "case": "t11_sv_enum_____",
+  "axis": "type: enum",
+  "differs_from": "t11_sv_logic____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "state_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "IDLE"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "DONE"
+    }
+  ]
+}

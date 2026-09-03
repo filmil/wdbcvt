@@ -1,0 +1,51 @@
+{
+  "case": "t11_sv_struct_r_",
+  "axis": "unpacked struct with a real field",
+  "differs_from": "t11_sv_struct3__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 96,
+      "type": "rec_t",
+      "fields": [
+        {
+          "scope": "",
+          "name": "r",
+          "width": 64,
+          "type": "real"
+        },
+        {
+          "scope": "",
+          "name": "a",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.r",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.r",
+      "value": "1.5"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.a",
+      "value": "1"
+    }
+  ]
+}

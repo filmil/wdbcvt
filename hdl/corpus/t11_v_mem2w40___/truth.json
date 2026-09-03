@@ -1,0 +1,40 @@
+{
+  "case": "t11_v_mem2w40___",
+  "axis": "memory element width 40, depth 2",
+  "differs_from": "t11_v_mem4______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 80,
+      "type": "",
+      "elements": 2,
+      "element_width": 40,
+      "element_type": "",
+      "declared": "memory of reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(0000000000000000000000000000000000000000, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(0000000000000000000000000000000000000000, 0000000000000000000000000000000000000000)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(0000000000000000000000000000000000000000, 1010010111000011111100000000111100010010)"
+    }
+  ]
+}

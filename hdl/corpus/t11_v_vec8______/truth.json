@@ -1,0 +1,33 @@
+{
+  "case": "t11_v_vec8______",
+  "axis": "width 1 to 8, Verilog",
+  "differs_from": "t11_v_bit_edge__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "range": "7 downto 0",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

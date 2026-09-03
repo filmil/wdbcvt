@@ -1,0 +1,50 @@
+{
+  "case": "t11_v_mem4______",
+  "axis": "type: a memory of four bytes, Verilog",
+  "differs_from": "t11_v_vec8______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 32,
+      "type": "",
+      "elements": 4,
+      "element_width": 8,
+      "element_type": "",
+      "declared": "memory of reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, 00000000)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(00000000, 00000000, 10100101, 00000000)"
+    }
+  ]
+}

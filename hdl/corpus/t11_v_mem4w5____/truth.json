@@ -1,0 +1,50 @@
+{
+  "case": "t11_v_mem4w5____",
+  "axis": "memory element width 8 to 5, for the element packing",
+  "differs_from": "t11_v_mem4______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 20,
+      "type": "",
+      "elements": 4,
+      "element_width": 5,
+      "element_type": "",
+      "declared": "memory of reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXX, XXXXX, XXXXX, XXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000, XXXXX, XXXXX, XXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000, 00000, XXXXX, XXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000, 00000, 00000, XXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000, 00000, 00000, 00000)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(00000, 00000, 00101, 00000)"
+    }
+  ]
+}

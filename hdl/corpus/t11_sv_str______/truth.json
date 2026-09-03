@@ -1,0 +1,16 @@
+{
+  "case": "t11_sv_str______",
+  "axis": "type: string",
+  "differs_from": "t11_sv_logic____",
+  "end_time_ns": 100,
+  "signals": [],
+  "transitions": [],
+  "absent": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "string"
+    }
+  ]
+}

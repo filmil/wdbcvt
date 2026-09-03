@@ -1,0 +1,70 @@
+{
+  "case": "t11_v_mem8______",
+  "axis": "memory depth 4 to 8, past one word",
+  "differs_from": "t11_v_mem4______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "m",
+      "width": 64,
+      "type": "",
+      "elements": 8,
+      "element_width": 8,
+      "element_type": "",
+      "declared": "memory of reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, 00000000, XXXXXXXX, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, 00000000, 00000000, XXXXXXXX, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, 00000000, 00000000, 00000000, XXXXXXXX, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, 00000000, 00000000, 00000000, 00000000, XXXXXXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "m",
+      "value": "(00000000, 00000000, 00000000, 00000000, 00000000, 00000000, 00000000, 00000000)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "m",
+      "value": "(00000000, 00000000, 10100101, 00000000, 00000000, 00000000, 00000000, 00000000)"
+    }
+  ]
+}

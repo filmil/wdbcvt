@@ -1,0 +1,26 @@
+{
+  "case": "t11_v_real______",
+  "axis": "type: real, Verilog",
+  "differs_from": "t11_v_bit_edge__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "real"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1.5"
+    }
+  ]
+}

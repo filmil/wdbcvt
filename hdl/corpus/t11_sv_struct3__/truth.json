@@ -1,0 +1,69 @@
+{
+  "case": "t11_sv_struct3__",
+  "axis": "unpacked struct with three fields, for the field order",
+  "differs_from": "t11_sv_ustruct__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 96,
+      "type": "rec_t",
+      "fields": [
+        {
+          "scope": "",
+          "name": "a",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        },
+        {
+          "scope": "",
+          "name": "b",
+          "width": 4,
+          "type": "",
+          "declared": "logic"
+        },
+        {
+          "scope": "",
+          "name": "c",
+          "width": 8,
+          "type": "",
+          "declared": "logic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.b",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.c",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.b",
+      "value": "1010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.c",
+      "value": "11000011"
+    }
+  ]
+}

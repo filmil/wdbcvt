@@ -1,0 +1,55 @@
+{
+  "case": "t11_v_two_w64___",
+  "axis": "handle spacing: a 64 bit reg beside a one bit reg",
+  "differs_from": "t11_v_vec8______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "p",
+      "width": 64,
+      "type": "",
+      "range": "63 downto 0",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "q",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "p",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "p",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "q",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "q",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "p",
+      "value": "0000000000000000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "time_ns": 60,
+      "signal": "q",
+      "value": "1"
+    }
+  ]
+}

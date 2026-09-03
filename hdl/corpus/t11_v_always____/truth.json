@@ -1,0 +1,76 @@
+{
+  "case": "t11_v_always____",
+  "axis": "process kind: an always block and a named block, Verilog",
+  "differs_from": "t11_v_bit_edge__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 25,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 75,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 75,
+      "signal": "s",
+      "value": "0"
+    }
+  ],
+  "unrecorded": [
+    {
+      "time_ns": 100,
+      "signal": "clk",
+      "value": "0"
+    }
+  ]
+}

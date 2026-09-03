@@ -1,0 +1,33 @@
+{
+  "case": "t11_v_vec33_____",
+  "axis": "width 8 to 33, past one 32 bit word",
+  "differs_from": "t11_v_vec8______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 33,
+      "type": "",
+      "range": "32 downto 0",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "100000000000000000000000010100101"
+    }
+  ]
+}

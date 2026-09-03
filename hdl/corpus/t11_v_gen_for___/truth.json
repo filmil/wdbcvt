@@ -1,0 +1,54 @@
+{
+  "case": "t11_v_gen_for___",
+  "axis": "generate for loop with two instances, Verilog",
+  "differs_from": "t11_v_hier1_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.g[0].dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.g[1].dut",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].dut.s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[0].dut.s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].dut.s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[1].dut.s",
+      "value": "1"
+    }
+  ]
+}

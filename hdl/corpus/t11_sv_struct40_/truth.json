@@ -1,0 +1,52 @@
+{
+  "case": "t11_sv_struct40_",
+  "axis": "unpacked struct with a 40 bit field, for the field slot size",
+  "differs_from": "t11_sv_struct3__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 96,
+      "type": "rec_t",
+      "fields": [
+        {
+          "scope": "",
+          "name": "a",
+          "width": 40,
+          "type": "",
+          "declared": "logic"
+        },
+        {
+          "scope": "",
+          "name": "b",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0000000000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.a",
+      "value": "1010010111000011111100000000111100010010"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.b",
+      "value": "1"
+    }
+  ]
+}

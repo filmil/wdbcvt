@@ -1,0 +1,38 @@
+{
+  "case": "t11_v_vec64x____",
+  "axis": "width 33 to 64, with an X bit in the upper word",
+  "differs_from": "t11_v_vec33_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "",
+      "range": "63 downto 0",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1101111010101101101111101110111111001010111111101011101010111110"
+    },
+    {
+      "time_ns": 75,
+      "signal": "s",
+      "value": "11011110101011011011111X1110111111001010111111101011101010111110"
+    }
+  ]
+}
