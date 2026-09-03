@@ -1,0 +1,27 @@
+{
+  "case": "t29_sv_stream___",
+  "axis": "logic [7:0] s = {<<{8'h05}}, a streaming operator",
+  "differs_from": "t28_sv_v8_signed",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "10100000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

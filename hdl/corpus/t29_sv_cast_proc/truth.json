@@ -1,0 +1,26 @@
+{
+  "case": "t29_sv_cast_proc",
+  "axis": "int'(2.5) in a process statement",
+  "differs_from": "t28_sv_int_cast_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "int"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "3"
+    }
+  ]
+}

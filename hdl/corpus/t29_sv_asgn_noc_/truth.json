@@ -1,0 +1,49 @@
+{
+  "case": "t29_sv_asgn_noc_",
+  "axis": "assign w = s + 1 without a cast",
+  "differs_from": "t29_sv_cast_asgn",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 8,
+      "type": "",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "XXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "00000001"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    },
+    {
+      "time_ns": 50,
+      "signal": "w",
+      "value": "10100110"
+    }
+  ]
+}
