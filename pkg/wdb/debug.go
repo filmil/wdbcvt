@@ -3,6 +3,7 @@
 package wdb
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 )
@@ -385,6 +386,52 @@ func (s *dbgSection) region(from, to int) ([]byte, error) {
 	return s.d[a:b], nil
 }
 
+// checkCounts holds header words 0 to 13 against the regions they
+// count: word i counts region i+4, the way the four counts before them
+// count regions 0 to 3. A record region is counted in records, a name
+// pool in bytes before its padding, and an empty region holds 0.
+// Region 17 ends at offset 2, the end of the section proper.
+func (s *dbgSection) checkCounts() error {
+	for k := 4; k <= 17; k++ {
+		to := k + 1
+		if k == 17 {
+			to = 2
+		}
+		r, err := s.region(k, to)
+		if err != nil {
+			return err
+		}
+		w := int(s.Words[k-4])
+		var want int
+		switch k {
+		case 4:
+			want = w * rangeRecLen * 4
+		case 9, 10, 11:
+			// The pool's length before padding is the last NUL of a
+			// name and one; a pool with no names has no bytes.
+			if got := len(bytes.TrimRight(r, "\x00")); got > 0 || len(r) > 0 {
+				want = got + 1
+				if want != w {
+					return fmt.Errorf("DBG header word %d is %d for a %d byte name pool in region %d", k-4, w, want, k)
+				}
+			}
+			continue
+		case 13, 14:
+			want = w * 8
+		case 15:
+			want = (w*4 + 7) / 8 * 8
+		case 17:
+			want = (w*classRecLen*4 + 7) / 8 * 8
+		default:
+			want = 0
+		}
+		if len(r) != want {
+			return fmt.Errorf("DBG header word %d is %d, which does not fit the %d bytes of region %d", k-4, w, len(r), k)
+		}
+	}
+	return nil
+}
+
 func words(b []byte) []int32 {
 	out := make([]int32, len(b)/4)
 	for i := range out {
@@ -431,6 +478,9 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 	if rest := dbg.Offset + dbg.Length - s.End; s.End > dbg.Offset+dbg.Length || rest != uint64(s.Counts[2])*instRecLen {
 		return fmt.Errorf("DBG section ends at %#x and the directory entry at %#x, which does not fit %d instance records",
 			s.End, dbg.Offset+dbg.Length, s.Counts[2])
+	}
+	if err := s.checkCounts(); err != nil {
+		return err
 	}
 	// Region 17 runs to the end of the section proper, as offset 2
 	// says. Its entries are three words, padded to 8 bytes at the end.

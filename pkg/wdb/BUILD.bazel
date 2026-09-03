@@ -23,6 +23,7 @@ go_test(
     size = "small",
     srcs = [
         "corpus_test.go",
+        "debug_test.go",
         "diff_test.go",
         "probe_test.go",
         "vcd_test.go",
