@@ -175,6 +175,7 @@ The offsets are in the documents linked in the last column.
 | A packed union is a record entry of layout `6` as wide as its widest field, every field over the same bits | `t24_sv_union` against `t11_sv_struct` | `truth.json`, `TestVCD` | types, values, vcd |
 | DBG header word 14 flags `-debug drivers` in byte 1 and `readers` in byte 2; word 15 flags `line` in byte 1 and `subprogram` in byte 2, byte 0 of each is `1` | `t24_dbg_readers` against `t24_two_drivers`, one byte at `0x303`; `t24_dbg_line` against `t24_dbg_drv_only` | `t24_dbg_sub_only`, `t24_dbg_xlibs`, `t24_dbg_drivers`, the `header words` line of every dump | hierarchy |
 | Without `-debug line`, header word 11 is `0` and regions 15 and 16 are empty | `t24_dbg_drv_only` against `t24_dbg_line` | `t24_dbg_xlibs` | hierarchy |
+| DBG header word `i`, for 0 to 13, counts region `i + 4`: records for a record region, bytes up to the last NUL for a name pool, words for region 15, and 0 for an empty region | a sweep of the 17 words against the region lengths over 762 databases, every one fitting | the reader's `checkCounts`, 758 of 758, `//hdl/serv:sim`, `//hdl/potato:sim` | hierarchy |
 | `-debug xlibs` alone brings the four packages, without the `resolved` scope of `all` | `t24_dbg_xlibs` against `t24_dbg_drv_only` | `t22_dbg_all` | hierarchy |
 | `-debug drivers` over `typical` and `readers` over `typical` change nothing but the flag byte | `t24_dbg_drivers`, `t24_dbg_readers`, each against `t24_two_drivers` | `cmp` outside the noise mask | hierarchy |
 | A signal attribute in a concurrent assignment is an implicit process `line__N`, two of them for `'delayed`, and no object for the implicit signal | `t24_att_delayed` against `t24_att_stable` | `t24_att_quiet`, `t24_att_transact`, `t24_ext_name` | hierarchy |
@@ -839,6 +840,7 @@ claim rests on and rerun the comparison.
 | `t49_sub_str_prm_` against `t23_sub_sig_prm_` | an unconstrained `string` parameter | no declaration, no object, no handle space |
 | `t49_mix_2port___` against `t21_mix_v_in_vh_` | an output port at the boundary | 1 on both ports, positions 0 and 1; `U`, `X`, `0` on the VHDL signal the assign drives |
 | `t49_mix_deep____` against `t49_mix_2port___` | a VHDL leaf under the Verilog child | 1 on the leaf's ports too; the leaf's input holds no `U` and its output no `X`; every boundary port has its own handle |
+| the 17 header words against the region lengths, every database, reread | nothing; a sweep | word `i` counts region `i + 4` for 0 to 13; words 1 to 4, 8 and 12 are the counts of the empty regions |
 | every `sim.vcd` against its `sim.wdb`, through `go-vcd-parser` | nothing; the same run | the VCD spelling rules, the omission rule, the code sharing rule, and one wrong VCD value |
 
 Three findings were not found by a pair.

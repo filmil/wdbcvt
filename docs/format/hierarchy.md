@@ -65,15 +65,15 @@ The 17 header words are, in order:
 | Word | Value | Found by |
 | ---: | :--- | :--- |
 | 0 | number of range records | `t1_vec8` 1, `t2_array2d` 2 |
-| 1 to 4 | 0 | |
+| 1 to 4 | 0, the counts of the empty regions 5 to 8 | |
 | 5 | length of the scope name pool before padding | `t2_flat3` 14 |
 | 6 | length of the declaration name pool before padding | `t2_flat3` 20 |
 | 7 | length of the file name pool before padding | |
-| 8 | 0 | |
-| 9 | number of files | |
-| 10 | number of files again | |
+| 8 | 0, the count of the empty region 12 | |
+| 9 | number of files, the entries of region 13 | |
+| 10 | number of files again, the entries of region 14 | |
 | 11 | number of words in region 15, `0` without `-debug line` | `t2_flat3` 6; `t24_dbg_drv_only` 0 |
-| 12 | 0 | |
+| 12 | 0, the count of the empty region 16 | |
 | 13 | number of value class entries in region 17 | `t25_sv_two_class` 2 against `t25_sv_two_same` 1 |
 | 14 | debug flags: byte 0 `1`, byte 1 `-debug drivers`, byte 2 `-debug readers` | `t24_dbg_drv_only`, `t24_dbg_readers` |
 | 15 | debug flags: byte 0 `1`, byte 1 `-debug line`, byte 2 `-debug subprogram`, both under `line` alone | `t24_dbg_line`, `t24_dbg_sub_only` |
@@ -86,6 +86,19 @@ Word 13 counts the entries of region 17, which is 16 bytes long for
 one entry and empty without objects; the value class section at the
 end of this file has what an entry holds.
 Word 16 is `0x10000` in every case.
+
+Words 0 to 13 are one rule: word `i` counts region `i + 4`, the way the
+four counts before the offsets count regions 0 to 3.
+A record region is counted in records, a name pool in bytes up to and
+including its last NUL, region 15 in words, and an empty region holds
+0.
+Regions 15 and 17 are padded to a multiple of 8 bytes after the counted
+words.
+Found by a sweep over the 758 corpus databases and the four external
+ones, which holds in every one of them, and confirmed by the reader,
+which rejects a file whose count does not fit its region.
+Reproduce with `dewdb -dump`, which prints the counts as
+`header words` and the region bounds as `offsets`.
 The reader keeps the 17 words as `Debug.Words` and the dump prints
 them as `header words`.
 

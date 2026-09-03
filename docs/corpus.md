@@ -1543,6 +1543,18 @@ The `storage` field of `truth.json` checks the word.
 | `t49_mix_deep____` | `t49_mix_2port___` | a VHDL leaf under the Verilog child | 1 on the leaf's ports; no `U` on its input |
 
 
+**The header count sweep.**
+No new case.
+The 17 DBG header words of every database, the 758 corpus cases and
+the four external designs, were held against the lengths of the 18
+regions.
+Word `i` for 0 to 13 counts region `i + 4`, in records, in bytes to the
+last NUL of a name pool, in words for region 15, and as 0 for the empty
+regions 5 to 8, 12 and 16.
+The reader now rejects a file whose counts do not fit, and a unit test
+raises word 0 of a corpus database by one to see the rejection.
+The [hierarchy](format/hierarchy.md) file has the table.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
