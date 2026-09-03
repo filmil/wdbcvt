@@ -45,6 +45,10 @@ filegroup(
         "//hdl/corpus/t3_tr4__________:sim",
         "//hdl/corpus/t3_tr8__________:sim",
         "//hdl/corpus/t3_valz_________:sim",
+        "//hdl/corpus/t4_gen_default__:sim",
+        "//hdl/corpus/t4_gen_diff_two_:sim",
+        "//hdl/corpus/t4_gen_explicit_:sim",
+        "//hdl/corpus/t4_gen_same_two_:sim",
     ],
     visibility = ["//visibility:public"],
 )
