@@ -1435,6 +1435,28 @@ the tier declares a string signal and a string variable.
 | `t44_str_sig_3to7` | `t44_str_sig_____` | `string(3 to 7)` | `(3 to 7)` as written |
 | `t44_str_var_____` | `t6_var_int` | a `string(1 to 5)` variable | a 5 byte declaration, no record |
 
+**Tier 45: what the script logs, and when.**
+VHDL.
+Every case so far logged everything under the top from time 0 in one
+`run -all`.
+The tier starts logging late, logs twice, logs one signal or one
+scope, splits the run, and elaborates two top entities.
+The cases with a script of their own carry it as `xsim.tcl`, and the
+late ones name the log time as `log_ns` in `truth.json`, because the
+VCD backdates the first value to `#0`.
+
+| Case | Differs from | Axis | Found |
+| :--- | :--- | :--- | :--- |
+| `t45_log_base____` | `t1_bit_two_edges` | three edges under the default script | the baseline of the tier |
+| `t45_log_late____` | `t45_log_base____` | `log_wave` after `run 10 ns` | the first record at 10 ns holding the value held; `t0` 10000 |
+| `t45_run_steps___` | `t45_log_base____` | the run in three `run` commands | no difference |
+| `t45_log_twice___` | `t45_log_base____` | `log_wave` again at 10 ns | one record of the value held |
+| `t45_log_one_____` | `t45_log_base____` | `log_wave /tb/s` beside an unlogged `u` | `u` listed and marked not logged |
+| `t45_log_dut_____` | `t45_log_one_____` | `log_wave -recursive /tb/dut` | `tb.s` not logged, `tb.dut.c` as usual |
+| `t45_log_dut_late` | `t45_log_dut_____` | the child log after `run 10 ns` | the child's first record at 10 ns |
+| `t45_two_tops____` | `t45_log_base____` | two `--top` options | two root children in option order; only the first logged by `*` |
+| `t45_two_tops_all` | `t45_two_tops____` | `log_wave -recursive /tb2` and `/tb` | both tops record |
+
 
 ## Record which comparison produced which finding
 
@@ -1473,7 +1495,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 713 cases through tier 44, and
+5. The reader now reproduces all 722 cases through tier 45, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

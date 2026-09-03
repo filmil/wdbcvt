@@ -814,6 +814,35 @@ change.
 `t3_late` ends at 1010000 with its last record at 1000000, and
 `t6_tr1300` ends at 1310000 with its last record at 1300000.
 
+**What the script logs, and when.**
+The records of a signal start when `log_wave` names it, not at time
+0.
+`t45_log_late` issues `log_wave -recursive *` after `run 10 ns` on a
+signal that changes at 5, 15 and 25 ns, and the page holds `1` at
+10000, the value then held, and the two later changes; `t0` is 10000,
+and nothing else in the file differs from `t45_log_base`, which logs
+from the start.
+The VCD written by the same script backdates that first value: its
+`$dumpvars` block at `#0` holds `1`, the value at 10 ns, so the two
+disagree on the first time and `TestVCD` moves the VCD's first change
+to the `log_ns` the truth names.
+A second `log_wave -recursive *` at 10 ns on a signal logged from the
+start, `t45_log_twice`, adds one record at 10000 holding the value
+held, `1`, and nothing else: it is a write of the value held.
+Splitting the run into `run 10 ns`, `run 10 ns`, `run -all`,
+`t45_run_steps`, leaves no trace at all.
+A signal the script does not name is declared, listed and marked not
+logged, as a package signal is under the default script: `u` of
+`t45_log_one` under `log_wave /tb/s`, and `tb.s` of `t45_log_dut`
+under `log_wave -recursive /tb/dut`, where `tb.dut.c` records as
+usual and the logged range table holds `[1 1]`.
+The arena of the unlogged object stays unused.
+A child scope logged late, `t45_log_dut_late`, starts its records at
+10000 as the top did.
+*Found by* `t45_log_late` against `t45_log_base`.
+*Confirmed by* `t45_log_twice`, `t45_run_steps`, `t45_log_one`,
+`t45_log_dut` and `t45_log_dut_late`, each against `truth.json`.
+
 
 ## Verilog values
 

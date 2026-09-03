@@ -116,6 +116,21 @@ from the parent links, so it shows `tb.p`.
 Children of one parent are contiguous, starting at word 4.
 `t2_hier3` has the root at 0, `tb` at 1 with children 2 and 3, `tb.dut`
 at 2 with child 4, and `tb.dut.inner` at 4 with child 5.
+
+The root can have more than one top.
+`t45_two_tops` elaborates `--top corpus.tb2 --top corpus.tb`, and
+the root has two children, `tb2` at 1 and `tb` at 2, in the order of
+the options, each with its process after them, and a unit each.
+The handles run on across the tops as across any scopes: `tb2.t` is
+`0x768` and `tb.s` `0x858`.
+The default script logs the first top only: `log_wave -recursive *`
+and `get_objects -r /*` reach the current scope, `/tb2`, and `tb.s`
+is marked not logged, where `get_scopes /*` lists both.
+`t45_two_tops_all` names `/tb2` and `/tb` in two `log_wave` calls and
+both record, `tb.s` in arena 1 at key `0x58`, and the logged range
+table holds `[0 1]`.
+*Found by* `t45_two_tops` against `t45_log_base`.
+*Confirmed by* `t45_two_tops_all`.
 Two scopes elaborated from the same process share one pool string:
 `p` sits at offset 20 in the `t2_hier3` pool and both `tb.p` and
 `tb.dut.inner.p` name it.
@@ -1647,10 +1662,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 713 of 713 cases, and the
+*Confirmed by* the region length check in 722 of 722 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 713 of 713 cases and
+and *confirmed by* the reader's range check in 722 of 722 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
