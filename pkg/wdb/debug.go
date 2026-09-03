@@ -12,6 +12,7 @@ import (
 const (
 	dbgOffsets = 18 // uint32 region offsets, after the magic, timestamp and precision
 	dbgCounts  = 4  // uint32 counts after the offsets
+	dbgWords   = 17 // uint32 header words after the counts
 
 	scopeRecLen = 9  // uint32 words per scope record
 	unitRecLen  = 9  // uint32 words per unit record
@@ -333,6 +334,12 @@ type Debug struct {
 	// the regions that are not decoded yet.
 	Offsets [dbgOffsets]uint32
 	Counts  [dbgCounts]uint32
+	// Words holds the 17 header words after the counts. Most are
+	// sizes the regions repeat; words 14 and 15 are 0x101 and grow a
+	// third byte under -debug readers and -debug subprogram: tier 24,
+	// t24_dbg_readers_ against t24_two_drivers_ and the -debug
+	// subprogram cases of tiers 22 and 23 against their siblings.
+	Words [dbgWords]uint32
 	// End is the file offset one past the section proper; the instance
 	// records start there and run to the end of the directory entry's
 	// length.
@@ -386,6 +393,9 @@ func readDebug(f *File, d []byte, dbg DirEntry) error {
 	}
 	for i := range s.Counts {
 		s.Counts[i] = c.u32()
+	}
+	for i := range s.Words {
+		s.Words[i] = c.u32()
 	}
 	if c.err != nil {
 		return fmt.Errorf("DBG header: %w", c.err)

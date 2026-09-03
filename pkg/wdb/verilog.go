@@ -105,6 +105,8 @@ func (f *File) bitsOf(t int, rs *[]Range) (int, error) {
 		}
 		return n * eb, nil
 	case KindRecord:
+		// The fields of a packed union overlap, so it takes the
+		// bits of its widest field: t24_sv_union____.
 		total := 0
 		for _, fd := range ty.Fields {
 			frs := fd.Ranges
@@ -114,6 +116,10 @@ func (f *File) bitsOf(t int, rs *[]Range) (int, error) {
 			}
 			if ty.Layout == LayoutUnpacked {
 				fb = roundUp(fb, 32)
+			}
+			if ty.Layout == LayoutUnion {
+				total = max(total, fb)
+				continue
 			}
 			total += fb
 		}
@@ -452,7 +458,29 @@ func (f *File) decodeBits(t int, bits []byte, rs *[]Range) (Value, error) {
 		}
 		return v, nil
 	case KindRecord:
-		if ty.Layout != LayoutPacked {
+		switch ty.Layout {
+		case LayoutPacked:
+		case LayoutUnion:
+			// Every field of a packed union reads the same bits,
+			// a narrower field the low ones: t24_sv_union____.
+			for _, fd := range ty.Fields {
+				frs := fd.Ranges
+				fb, err := f.bitsOf(fd.Type, &frs)
+				if err != nil {
+					return v, fmt.Errorf("%s.%s: %w", ty.Name, fd.Name, err)
+				}
+				if fb > len(bits) {
+					return v, fmt.Errorf("%s.%s: needs %d of %d bits", ty.Name, fd.Name, fb, len(bits))
+				}
+				frs = fd.Ranges
+				fv, err := f.decodeBits(fd.Type, bits[len(bits)-fb:], &frs)
+				if err != nil {
+					return v, fmt.Errorf("%s.%s: %w", ty.Name, fd.Name, err)
+				}
+				v.Fields = append(v.Fields, fv)
+			}
+			return v, nil
+		default:
 			return v, fmt.Errorf("%s: an unpacked struct inside a packed value has not been observed", ty.Name)
 		}
 		off := 0

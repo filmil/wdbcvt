@@ -178,10 +178,19 @@ func (f *File) vcdSpell(v Value) string {
 		// 32 bit words: t11_sv_ustruct, t11_sv_struct3 and
 		// t11_sv_struct40. A real field inside one does not spell its
 		// value at all, t11_sv_struct_r, and comes back as 32 question
-		// marks so that the comparison fails on it.
+		// marks so that the comparison fails on it. A packed union
+		// is its widest field, since the fields share the bits:
+		// t24_sv_union____.
 		var b strings.Builder
 		for _, fv := range v.Fields {
 			s := f.vcdSpell(fv)
+			if ty.Layout == LayoutUnion {
+				if len(s) > b.Len() {
+					b.Reset()
+					b.WriteString(s)
+				}
+				continue
+			}
 			if ty.Layout == LayoutUnpacked {
 				if strings.HasPrefix(s, "r") {
 					s = strings.Repeat("?", 32)

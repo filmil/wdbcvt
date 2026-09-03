@@ -41,13 +41,16 @@ const (
 )
 
 // The u16 after the first word of an array or record entry: 1 for a
-// VHDL type, 3 for a packed Verilog type and 2 for an unpacked one.
+// VHDL type, 3 for a packed Verilog type, 2 for an unpacked one and 6
+// for a packed union, whose fields share the same bits.
 // Found by t11_sv_struct against t11_sv_ustruct, and by t11_v_mem4,
-// whose memory is unpacked and whose word is packed.
+// whose memory is unpacked and whose word is packed; 6 by
+// t24_sv_union____ against t11_sv_struct.
 const (
 	LayoutVHDL     = 1
 	LayoutUnpacked = 2
 	LayoutPacked   = 3
+	LayoutUnion    = 6
 )
 
 func (k Kind) String() string {
@@ -355,7 +358,7 @@ func (c *cursor) origin() uint32 {
 func (c *cursor) layout() uint16 {
 	v := c.u16()
 	switch v {
-	case LayoutVHDL, LayoutUnpacked, LayoutPacked:
+	case LayoutVHDL, LayoutUnpacked, LayoutPacked, LayoutUnion:
 	default:
 		if c.err == nil {
 			c.err = fmt.Errorf("layout word %#x", v)

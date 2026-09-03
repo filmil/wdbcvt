@@ -87,6 +87,11 @@ func (f *File) Dump(w io.Writer) error {
 		p(" %#x", o)
 	}
 	p("\n")
+	p("  header words  ")
+	for _, w := range d.Words {
+		p(" %#x", w)
+	}
+	p("\n")
 
 	p("files (%d):\n", len(f.Files))
 	for i, sf := range f.Files {
