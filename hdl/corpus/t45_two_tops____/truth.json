@@ -1,0 +1,33 @@
+{
+  "case": "t45_two_tops____",
+  "axis": "elaboration. xelab --top corpus.tb2 --top corpus.tb under the default script, to see whether the root scope gets two children and what log_wave -recursive * logs when there are two.",
+  "differs_from": "t45_log_base____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb2",
+      "name": "t",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb2.t",
+      "value": "0"
+    },
+    {
+      "time_ns": 7,
+      "signal": "tb2.t",
+      "value": "1"
+    }
+  ]
+}

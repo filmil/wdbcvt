@@ -1,0 +1,43 @@
+{
+  "case": "t45_log_one_____",
+  "axis": "logging. log_wave /tb/s with a second signal u declared, to see how an unlogged signal of the top is written: declared and marked, or absent.",
+  "differs_from": "t45_log_base____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "u",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

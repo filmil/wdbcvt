@@ -1,0 +1,39 @@
+{
+  "case": "t45_log_dut_late",
+  "axis": "logging. The child log of t45_log_dut issued after run 10 ns.",
+  "differs_from": "t45_log_dut_____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb.dut",
+      "name": "c",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.c",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "tb.dut.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "tb.dut.c",
+      "value": "1"
+    }
+  ],
+  "log_ns": 10
+}

@@ -1,0 +1,36 @@
+{
+  "case": "t45_run_steps___",
+  "axis": "logging. run 10 ns, run 10 ns, run -all instead of one run -all, to see whether the database notices the breaks.",
+  "differs_from": "t45_log_base____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

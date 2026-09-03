@@ -1,0 +1,36 @@
+{
+  "case": "t45_log_twice___",
+  "axis": "logging. A second log_wave -recursive * after run 10 ns, to see whether an already logged signal gets a second record or a second object.",
+  "differs_from": "t45_log_base____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

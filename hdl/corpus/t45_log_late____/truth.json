@@ -1,0 +1,32 @@
+{
+  "case": "t45_log_late____",
+  "axis": "logging. log_wave and log_vcd are issued after run 10 ns, to see what the database holds for the time before, and how the first record of a late logged signal is written.",
+  "differs_from": "t45_log_base____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "log_ns": 10
+}

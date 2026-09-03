@@ -1,0 +1,43 @@
+{
+  "case": "t45_log_dut_____",
+  "axis": "logging. log_wave -recursive /tb/dut with a signal in tb as well, to see how a logged child under an unlogged parent is written.",
+  "differs_from": "t45_log_one_____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    },
+    {
+      "scope": "tb.dut",
+      "name": "c",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "tb.dut.c",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "tb.dut.c",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "tb.dut.c",
+      "value": "1"
+    }
+  ]
+}

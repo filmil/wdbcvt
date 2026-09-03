@@ -149,6 +149,11 @@ type truth struct {
 	// a parameter string, t26_sv_str_prm, an event, t26_sv_event, a
 	// function called only from an initializer, t26_sv_logic_fn.
 	Absent []truthAbsent `json:"absent"`
+	// LogNS is the time log_wave was issued when the script did not
+	// log from the start: t45_log_late. The database's first record
+	// of every logged signal is at that time, and the VCD writes the
+	// same value in its $dumpvars block at time 0.
+	LogNS int64 `json:"log_ns"`
 }
 
 // truthAbsent is one declaration that leaves no object. Type is the

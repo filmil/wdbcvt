@@ -1,0 +1,52 @@
+{
+  "case": "t45_two_tops_all",
+  "axis": "elaboration. The two tops of t45_two_tops with log_wave -recursive /tb2 and /tb, since -recursive * and /* reach the current scope /tb2 only, to see how the objects of two roots are keyed and paged.",
+  "differs_from": "t45_two_tops____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb2",
+      "name": "t",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 15,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb2.t",
+      "value": "0"
+    },
+    {
+      "time_ns": 7,
+      "signal": "tb2.t",
+      "value": "1"
+    }
+  ]
+}

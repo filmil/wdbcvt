@@ -274,12 +274,25 @@ func sameVCDValue(kind string, size int, got, want string) bool {
 // over the corpus; see docs/format/vcd.md.
 func (f *File) vcdOmitted(o Object) string {
 	dc := f.Decls[o.Decl]
-	// The top is the first child of the root scope; the packages are
-	// its other children, pp_csr and pp_constants in //hdl/potato:sim.
-	// A Verilog top with a parameter set on the command line is named
-	// with it, `tb(memfile="...")` in //hdl/serv:sim.
-	top := plainPath(f.Scopes[f.Scopes[0].FirstChild].Name)
-	if p := plainPath(f.ObjectPath(o)); !strings.HasPrefix(p, top+".") && !strings.HasPrefix(p, top+"(") {
+	// The tops are the children of the root scope whose unit is an
+	// entity or a module; the packages are its other children, pp_csr
+	// and pp_constants in //hdl/potato:sim. A Verilog top with a
+	// parameter set on the command line is named with it,
+	// `tb(memfile="...")` in //hdl/serv:sim. Two tops are two such
+	// children, t45_two_tops_all, and its script logs both.
+	p := plainPath(f.ObjectPath(o))
+	under := false
+	root := f.Scopes[0]
+	for i := root.FirstChild; i < root.FirstChild+root.NumChildren; i++ {
+		if k := f.Units[f.Scopes[i].Unit].Kind; k != UnitEntity && k != UnitModule {
+			continue
+		}
+		top := plainPath(f.Scopes[i].Name)
+		if strings.HasPrefix(p, top+".") || strings.HasPrefix(p, top+"(") {
+			under = true
+		}
+	}
+	if !under {
 		return "outside the top hierarchy that the script logs"
 	}
 	ty := &f.Types[f.resolve(dc.Type)]
@@ -354,6 +367,16 @@ func TestVCD(t *testing.T) {
 				t.Fatal(err)
 			}
 			v := loadVCD(t, filepath.Join(dir, "sim.vcd"))
+			// A log started late puts its first record at the log
+			// time, where the VCD backdates the same value to its
+			// $dumpvars block at 0: t45_log_late. The truth names the
+			// log time, and the first VCD change is moved to it.
+			var logAt uint64
+			if _, err := os.Stat(filepath.Join(dir, "truth.json")); err == nil {
+				if tr := loadTruth(t, dir); tr.LogNS != 0 {
+					logAt = ticks(t, f, tr.LogNS, 0, 0)
+				}
+			}
 			if unit := float64(f.TimeFS(1)); v.timescaleFS < unit*0.999 || v.timescaleFS > unit*1.001 {
 				t.Fatalf("VCD timescale %g fs, the database counts in %s", v.timescaleFS, f.TimeUnit())
 			}
@@ -400,6 +423,9 @@ func TestVCD(t *testing.T) {
 				// pins the count of records through records.
 				want = changesOnly(finalPerTime(want))
 				got := changesOnly(v.changes[vv.code])
+				if logAt != 0 && len(got) > 0 && got[0].time == 0 {
+					got[0].time = logAt
+				}
 				if reason := f.vcdOmitted(o); reason != "" {
 					t.Errorf("%s is in the VCD but vcdOmitted says it is %s", vv.path, reason)
 				}
