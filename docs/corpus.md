@@ -512,6 +512,16 @@ write differs from a blocking one.
 | `t17_v_reg_nb` | `s <= 1'b1` | the same records as `s = 1'b1` |
 | `t17_v_nb_swap` | `a <= b; b <= a;` | one record each, swapped |
 
+Tier 18 asks what the `dims` word of an array type entry counts, since
+every array type so far had one index dimension, and whether a VHDL
+signal with a reader gets the extra time 0 record a Verilog net does.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t18_arr_2dim` | `array (0 to 1, 0 to 2) of std_ulogic` | `dims` `2`, two index words, row major value |
+| `t18_arr_3dim` | `array (0 to 1, 0 to 1, 0 to 2) of std_ulogic` | `dims` `3`, three index words |
+| `t18_sig_read` | `y <= s` beside `t1_bit_one_edge` | no extra record on `s` |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -569,7 +579,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 261 cases through tier 17, and
+5. The reader now reproduces all 264 cases through tier 18, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

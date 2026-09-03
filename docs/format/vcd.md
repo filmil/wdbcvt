@@ -33,14 +33,14 @@ the files by eye.
 
 ## What the VCD carries
 
-All 261 cases pass, and every object of the database is either in its
+All 264 cases pass, and every object of the database is either in its
 VCD or covered by one line of this table.
 
 | Object | In the VCD |
 | :--- | :--- |
 | VHDL `bit`, `std_ulogic`, `std_logic` | yes, `wire 1` |
-| VHDL one dimensional arrays of those: `bit_vector`, `std_logic_vector`, `signed`, `unsigned` | yes, `wire N` |
-| VHDL `boolean`, `integer`, `real`, `time`, `character`, a user enumeration, a record, any other array | no |
+| VHDL arrays of those with any number of index dimensions: `bit_vector`, `std_logic_vector`, `signed`, `unsigned`, the `(0 to 1, 0 to 2)` array of `t18_arr_2dim` | yes, `wire N` over all elements |
+| VHDL `boolean`, `integer`, `real`, `time`, `character`, a user enumeration, a record, an array of arrays such as `t2_array2d` | no |
 | VHDL generic or constant, of any type, including a generate index | no |
 | A signal outside `tb`, such as the package signal `sig_pkg.x` of `t13_pkg_log_all` | no; the script logs `/*` |
 | Verilog `reg`, `wire`, a vector, `integer`, `time`, `real`, `shortreal` | yes, as `reg`, `wire`, `integer`, `time` or `real` |
@@ -85,6 +85,9 @@ comparing, by the rules the comparison found necessary:
   which is the order the database holds them in.
 * A packed array with two packed dimensions, `t11_sv_arr2d`, is the
   elements in index order, element 0 on the left, likewise.
+* A VHDL array with two or three index dimensions, `t18_arr_2dim` and
+  `t18_arr_3dim`, is one `wire` of all elements in row major order,
+  `(0,0)` on the left, which is also the order of the record bytes.
 * An unpacked struct puts every field in a slot of whole 32 bit words,
   so `{logic a; logic [3:0] b;}` is declared `reg 64` and `a = 1,
   b = 1010` is written `b1` followed by 28 zeros and `1010`.

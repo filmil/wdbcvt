@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 261 of 261 cases decoding with the entry lengths chaining
+*Confirmed by* 264 of 264 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -49,7 +49,7 @@ exactly to the word at `36`.
 | `0x06` | real | `[u32 origin][u32 variant][f64 low][f64 high][u32 1]` for VHDL, `[u32 0]` for Verilog |
 | `0x07` | alias | `[u32 origin][u32 target][u32 nranges]` then that many range triples |
 | `0x0d` | physical | `[u32 origin][u32 n]` then `n` times `name NUL [u64 scale]` |
-| `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims][u32 index][u32 nranges]` then that many range triples, then `-99` |
+| `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims]` then `dims` index type words, then `[u32 nranges]` and that many range triples, then `-99` |
 | `0x11` | record | `[u32 origin][u16 layout][u16 0xb][u32 n]` then `n` fields, then `-99` |
 
 Kinds `0x04` and `0x07` come from SystemVerilog only, and are described
@@ -116,8 +116,28 @@ record in the debug section.
 `t2_array2d` declares `array (0 to 3) of std_ulogic_vector(7 downto 0)`
 and its entry holds `(0 to 3) (7 downto 0)`: two triples, one per
 dimension of the flattened shape.
-The `dims` word is `1` in every entry, including that one, so what it
-counts is open.
+
+**Index dimensions.**
+The `dims` word counts the index dimensions of the type itself, and as
+many index type words follow it, one per dimension.
+`t2_array2d` has `dims` `1` and one index word, `3` for `natural`,
+under two triples, because its second triple belongs to the element.
+`t18_arr_2dim` declares `array (0 to 1, 0 to 2) of std_ulogic`, and
+its entry has `dims` `2`, two index words `1 1`, then `2` triples
+`(0 to 1) (0 to 2)`.
+`t18_arr_3dim` has `dims` `3`, three index words and three triples.
+Every entry through tier 17 had one index dimension, which is why the
+word read as a constant `1` and the index word as a fixed field.
+The value of a multidimensional array is its elements in row major
+order, the last index fastest, one byte per `std_ulogic`: the
+`t18_arr_2dim` record `03 02 03 02 03 03` is `(('1','0','1'),
+('0','1','1'))`.
+
+*Found by* `t18_arr_2dim` against `t2_array2d`, where the reader ran
+out of bytes 4 words early on the entry.
+
+*Confirmed by* `t18_arr_3dim`, and by `truth.json` of both against the
+decoded value.
 
 **Record.**
 Each field is `name NUL [u32 type][u32 nranges]` then that many
