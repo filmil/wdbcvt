@@ -1,0 +1,42 @@
+{
+  "case": "t47_use_pkg_two_",
+  "axis": "use clause. `use work.two_pkg.all`, an own package with an integer and a std_ulogic constant, to price a used package by its constants.",
+  "differs_from": "t47_use_numstd__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "two_pkg",
+      "name": "c1",
+      "type": "integer",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "two_pkg",
+      "name": "c2",
+      "type": "std_ulogic",
+      "kind": "constant",
+      "logged": false
+    }
+  ]
+}

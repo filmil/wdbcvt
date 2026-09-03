@@ -1,0 +1,26 @@
+{
+  "case": "t47_use_pkg_4arr",
+  "axis": "use clause. `use work.arr_pkg.all`, four unconstrained array types and no object, to see whether a library package's price is its types.",
+  "differs_from": "t47_use_pkg_typ_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

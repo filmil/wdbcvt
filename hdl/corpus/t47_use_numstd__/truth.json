@@ -1,0 +1,26 @@
+{
+  "case": "t47_use_numstd__",
+  "axis": "use clause. `use ieee.numeric_std.all` added to t1_bit_one_edge and nothing else, to see whether the 0x1f8 of handle space of the tier 2 cases is the package, not the type.",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

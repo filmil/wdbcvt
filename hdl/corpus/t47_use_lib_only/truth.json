@@ -1,0 +1,27 @@
+{
+  "case": "t47_use_lib_only",
+  "axis": "use clause. `library ieee;` alone over t47_use_none, to see whether the library clause or the use clause costs.",
+  "differs_from": "t47_use_none____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "bit",
+      "declared": "bit"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

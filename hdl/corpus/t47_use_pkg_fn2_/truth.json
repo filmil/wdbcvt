@@ -1,0 +1,26 @@
+{
+  "case": "t47_use_pkg_fn2_",
+  "axis": "use clause. `use work.fn_pkg.all`, two functions with a body and no object.",
+  "differs_from": "t47_use_pkg_typ_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

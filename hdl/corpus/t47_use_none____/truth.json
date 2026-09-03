@@ -1,0 +1,27 @@
+{
+  "case": "t47_use_none____",
+  "axis": "use clause. No `library ieee` and no use clause; the signal is a `bit`, to see what std_logic_1164 costs.",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "bit",
+      "declared": "bit"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

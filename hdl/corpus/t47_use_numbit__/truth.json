@@ -1,0 +1,26 @@
+{
+  "case": "t47_use_numbit__",
+  "axis": "use clause. `use ieee.numeric_bit.all`, a package with the same two null constants as numeric_std.",
+  "differs_from": "t47_use_numstd__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "case": "t47_use_pkg_nul_",
+  "axis": "use clause. `use work.nul_pkg.all`, two constants of a null range as numeric_std declares NAU and NAS.",
+  "differs_from": "t47_use_pkg_two_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "nul_pkg",
+      "name": "n1",
+      "type": "std_ulogic_vector",
+      "kind": "constant",
+      "logged": false,
+      "width": 0
+    },
+    {
+      "scope": "nul_pkg",
+      "name": "n2",
+      "type": "std_ulogic_vector",
+      "kind": "constant",
+      "logged": false,
+      "width": 0
+    }
+  ]
+}

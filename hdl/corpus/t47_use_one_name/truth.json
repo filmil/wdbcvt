@@ -1,0 +1,27 @@
+{
+  "case": "t47_use_one_name",
+  "axis": "use clause. `use ieee.std_logic_1164.std_ulogic;` over t47_use_lib_only, one name against `.all`.",
+  "differs_from": "t47_use_lib_only",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "bit",
+      "declared": "bit"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}
