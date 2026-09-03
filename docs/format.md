@@ -65,14 +65,17 @@ Every row is a measurement that reproduces.
 All of them are from Vivado 2025.2, and are scoped to it.
 See [provenance.md](provenance.md) for what guards these claims.
 
-| Offset | Length | Meaning | How it was confirmed |
-| :--- | :--- | :--- | :--- |
-| `0x00` | 24 | ASCII `Xilinx WAVE DATABASE 01`, NUL terminated | `head -c 24 sim.wdb`. Present in all ten databases. |
-| `0x18` | 17 | ASCII `Xilinx Simulator`, NUL terminated | Same hex dump. |
-| `0x30` | 8 | `uint64` little endian, value `0x40` | Constant across all ten databases. |
-| `0x38` | 4 | `uint32` little endian, Unix epoch seconds, the time the database was written | Decoded `1788417066` as `2026-09-03 08:31:06 CEST`, equal to the file's own mtime to the second. Differs between two runs of one design, which is how it was found. |
-| `0xe0` | 4 | `uint32` little endian, the simulation end time in **picoseconds** | Checked against all ten cases with a known end time, from 20 ns to 1010 ns. Ten of ten exact. `dd if=sim.wdb bs=1 skip=224 count=4 \| od -An -tu4`. |
-| `0x158` | 26 | ASCII `Xilinx ISim TYPE FILE 001`, NUL terminated | A nested section with its own magic. |
+| Offset | Len | Meaning | Found by | Confirmed by |
+| :--- | ---: | :--- | :--- | :--- |
+| `0x00` | 24 | ASCII `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | present in all 33 cases |
+| `0x18` | 17 | ASCII `Xilinx Simulator`, NUL terminated | same hex dump | present in all 33 cases |
+| `0x30` | 8 | `uint64` little endian, value `0x40` | same hex dump | constant in all 33 cases |
+| `0x38` | 4 | `uint32` little endian, Unix epoch seconds, when the database was written | **the noise mask**: two runs of `t3_tr1`, which differ only here and in four other clocks | decoded `1788417066` as `2026-09-03 08:31:06 CEST`, equal to the file's own mtime |
+| `0xd0` | 4 | a file offset. Zero unless the design has more than one signal | **scan for header fields that vary**: non-zero only in `t1_two_bits`, `t2_flat3`, `t2_record_two` | the value lands inside the file in all three, and those are exactly the multi signal cases |
+| `0xe0` | 4 | `uint32` little endian, simulation end time in **picoseconds** | **correlation sweep**: the only offset whose `uint32` equals the end time in every case | 10 of 10 cases with a known end time, 20 ns to 1010 ns, exact |
+| `0x110` | 4 | `1` when the design logs any signal, `0` when it logs none | **correlation sweep** | `0` for `t0_nosig` alone, `1` for the other 32 |
+| `0x158` | 26 | ASCII `Xilinx ISim TYPE FILE 001`, start of the type table | `strings -a -t d` | present in all 33 cases |
+| `0x178` | 4 | `uint32`, **the number of named types** in the type table | **correlation sweep**, then counting type names per case | 33 of 33, once `TRUE` and `FALSE` were correctly classified as `BOOLEAN`'s literals rather than as types |
 
 Whole file properties, also measured:
 
@@ -84,7 +87,8 @@ Whole file properties, also measured:
   of the Vivado installation that produced the file and the build
   machine paths AMD compiled the standard libraries on.
 * **Adding one transition grows the file by 15 bytes and perturbs 83
-  places.** Many of the perturbed bytes change by exactly `+8`
+  places.** Found by comparing `t1_bit_one_edge` with
+  `t1_bit_two_edges`. Many of the perturbed bytes change by exactly `+8`
   (`0x2b` to `0x33`, `0xeb` to `0xf3`, `0xc0` to `0xc8`), which is the
   signature of internal offset fields moving because a record grew.
   That, with the low entropy, says the format is a structured file full
@@ -119,7 +123,11 @@ packed with no padding.
 ## How types are stored
 
 **Types are stored by name, in the clear, and enumerations carry their
-literal names.** Four independent measurements agree:
+literal names.**
+
+*Found by* `strings -a -t d` on `t1_bit_one_edge`, which shows
+`STD_ULOGIC` followed by its nine literals. *Confirmed by* four
+independent measurements:
 
 * `STD_ULOGIC` appears as text, upper cased, followed by its nine
   literals as quoted strings. So `std_ulogic` is not a builtin to this
@@ -162,15 +170,48 @@ single transition:
 Two things stand out and are worth reading carefully rather than
 guessing at.
 
-**Resolved costs more than unresolved.** `t2_slv8` uses
-`std_logic_vector` where `t1_vec8` uses `std_ulogic_vector`. Same width,
-same values, same transition. The resolved form costs **447 bytes more**.
+**Resolved costs more than unresolved.** *Found by* comparing `t2_slv8`
+with `t1_vec8`: `std_logic_vector` against `std_ulogic_vector`, same
+width, same values, same transition. The resolved form costs **447 bytes
+more**, and the figure is unchanged after the case name padding.
 
-**`character` is the outlier, and consistently so.** It costs +1461
-where the other predefined scalar types cost about +400. `character` is
+**`character` is the outlier, and consistently so.** *Found by* the type
+size table below: it costs +1461 where the other predefined scalar types
+cost about +400. `character` is
 an enumeration of 256 literals. The extra 1059 bytes over the others,
 spread across 254 extra literals, is about 4 bytes each, which matches
 the 4 byte spacing measured in the `std_ulogic` literal table.
+
+
+## The correlation sweep
+
+Three of the header fields were not found by diffing two files. They
+were found by reading the same offset in all 33 databases at once and
+asking which offset holds a number the corpus already knows.
+
+For every 4 byte aligned offset, take the little endian `uint32` in each
+case, and keep the offset only if that number equals the same property
+of the design in **every** case: the end time, the signal count, the
+number of types, and so on. The properties come from `truth.json`, so
+they are known before the file is opened.
+
+The sweep is worth more than it looks, for two reasons.
+
+It finds fields a pairwise diff cannot. A field that is correct in every
+case never shows up as a difference between two cases, so diffing is
+blind to it. `0xe0` and `0x178` were both invisible that way and obvious
+to the sweep.
+
+It also refuses coincidences. One case agreeing is noise; 33 cases
+agreeing on a number that ranges from 20000 to 1010000 is not. The
+sweep reports only offsets that match everywhere, which is why the end
+time came out of it with no candidates to sift.
+
+It has one failure mode worth naming. A property that is nearly constant
+across the corpus matches almost anything, so `0x110`, which is `1` in
+32 cases and `0` in one, is recorded as what it demonstrably is rather
+than as a signal count. Design a case that moves a property before
+trusting a sweep hit on it.
 
 
 ## Values over time
@@ -275,6 +316,9 @@ for enumerations with their literal names. See
 
 ## How hierarchy is stored
 
+*Found by* comparing the `strings -a -t d` output of `t1_hier1` and
+`t2_hier3`.
+
 Scope names are stored as a sequence of NUL terminated strings in the
 `Xilinx ISim DBG 006` section, in tree order.
 
@@ -332,13 +376,13 @@ and then the member types:
 481 STD_ULOGIC ... 556 NATURAL   588 STD_ULOGIC_VECTOR   654 INTEGER
 ```
 
-**Type entries are shared between signals of the same type.**
-`t2_record_two` declares two signals of one record type. `bundle_t`,
-`alpha` and `bravo` each appear **exactly once** in the file. Reproduce
-with `grep -aoc alpha sim.wdb`.
+**Type entries are shared between signals of the same type.** *Found by*
+`t2_record_two` against `t2_record2`: two signals of one record type
+rather than one. `bundle_t`, `alpha` and `bravo` each appear **exactly
+once** in the file. Reproduce with `grep -aoc alpha sim.wdb`.
 
-**Nested records get their own type entry.** `t2_record_nested` wraps a
-record in a record, and the table holds the outer type, its field names,
+**Nested records get their own type entry.** *Found by* `t2_record_nested`
+against `t2_record2`, which wraps a record in a record, and the table holds the outer type, its field names,
 then the inner type, then the inner field names, then the leaf types:
 
 ```
