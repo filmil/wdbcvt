@@ -1,0 +1,42 @@
+{
+  "case": "t9_block________",
+  "axis": "block statement. A labelled block declaring a signal, to see what unit kind it gets and how its signal is scoped.",
+  "differs_from": "t1_hier1________",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.b",
+      "name": "y",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.b.y",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.b.y",
+      "value": "1"
+    }
+  ]
+}

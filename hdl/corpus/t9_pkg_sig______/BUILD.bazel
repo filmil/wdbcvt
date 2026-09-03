@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("//build:wdb_case.bzl", "wdb_case")
+
+package(default_visibility = ["//visibility:public"])
+
+wdb_case(
+    name = "t9_pkg_sig______",
+    # Compilation order matters to xvhdl; do not sort.
+    # do not sort
+    srcs = [
+        "sig.pkg.vhdl",
+        "tb.ent.vhdl",
+    ],
+)

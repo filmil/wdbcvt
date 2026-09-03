@@ -1,0 +1,26 @@
+{
+  "case": "t9_proc_local___",
+  "axis": "subprograms. A procedure inside the process with no signal parameter, to separate the cost of the parameter from the cost of the procedure.",
+  "differs_from": "t6_var_int______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    }
+  ]
+}

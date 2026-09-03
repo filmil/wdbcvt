@@ -1,0 +1,43 @@
+{
+  "case": "t9_port_sliceto_",
+  "axis": "port association. The same element index as t9_port_slice on a `to` range, to see whether the offset counts elements from the left or index values.",
+  "differs_from": "t9_port_slice___",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 2,
+      "type": "std_ulogic_vector"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "00"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "10"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "1"
+    }
+  ]
+}

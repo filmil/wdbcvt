@@ -1,0 +1,42 @@
+{
+  "case": "t9_tr70000______",
+  "axis": "page count. 70000 one byte records need 117 pages, more than the 100 slots of an arena record, to see where the directory goes when it overflows.",
+  "differs_from": "t6_tr1300_______",
+  "end_time_ns": 70010,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ],
+  "transition_runs": [
+    {
+      "signal": "s",
+      "start_ns": 1,
+      "step_ns": 1,
+      "count": 70000,
+      "values": [
+        "1",
+        "0"
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "initial": "1"
+    }
+  ]
+}

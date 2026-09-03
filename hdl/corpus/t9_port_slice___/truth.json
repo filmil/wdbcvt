@@ -1,0 +1,43 @@
+{
+  "case": "t9_port_slice___",
+  "axis": "port association. The actual is an element of a vector, not a whole signal, to see whether the port still shares a handle or gets its own.",
+  "differs_from": "t8_port_in______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 2,
+      "type": "std_ulogic_vector"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 1,
+      "type": "std_ulogic",
+      "port": "in"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "00"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "11"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "1"
+    }
+  ]
+}

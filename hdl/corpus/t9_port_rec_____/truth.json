@@ -1,0 +1,94 @@
+{
+  "case": "t9_port_rec_____",
+  "axis": "package and record port. The type and a constant come from a package, to see whether a package is a scope or a unit and how a record port is bound.",
+  "differs_from": "t8_port_in______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "type": "pair_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ]
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "type": "pair_t",
+      "fields": [
+        {
+          "name": "alpha",
+          "width": 1,
+          "type": "std_ulogic"
+        },
+        {
+          "name": "bravo",
+          "width": 1,
+          "type": "std_ulogic"
+        }
+      ],
+      "port": "in"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "x.bravo",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a.alpha",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a.bravo",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x.bravo",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a.alpha",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a.bravo",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "pair_pkg",
+      "name": "zero",
+      "type": "pair_t",
+      "kind": "constant",
+      "logged": false
+    }
+  ]
+}

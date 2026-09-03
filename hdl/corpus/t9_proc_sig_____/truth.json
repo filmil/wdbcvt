@@ -1,0 +1,26 @@
+{
+  "case": "t9_proc_sig_____",
+  "axis": "subprograms. A procedure that drives a signal through a parameter, to see whether the formal is an object or costs handle space.",
+  "differs_from": "t6_var_int______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    }
+  ]
+}

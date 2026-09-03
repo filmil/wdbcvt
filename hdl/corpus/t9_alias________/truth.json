@@ -1,0 +1,26 @@
+{
+  "case": "t9_alias________",
+  "axis": "alias. An alias of a signal, to see whether it is an object, and whether it shares the handle like a port.",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    }
+  ]
+}

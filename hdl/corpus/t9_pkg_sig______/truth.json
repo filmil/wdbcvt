@@ -1,0 +1,34 @@
+{
+  "case": "t9_pkg_sig______",
+  "axis": "package signal. A signal outside any entity, to see where the hierarchy puts it.",
+  "differs_from": "t1_bit_one_edge_",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "sig_pkg",
+      "name": "g",
+      "width": 1,
+      "type": "std_ulogic",
+      "logged": false
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    }
+  ],
+  "note": "log_wave -r /tb logs nothing under the package, so g is declared but has no records."
+}

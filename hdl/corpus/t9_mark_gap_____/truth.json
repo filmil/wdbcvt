@@ -1,0 +1,42 @@
+{
+  "case": "t9_mark_gap_____",
+  "axis": "logged objects. The first object is a package constant with no records, to see whether the marker names the first logged object rather than object zero.",
+  "differs_from": "t9_port_rec_____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb.dut",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "c_pkg",
+      "name": "c",
+      "type": "integer",
+      "kind": "constant",
+      "logged": false
+    },
+    {
+      "scope": "tb.dut.p",
+      "name": "v",
+      "type": "integer",
+      "kind": "variable",
+      "initial": "0"
+    }
+  ]
+}

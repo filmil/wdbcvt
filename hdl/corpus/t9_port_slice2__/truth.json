@@ -1,0 +1,43 @@
+{
+  "case": "t9_port_slice2__",
+  "axis": "port association. The actual is a slice in the middle of a vector, to see whether the instance record carries a byte offset into the actual.",
+  "differs_from": "t9_port_slice___",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 4,
+      "type": "std_ulogic_vector"
+    },
+    {
+      "scope": "tb.dut",
+      "name": "a",
+      "width": 2,
+      "type": "std_ulogic_vector",
+      "port": "in"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.dut.a",
+      "value": "00"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "0110"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.dut.a",
+      "value": "11"
+    }
+  ]
+}
