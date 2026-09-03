@@ -840,6 +840,33 @@ line 0 in the module scope, logged like any variable.
 `state_t'(1)` in `t28_sv_enum_cast` and `8'(0)` in `t28_sv_v8_szcast`
 leave the same variable, of the cast's type, named by the line of the
 cast, and `s` records its default and then the value.
+So do `signed'(8'h05)` in `t29_sv_cast_sgn`, all `X` and then
+`00000101` for `s` with `00000101` once on the hidden 8 bit variable,
+and `real'(3)` in `t29_sv_cast_real`, `0` and then `3` with `3` once
+on the hidden `real`.
+Two initializers with casts, `t29_sv_cast_two`, run in one implicit
+process and leave two hidden variables, each recording once.
+Two casts in one initializer, `int'(1.5) + int'(2.5)` in
+`t29_sv_cast_same`, run as no process and leave no variable: `s`
+records `5` once, the folded sum.
+A cast outside an initializer leaves no variable and no extra record:
+`s = int'(2.5)` in a process, `t29_sv_cast_proc`, `return int'(2.5)`
+in a function, `t29_sv_cast_fn`, `8'(s + 1)` in a continuous
+assignment, `t29_sv_cast_asgn`, or in `always_comb`, `t29_sv_cast_alwc`,
+each record what the same statement without the cast records,
+`t29_sv_incr`, `t29_sv_fn_noc`, `t29_sv_asgn_noc` and
+`t29_sv_alwc_noc`.
+A function called from a process records its return variable in the
+function scope, `tb.f.f` in `t29_sv_fn_noc`, `0` at time 0 and `3` at
+the call, as `t12_v_func` does in Verilog.
+A loop index declared in the loop is an object of a block scope and
+records too, see the hierarchy document: the `foreach` index of
+`t29_sv_foreach` records `0`, `1`, `2`, `3`, while the `for` index of
+`t29_sv_for_int` records `0` at time 0 and `3` after the loop, and a
+module level `integer` index in `t29_sv_for_modi` records `X` and
+then every value.
+Each value of the sum in those loops is a record of its own, `1`, `3`
+and `6` at 50 ns in `t29_sv_foreach`, three records at one time.
 A real literal into a vector is no process: `logic [7:0] s = 1.5` in
 `t28_sv_v8_real` records `00000010` once.
 An assignment pattern is none either: `'{a: 1'b0, b: 4'b0000}` into

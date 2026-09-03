@@ -877,6 +877,40 @@ Neither class turned up.
 | `t28_sv_rtime_prm` | `parameter realtime T = 10ns` | `realtime`, 16 bits, class 0 |
 | `t28_sv_rtime_noi` | `realtime s` | `0` once |
 
+Tier 29 asks where else the elaborator leaves a hidden object, after
+tier 28 found the cast variable in an initializer: a cast in a
+process statement, two casts in two initializers and in one, a cast
+in a continuous assignment, in a function, in `always_comb`, in a
+parameter and in a child module, a signing cast and a cast to `real`,
+a streaming operator, `$bits`, an increment, a `for` loop with an
+`int` index, the same loop with a module level `integer`, and a
+`foreach`.
+Four cases without the cast are the controls for the handle space.
+A `case inside` statement was planned and dropped: `xsim` rejects it
+as an unsupported construct.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t29_sv_cast_proc` | `s = int'(2.5)` in a process | no hidden variable; `0x1f0` more handle space |
+| `t29_sv_cast_two` | two initializers with casts | `temp_0_ln5`, `temp_1_ln6`; one implicit process |
+| `t29_sv_cast_same` | `int'(1.5) + int'(2.5)` in one initializer | nothing; `5` once |
+| `t29_sv_cast_asgn` | `assign w = 8'(s + 1)` | two `NetRegassign` scopes; no hidden variable |
+| `t29_sv_asgn_noc` | `assign w = s + 1` | one `NetRegassign` scope |
+| `t29_sv_cast_fn` | `return int'(2.5)` in a function | no hidden variable; `0x1f0` more handle space |
+| `t29_sv_fn_noc` | `return 3` in a function | the object `tb.f.f` |
+| `t29_sv_cast_alwc` | `always_comb w = 8'(s + 1)` | no hidden variable; `0xf8` more handle space |
+| `t29_sv_alwc_noc` | `always_comb w = s + 1` | the control |
+| `t29_sv_cast_prm` | `parameter K = int'(1.5)` | a 32 bit vector, `2`; no cost |
+| `t29_sv_cast_sub` | `int'(1.5)` in a child module | the hidden variable in `tb.u`, numbered 0 |
+| `t29_sv_cast_sgn` | `logic [7:0] s = signed'(8'h05)` | a hidden 8 bit variable of class 1 |
+| `t29_sv_cast_real` | `real s = real'(3)` | a hidden `real` |
+| `t29_sv_stream` | `logic [7:0] s = {<<{8'h05}}` | nothing; `10100000` |
+| `t29_sv_bits` | `int s = $bits(s)` | nothing; `32` |
+| `t29_sv_incr` | `s++` | nothing |
+| `t29_sv_for_int` | `for (int i = 0; i < 3; i++)` | `tb.Block7_1.i`, `0` then `3` |
+| `t29_sv_for_modi` | `integer i` in the module | `i` records every value |
+| `t29_sv_foreach` | `foreach (a[i])` | `tb.Block8_1.i` records every value |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -934,7 +968,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 489 cases through tier 28, and
+5. The reader now reproduces all 508 cases through tier 29, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

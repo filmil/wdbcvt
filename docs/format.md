@@ -62,29 +62,29 @@ bazel run //cmd/wdbcvt -- -dump -in "$PWD/bazel-bin/hdl/corpus/<case>/sim.wdb"
 ```
 
 for the case the row names, and `//pkg/wdb:wdb_test` asserts every row
-against the `truth.json` of all 489 cases, and against the `sim.vcd`
+against the `truth.json` of all 508 cases, and against the `sim.vcd`
 of every case for the objects a VCD can hold.
 The offsets are in the documents linked in the last column.
 
 | Finding | Found by | Confirmed by | Where |
 | :--- | :--- | :--- | :--- |
-| Magic `Xilinx WAVE DATABASE 01`, producer `Xilinx Simulator` | hex dump of `t1_bit_one_edge` | all 489 cases | container |
+| Magic `Xilinx WAVE DATABASE 01`, producer `Xilinx Simulator` | hex dump of `t1_bit_one_edge` | all 508 cases | container |
 | `0x38` is a Unix timestamp | noise mask, two runs of `t3_tr1` | equals the file mtime | container |
-| `0x48` holds three pointers to 48 byte directory entries | `strings -t d` on `t2_flat3`, then reading the values | all 489 cases, each pointer lands on a name | container |
+| `0x48` holds three pointers to 48 byte directory entries | `strings -t d` on `t2_flat3`, then reading the values | all 508 cases, each pointer lands on a name | container |
 | The arena table at `0xc8` grows with the object count | `t5_sig10` shifted every trailer field by 8 | 3, 4, 6 slots in `t6_sig05`, `t6_sig12`, `t6_sig20` | container |
-| The arena table has `ceil(handle space / 0x800)` slots | `t7_sig07` broke the `ceil(objects / 4) + 1` guess | the reader checks it in 489 of 489 | container |
-| Trailer `+0x0c` is the arena table slot count | sweep of every fixed word over the 63 cases of tier 7 | 489 of 489, checked by the reader | container |
-| Trailer `+0x18` is the handle space size | `t7_sig07` to `t7_sig24` against the slot count | the slot rule, 489 of 489 | container |
-| Arena records sit in first write order, not arena order | `t7_gen_for`, arena 2 first | 489 of 489 with the reader accepting any order | container |
+| The arena table has `ceil(handle space / 0x800)` slots | `t7_sig07` broke the `ceil(objects / 4) + 1` guess | the reader checks it in 508 of 508 | container |
+| Trailer `+0x0c` is the arena table slot count | sweep of every fixed word over the 63 cases of tier 7 | 508 of 508, checked by the reader | container |
+| Trailer `+0x18` is the handle space size | `t7_sig07` to `t7_sig24` against the slot count | the slot rule, 508 of 508 | container |
+| Arena records sit in first write order, not arena order | `t7_gen_for`, arena 2 first | 508 of 508 with the reader accepting any order | container |
 | The trailer is the 0x48 bytes before the first directory pointer | `t5_sig10` against `t6_sig05` | end time correct in all 63 | container |
-| The end time is a uint64 at trailer `+0`, in the file's time unit | correlation sweep over 33 cases | 489 of 489, 20 ns to 70010 ns; 100 for 100 ns in `t21_v_ts_1ns_1ns` | container |
-| The marker offset is at trailer `+0x38` | `t5_tr1000`, where the marker moved | 489 of 489 | container |
-| The marker is a list of `[first][last]` object index ranges, as many as trailer `+0x30` counts, covering exactly the objects with records | `t9_port_rec` held two entries where `t6_var_int` had shown one; `t9_mark_gap` put an unlogged object first | 489 of 489, the reader checks every object against the ranges | container |
+| The end time is a uint64 at trailer `+0`, in the file's time unit | correlation sweep over 33 cases | 508 of 508, 20 ns to 70010 ns; 100 for 100 ns in `t21_v_ts_1ns_1ns` | container |
+| The marker offset is at trailer `+0x38` | `t5_tr1000`, where the marker moved | 508 of 508 | container |
+| The marker is a list of `[first][last]` object index ranges, as many as trailer `+0x30` counts, covering exactly the objects with records | `t9_port_rec` held two entries where `t6_var_int` had shown one; `t9_mark_gap` put an unlogged object first | 508 of 508, the reader checks every object against the ranges | container |
 | An arena record's word 0 names a continuation record for pages past 100 | `t9_tr70000`, 117 pages | the reader reads the 70001 records back | container |
-| Each directory entry follows the section it describes | `t2_flat3`: `WDB.Event` at `0xe0+0x48`, RTTI and DBG the same | 489 of 489 | container |
-| The page directory starts 48 bytes after the DBG entry | `t2_flat3`, reading the offsets | 489 of 489 | container |
+| Each directory entry follows the section it describes | `t2_flat3`: `WDB.Event` at `0xe0+0x48`, RTTI and DBG the same | 508 of 508 | container |
+| The page directory starts 48 bytes after the DBG entry | `t2_flat3`, reading the offsets | 508 of 508 | container |
 | An arena record is `0x4c0` bytes: 100 page offsets, 100 lengths, a count | `t5_tr1000`, two pages in one arena | `t6_tr1300`, three pages | container |
-| A page is a zlib stream that inflates to 10240 bytes | entropy profile, then `zlib` on `t1_bit_one_edge` | 489 of 489 | values |
+| A page is a zlib stream that inflates to 10240 bytes | entropy profile, then `zlib` on `t1_bit_one_edge` | 508 of 508 | values |
 | Page header `[t0][last minus t0][n]` | `t5_tr1000` page 1 | all pages of all cases | values |
 | A record is `[uint64 time][uint32 key][uint32 length][value]` | `t1_bit_two_edges` against `t1_bit_one_edge` | every record of every case matches `truth.json` | values |
 | `handle >> 11` is the arena, `handle & 0x7ff` the key | `t5_sig10` | `t6_sig20`, four arenas | values |
@@ -101,23 +101,23 @@ The offsets are in the documents linked in the last column.
 | Integers are int32, reals float64, physical values int64 in the base unit | `t2_integer`, `t2_real`, `t2_time` | `truth.json`; `t21_int_neg` two's complement, `t21_real_neg`, `t21_phys_user` in `um` | values |
 | Arrays are elements back to back, left index first | `t1_vec8` | `t2_array2d`, `t5_int_arr` | values |
 | Record fields are aligned to their size, records to 8 | `t5_rec_real` against `t2_record` | `t5_arr_rec`, `t5_rec_sub5` | values |
-| A signal has one record at time 0 and one per change | `t0_bit_const` | `t3_late`, 489 of 489 | values |
-| The type table starts with `Xilinx ISim TYPE FILE 001` | `strings` on `t1_bit_one_edge` | 489 of 489 | types |
-| `+32` of the type table is the number of types | correlation sweep | 489 of 489 | types |
-| Type entries are `[len][tag]` name body | `t2_enum` against `t1_bit_one_edge` | 489 of 489 | types |
+| A signal has one record at time 0 and one per change | `t0_bit_const` | `t3_late`, 508 of 508 | values |
+| The type table starts with `Xilinx ISim TYPE FILE 001` | `strings` on `t1_bit_one_edge` | 508 of 508 | types |
+| `+32` of the type table is the number of types | correlation sweep | 508 of 508 | types |
+| Type entries are `[len][tag]` name body | `t2_enum` against `t1_bit_one_edge` | 508 of 508 | types |
 | Enumerations list their literals; `character` has 261 | `t2_enum`, `t2_character` | `truth.json` names | types |
-| Integer entries carry the bounds, reals the bounds as float64 | `t2_integer`, `t2_real` | 489 of 489 | types |
+| Integer entries carry the bounds, reals the bounds as float64 | `t2_integer`, `t2_real` | 508 of 508 | types |
 | Physical entries list units with scales | `t2_time` | | types |
 | Arrays carry element, index type and constraint triples | `t1_vec8` against `t2_array2d` | `t5_int_arr` | types |
 | Records list fields with types and ranges | `t2_record` | `t2_record_nested`, `t5_rec_sub5` | types |
 | A record field of record type lists one range per inner field, the scalar's own range, only when the inner record has an array field | `t7_rec_vfirst`, `t7_rec_bitv`, `t7_rec_intv`, `t7_rec_in2` | `t7_rec_in2v` | types |
 | Types are shared between signals of the same type | `t2_record_two` | `t6_sig20`, one `STD_ULOGIC` | types |
-| The DBG section starts with `Xilinx ISim DBG 006` and 18 region offsets | `t1_hier1` against `t2_hier3` | 489 of 489 | hierarchy |
-| Scope records: name, parent, children, first object, unit, file, line | `t2_hier3` | 489 of 489 | hierarchy |
+| The DBG section starts with `Xilinx ISim DBG 006` and 18 region offsets | `t1_hier1` against `t2_hier3` | 508 of 508 | hierarchy |
+| Scope records: name, parent, children, first object, unit, file, line | `t2_hier3` | 508 of 508 | hierarchy |
 | Unit records: entity, architecture, kind, declaration count, file, line | `t2_hier3` | `t4_gen_diff_two` | hierarchy |
-| Declaration records: name, file, line, size, type, ranges, kind | `t2_flat3` | 489 of 489 | hierarchy |
+| Declaration records: name, file, line, size, type, ranges, kind | `t2_flat3` | 508 of 508 | hierarchy |
 | Declaration kinds `0x0e` signal, `0x0f` variable, `0x12` generic, `0x13` constant | `t4_gen_default`, `t5_tr1000`, `t6_var_int`, `t8_gen_if` | `t6_proc2`, `t7_gen_for` | hierarchy |
-| Declaration word 9 is the port mode: 0 inout, 1 in, 2 out, 3 buffer, 4 linkage, 5 none | `t8_port_in`, `t8_port_out`, `t8_port_inout`, `t8_port_buffer`, `t9_port_lnk` | 489 of 489 against the `port` field in `truth.json` | hierarchy |
+| Declaration word 9 is the port mode: 0 inout, 1 in, 2 out, 3 buffer, 4 linkage, 5 none | `t8_port_in`, `t8_port_out`, `t8_port_inout`, `t8_port_buffer`, `t9_port_lnk` | 508 of 508 against the `port` field in `truth.json` | hierarchy |
 | Instance word `+16` is a `uint32` scope and `+20` a `uint32` byte offset into the value, for a port bound to a slice | `t9_port_slice`, offset 1 for `x(0)` of `1 downto 0` | `t9_port_slice2`, `t9_port_sliceto`, offset 0 for `x(0)` of `0 to 1` | hierarchy |
 | A package with an object is a scope under the root with unit kind `0x0a` | `t9_port_rec` against `t2_record` | `t9_mark_two`, `t9_mark_gap`, `t9_pkg_sig` | hierarchy |
 | A package constant or signal is an object with no records | `t9_port_rec`, `t9_pkg_sig` | `t9_mark_two`, `t9_mark_gap` | values |
@@ -132,9 +132,9 @@ The offsets are in the documents linked in the last column.
 | A concurrent assignment is a process scope named `line__NN` | `t8_port_open` | `t8_port_vec8` | hierarchy |
 | A connected port shares the handle of the signal on its net, down a chain | `t8_port_in` | `t8_port_chain`, `t8_port_out`, `t8_port_inout`, `t8_port_buffer` | hierarchy |
 | An open port owns a handle and costs `0xb8` plus its rounded size | `t8_port_open3` | `t8_port_vec8`, `t8_port_vec16` | hierarchy |
-| The file table holds compile and local paths | `t2_slv8` against `t1_vec8` | 489 of 489 | hierarchy |
+| The file table holds compile and local paths | `t2_slv8` against `t1_vec8` | 508 of 508 | hierarchy |
 | Regions 14 and 15 are executable statement lines per file | `t6_proc2` | `t2_hier3` | hierarchy |
-| Instance records: handle, second handle, scope, kind, declaration | `t2_flat3` | 489 of 489 | hierarchy |
+| Instance records: handle, second handle, scope, kind, declaration | `t2_flat3` | 508 of 508 | hierarchy |
 | The second handle is the handle plus the value size rounded to 8 | `t2_record_two` against `t1_two_bits` | `t2_array2d`, `t2_record_nested` | hierarchy |
 | Equal generics share a unit; different generics duplicate it | `t4_gen_same_two` against `t4_gen_diff_two` | | hierarchy |
 | A generic is an object with one record at time 0 | `t4_gen_default` | `t4_gen_explicit` | hierarchy |
@@ -144,8 +144,8 @@ The offsets are in the documents linked in the last column.
 | An architecture constant is an object with one record at time 0 holding its value | `t8_gen_if` | | values |
 | A net holds one time 0 record per object sharing its handle | `t8_port_chain` | `t8_port_in` | values |
 | Only a value change gets a record; a same value assignment writes nothing | `t8_delta_same`, `t8_same` | `t8_delta3` | values |
-| Times are in the simulation precision and nothing finer is kept | `t8_ps` | 483 end times at the default 1 ps precision | values |
-| The DBG word after the timestamp is the power of ten of the time unit, and every time in the file counts that unit | `t21_v_ts_1ns_1ns` against `t11_v_bit_edge`, `-9` and a change at 50 | `t21_v_ts_1ps_1ps`, `t21_v_ts_10ns`, `t21_v_ts_1ns_100` at `-10`, `t21_v_ts_1ps_1fs` at `-15`; the VCD `$timescale` agrees in 489 of 489 | hierarchy, values |
+| Times are in the simulation precision and nothing finer is kept | `t8_ps` | 502 end times at the default 1 ps precision | values |
+| The DBG word after the timestamp is the power of ten of the time unit, and every time in the file counts that unit | `t21_v_ts_1ns_1ns` against `t11_v_bit_edge`, `-9` and a change at 50 | `t21_v_ts_1ps_1ps`, `t21_v_ts_10ns`, `t21_v_ts_1ns_100` at `-10`, `t21_v_ts_1ps_1fs` at `-15`; the VCD `$timescale` agrees in 508 of 508 | hierarchy, values |
 | The finest precision in the design sets the unit; no `timescale` means picoseconds | `t21_mix_ts_1ns` against `t21_mix_vh_in_v` | `t21_v_ts_none` | values |
 | Two Verilog instances with different parameter values share one unit record and one declaration set | `t21_v_param_diff` against `t21_v_param_same` | `t4_gen_diff_two`, where VHDL repeats the unit | hierarchy |
 | A mixed language design keeps each unit's, declaration's and type's language markers, and the port at the boundary has a handle of its own | `t21_mix_vh_in_v` against `t9_comp` | `t21_mix_v_in_vh` | hierarchy |
@@ -181,7 +181,7 @@ The offsets are in the documents linked in the last column.
 | A configuration specification chooses the architecture unit like a direct instantiation, and the component leaves no trace | `t24_config_spec` against `t23_arch_b` | `truth.json` | hierarchy |
 | A queue, a dynamic array, an associative array and a class leave no type entry, declaration or object, and take `0xf8` of handle space each | `t24_sv_queue` against `t11_sv_logic` | `t24_sv_dynarr`, `t24_sv_assoc`, `t24_sv_class` | hierarchy, types |
 | Each `fork` branch is a `vprocess` scope `ForkedN_i`; a clocking block leaves nothing | `t24_sv_fork` against `t11_v_always`; `t24_sv_clocking` against `t11_sv_logic` | `truth.json` | hierarchy |
-| DBG region 17 holds one 3 word entry per distinct value class among the objects, header word 13 counts them, and the region is padded to 8 bytes | `t25_sv_two_class` against `t25_sv_two_same`, 24 bytes and word 13 `2` for 16 and `1` | the reader's length check, 489 of 489 | hierarchy |
+| DBG region 17 holds one 3 word entry per distinct value class among the objects, header word 13 counts them, and the region is padded to 8 bytes | `t25_sv_two_class` against `t25_sv_two_same`, 24 bytes and word 13 `2` for 16 and `1` | the reader's length check, 508 of 508 | hierarchy |
 | The first word of a value class entry is the class code and the other two are 0; every VHDL object is class 0, and a Verilog object is classed by type and initializer form: 1 sized literal, 3 integer types and parameters, 4 unsized literal into a vector and `time`, 6 string parameter | `t25_sv_vec8_sz` against `t25_sv_vec8_int`, `1` for `4` | the tier 25 sweep, `t12_v_params` `[0 0 0] [3 0 0] [1 0 0]` in object order | hierarchy |
 | A SystemVerilog package enters the file only when a declaration uses one of its types; a package holding only a parameter leaves no unit, scope or object, used or not | `t25_sv_pkg_prm` against `t25_sv_pkg_tdef` | `t25_sv_pkg_unusd`, `t13_sv_pkg`; the `absent` list of `truth.json` | hierarchy |
 | A time literal initializer in a `.sv` file runs as an implicit process, the default and then the value, where `time s = 0` and `time s = 64'h0` record once | `t25_sv_time_lit` against `t11_sv_int`; `t27_sv_time_uns` against `t25_sv_time_lit` | `t27_sv_int_time`, `t27_sv_time_szd`, `t25_sv_time_noin` | values |
@@ -195,8 +195,12 @@ The offsets are in the documents linked in the last column.
 | An untyped parameter with a time literal declares an unnamed 64 bit vector of class 4 whose 16 byte record holds the `float64` of the value in the time unit and then `a8 07 00 00 00 00 00 00` | `t28_sv_prm_time` against `t28_sv_prm_tmtyp`, where `parameter time` is a `time` holding `10` in two pairs | the `stored` field of `truth.json`; `t28_sv_rtime_prm` | values, types |
 | `realtime` is a real entry named `realtime` with the Verilog variant, 32 bits for a variable and 16 for a parameter, and an untyped real parameter declares 32 bits | `t28_sv_rtime_var` against `t11_v_real`; `t28_sv_prm_realu` against `t26_sv_real_prm` | `t28_sv_rtime_noi`, `t28_sv_rtime_prm` | types |
 | The value class follows the target of an initializer, not its expression, and a string literal into a typed parameter is class 1 | `t28_sv_v8_prmneg` against `t28_sv_prm_neg`, `s` 4 beside `K` 3; `t28_sv_prm_lstr` against `t28_sv_v16_str` | `t28_sv_bit8_neg`, `t28_sv_v8_pow`, `t28_sv_pstr_int` | hierarchy |
+| A cast leaves its hidden variable only in a declaration initializer, one per cast numbered `temp_0`, `temp_1` through the module and from 0 again in a child; a cast in a process, a function, a continuous assignment, `always_comb` or a parameter leaves none, though each costs handle space, and two casts in one initializer fold and leave nothing | `t29_sv_cast_proc` against `t29_sv_incr`, the same objects and `0x1f0` more handle space; `t29_sv_cast_same` against `t28_sv_int_cast` | `t29_sv_cast_two`, `t29_sv_cast_sub`, `t29_sv_cast_fn` against `t29_sv_fn_noc`, `t29_sv_cast_asgn` against `t29_sv_asgn_noc`, `t29_sv_cast_alwc` against `t29_sv_alwc_noc`, `t29_sv_cast_prm` against `t28_sv_prm_expr` | hierarchy, values |
+| A continuous assignment with a cast has two `NetRegassign` process scopes at its line, where one without has one | `t29_sv_cast_asgn` against `t29_sv_asgn_noc` | the `0x198` of handle space | hierarchy |
+| A `for` loop with an `int` index or a `foreach` in a process declares the index in a block unit and scope `Block<line>_<n>` as a logged object; the `foreach` index records every value, the `for` index its first and its last | `t29_sv_for_int` against `t29_sv_incr`; `t29_sv_foreach` against `t29_sv_for_int` | `t29_sv_for_modi`, where a module level `integer` index records every value | hierarchy, values |
+| A SystemVerilog function called from a process has its return variable as a logged object in the function scope, recording the default at time 0 and the value at the call | `t29_sv_fn_noc` against `t29_sv_incr` | `t29_sv_cast_fn`; `t12_v_func` in Verilog | hierarchy, values |
 | An untyped parameter with an integer expression, `$clog2` or a negative literal is a 32 bit vector of class 3, a sized expression gives its width and class 1, and an enum parameter is class 3 over the typedef's alias | `t28_sv_prm_expr` against `t26_sv_logic_prm` | `t28_sv_prm_clog`, `t28_sv_prm_neg`, `t28_sv_prm_szexp`, `t28_sv_prm_enum`, `t28_sv_prm_int_u` | types, hierarchy |
-| The word before an array entry's triples counts them | `t11_v_time`, one constrained triple under a `1` | 489 of 489 | types |
+| The word before an array entry's triples counts them | `t11_v_time`, one constrained triple under a `1` | 508 of 508 | types |
 | `logic` and `bit` are four literal enumerations `0 1 Z X` and `0 1 0 0`, told apart by the variant word | `t11_v_bit_edge`, `t11_sv_bit` | `t11_sv_int` | types |
 | An unnamed Verilog vector is one shared array entry with `(0, 0, -2)`; `integer`, `time`, `int`, `byte`, `longint` are named entries with their own bounds | `t11_v_integer` against `t11_v_vec8` | `t11_v_time`, `t11_sv_byte`, `t11_sv_longint`, the five `t11_v_vec*` | types |
 | Signedness is not recorded | `t11_v_signed8` against `t11_v_vec8`, identical dumps | | types |
@@ -263,9 +267,9 @@ The offsets are in the documents linked in the last column.
 | An unconstrained two dimensional array type carries one `(0, 0, -2)` triple per dimension and the declaration carries the ranges | `t20_arr_2d_uncon` against `t18_arr_2dim` | `t20_rec_2dim`, two triples on a record field of a constrained two dimensional type | types |
 | A `real` parameter declares 16 bits for a `localparam` and for a value that does not fit a `float32` alike | `t20_v_realp_big` and `t20_v_realp_lp` against `t12_v_params` | `t12_v_params` | types |
 | A page written out before the end of the run keeps one record per key and time, the last; the last page of an arena keeps every delta | `t14_v_spill_dd` against `t14_v_page_dd`, one record at 5 ns against two at 190 ns | `t14_v_spill_dd2`, two records at 428 ns in the second page; the missing `X` of `t13_v_tr430` is the same loss | values |
-| At every time the VCD lists a value, the last database value at that time spells it, for every VCD variable of every case; a VCD entry exists at exactly the times a database record does | `TestVCD`, `bazel test //pkg/wdb:wdb_test --test_filter=TestVCD` | 489 of 489; one real field of `t11_sv_struct_r` excepted, where the VCD is wrong | vcd |
-| Two VCD variables with one identifier code are two objects with one handle and one offset | `TestVCD` on `t12_v_port_wire` and `t13_sv_iface` | 489 of 489 | vcd |
-| The VCD leaves out every VHDL generic, constant and non bit type, every signal outside `tb`, and every Verilog unpacked array not named by a typedef, and nothing else | `TestVCD`, the `vcdOmitted` rule | 489 of 489 | vcd |
+| At every time the VCD lists a value, the last database value at that time spells it, for every VCD variable of every case; a VCD entry exists at exactly the times a database record does | `TestVCD`, `bazel test //pkg/wdb:wdb_test --test_filter=TestVCD` | 508 of 508; one real field of `t11_sv_struct_r` excepted, where the VCD is wrong | vcd |
+| Two VCD variables with one identifier code are two objects with one handle and one offset | `TestVCD` on `t12_v_port_wire` and `t13_sv_iface` | 508 of 508 | vcd |
+| The VCD leaves out every VHDL generic, constant and non bit type, every signal outside `tb`, and every Verilog unpacked array not named by a typedef, and nothing else | `TestVCD`, the `vcdOmitted` rule | 508 of 508 | vcd |
 | An unpacked struct is written to the VCD as 32 bit slots per field; the database holds the fields at their own widths | `TestVCD` on `t11_sv_ustruct` against the dump | `t11_sv_struct3`, `t11_sv_struct40` | vcd |
 
 Whole file properties, also measured:
@@ -619,6 +623,22 @@ claim rests on and rerun the comparison.
 | `t28_sv_real_time` against `t27_sv_int_time` | `real s = 10ns` | `[0 0 0]`; `0` then `10` |
 | `t28_sv_rtime_var`, `t28_sv_rtime_noi` against `t11_v_real` | `realtime s = 10ns`, `realtime s` | the `realtime` entry, 32 bits; `0` then `10`; `0` |
 | `t28_sv_rtime_prm` against `t28_sv_prm_time` | `parameter realtime T = 10ns` | the `realtime` entry, 16 bits, `[1 0 0] [0 0 0]` |
+| `t29_sv_cast_proc` against `t29_sv_incr` | `s = int'(2.5)` in a process | no hidden variable; `0x1f0` more handle space |
+| `t29_sv_cast_two` against `t28_sv_int_cast` | two initializers with casts | `temp_0_ln5` and `temp_1_ln6`, each before its variable; one implicit process |
+| `t29_sv_cast_same` against `t28_sv_int_cast` | `int'(1.5) + int'(2.5)` in one initializer | nothing; `5` once |
+| `t29_sv_cast_asgn` against `t29_sv_asgn_noc` | `assign w = 8'(s + 1)` | a second `NetRegassign` scope; `0x198` more handle space |
+| `t29_sv_cast_fn` against `t29_sv_fn_noc` | `return int'(2.5)` in a function | no hidden variable; `0x1f0` more handle space |
+| `t29_sv_fn_noc` against `t29_sv_incr` | `s = f()` with `function int f` | the scope `tb.f` and the object `tb.f.f`, `0` then `3` |
+| `t29_sv_cast_alwc` against `t29_sv_alwc_noc` | `always_comb w = 8'(s + 1)` | no hidden variable; `0xf8` more handle space |
+| `t29_sv_cast_prm` against `t28_sv_prm_expr` | `parameter K = int'(1.5)` | a 32 bit vector holding `2`; the same handle space |
+| `t29_sv_cast_sub` against `t28_sv_int_cast` | the cast in a child module | `tb.u.xilinx_isim_temp_0_ln5castingOp` before `tb.u.s` |
+| `t29_sv_cast_sgn` against `t28_sv_v8_signed` | `signed'(8'h05)` for `$signed(8'h05)` | the hidden variable, class 1; `s` class 0, `X` then the value |
+| `t29_sv_cast_real` against `t28_sv_int_cast` | `real s = real'(3)` | a hidden `real`, `[0 0 0]`; `0` then `3` |
+| `t29_sv_stream`, `t29_sv_bits` against `t28_sv_v8_signed`, `t28_sv_int_cast` | `{<<{8'h05}}`, `$bits(s)` | nothing; `10100000`, `32` once |
+| `t29_sv_incr` against `t29_sv_cast_proc` | `s++` | nothing |
+| `t29_sv_for_int` against `t29_sv_incr` | `for (int i = 0; i < 3; i++)` | the block scope `tb.Block7_1` and the object `i`, `0` then `3` |
+| `t29_sv_for_modi` against `t29_sv_for_int` | `integer i` in the module | `i` in the module scope, `X`, `0`, `1`, `2`, `3` |
+| `t29_sv_foreach` against `t29_sv_for_int` | `foreach (a[i])` | `tb.Block8_1.i`, `0`, `1`, `2`, `3`; `a` an unnamed array |
 | every `sim.vcd` against its `sim.wdb`, through `go-vcd-parser` | nothing; the same run | the VCD spelling rules, the omission rule, the code sharing rule, and one wrong VCD value |
 
 Three findings were not found by a pair.
