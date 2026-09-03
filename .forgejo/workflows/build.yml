@@ -28,6 +28,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           REF: ${{ github.ref }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_PAGER: cat
         run: |
           set -euo pipefail
           auth="$(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
@@ -36,7 +37,9 @@ jobs:
           git -c "http.extraheader=Authorization: Basic ${auth}" \
               fetch -q --depth=1 origin "+${REF}:refs/ci/head"
           git checkout -q refs/ci/head
-          git log --oneline -1
+          # --no-pager matters: the runner leaves git free to start a pager,
+          # which then waits on input forever and hangs the whole job.
+          git --no-pager log --oneline -1
 
       - name: Show the toolchain
         run: |
