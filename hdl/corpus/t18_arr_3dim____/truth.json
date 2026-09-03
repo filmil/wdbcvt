@@ -1,0 +1,26 @@
+{
+  "case": "t18_arr_3dim____",
+  "axis": "array (0 to 1, 0 to 1, 0 to 2) of std_ulogic",
+  "differs_from": "t18_arr_2dim____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 12,
+      "type": "cube_t"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "000000000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "101011110001"
+    }
+  ]
+}
