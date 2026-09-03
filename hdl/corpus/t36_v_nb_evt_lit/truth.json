@@ -1,0 +1,55 @@
+{
+  "case": "t36_v_nb_evt_lit",
+  "axis": "always @(a) s <= 1'b0 with a toggling at 30 and 60 ns",
+  "differs_from": "t36_v_nb_clk_lit",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "case": "t36_v_nb_clk_lit",
+  "axis": "s <= 1'b0 at every posedge of a reg s = 1'b0",
+  "differs_from": "t17_v_reg_same__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 3,
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 75,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

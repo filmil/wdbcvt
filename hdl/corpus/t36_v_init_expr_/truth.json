@@ -1,0 +1,62 @@
+{
+  "case": "t36_v_init_expr_",
+  "axis": "s = a & b at 50 ns from an initial block, a = 1 and b = 0 held",
+  "differs_from": "t36_v_nb_clk_exp",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

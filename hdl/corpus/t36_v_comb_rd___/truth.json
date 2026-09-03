@@ -1,0 +1,89 @@
+{
+  "case": "t36_v_comb_rd___",
+  "axis": "always @(a or b) s = a & b with b = 0 held while a toggles, s read by wire c = s",
+  "differs_from": "t36_v_comb_and__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "c",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "0"
+    }
+  ]
+}

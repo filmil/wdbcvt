@@ -1,0 +1,28 @@
+{
+  "case": "t36_v_nb_dly_lit",
+  "axis": "always #25 s <= 1'b0 on a reg s = 1'b0",
+  "differs_from": "t36_v_nb_clk_lit",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

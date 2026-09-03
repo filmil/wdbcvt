@@ -1,0 +1,122 @@
+{
+  "case": "t36_v_nb_clk_net",
+  "axis": "assign w = s | b from the s <= a & b flop, a toggling",
+  "differs_from": "t36_v_nb_clk_tog",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 4,
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 75,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

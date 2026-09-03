@@ -1,0 +1,28 @@
+{
+  "case": "t36_v_nb_two_lit",
+  "axis": "s <= 1'b0 twice from an initial block, at 20 and 40 ns",
+  "differs_from": "t17_v_reg_same__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

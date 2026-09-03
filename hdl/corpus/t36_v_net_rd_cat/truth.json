@@ -1,0 +1,136 @@
+{
+  "case": "t36_v_net_rd_cat",
+  "axis": "assign w = sel ? a : b at the top, then wire [1:0] c = {w, sel} reads it",
+  "differs_from": "t36_v_net_copy__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "sel",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "records": 7,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "c",
+      "width": 2,
+      "type": "",
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "sel",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "sel",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "b",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "XX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "00"
+    },
+    {
+      "time_ns": 10,
+      "signal": "c",
+      "value": "10"
+    },
+    {
+      "time_ns": 30,
+      "signal": "c",
+      "value": "11"
+    },
+    {
+      "time_ns": 60,
+      "signal": "c",
+      "value": "10"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "w",
+      "value": "1"
+    }
+  ]
+}

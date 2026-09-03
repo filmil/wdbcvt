@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: Apache-2.0
+`timescale 1ns / 1ps
+
+module tb;
+    reg clk = 1'b0;
+    always #25 clk = ~clk;
+    reg s = 1'b0;
+    wire c = s;
+
+    always @(posedge clk) s = 1'b0;
+
+    initial begin
+        #100 $finish;
+    end
+endmodule

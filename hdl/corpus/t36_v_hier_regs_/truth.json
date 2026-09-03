@@ -1,0 +1,104 @@
+{
+  "case": "t36_v_hier_regs_",
+  "axis": "wire i = sel ? a : b inside a portless child module, a, b and sel regs of the child",
+  "differs_from": "t36_v_hier_int__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb.u",
+      "name": "sel",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.u",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.u",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb.u",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "records": 3,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "tb.u.sel",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "tb.u.sel",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "tb.u.sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.b",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "tb.u.i",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "case": "t36_v_hier_and__",
+  "axis": "assign w = a & b inside a child module, a toggling, b held at 0",
+  "differs_from": "t36_v_net_and_b_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "sel",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "sel",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 2,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 5,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "records": 3,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "tb.u.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "tb.u.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.w",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "sel",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.sel",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.sel",
+      "value": "0"
+    }
+  ]
+}

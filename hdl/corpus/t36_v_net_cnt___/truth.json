@@ -1,0 +1,87 @@
+{
+  "case": "t36_v_net_cnt___",
+  "axis": "assign w = (c[4:2] == 3'b111) from a 5 bit counter c",
+  "differs_from": "t36_v_net_flop__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "clk",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "c",
+      "width": 5,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 25,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "clk",
+      "value": "0"
+    },
+    {
+      "time_ns": 75,
+      "signal": "clk",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "XXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "00000"
+    },
+    {
+      "time_ns": 25,
+      "signal": "c",
+      "value": "00001"
+    },
+    {
+      "time_ns": 75,
+      "signal": "c",
+      "value": "00010"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "0"
+    }
+  ]
+}

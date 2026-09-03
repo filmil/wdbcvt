@@ -1,0 +1,104 @@
+{
+  "case": "t36_v_net_mux_v6",
+  "axis": "assign w = sel ? a : b on 6 bit vectors written to 1 at 10 ns, sel toggling",
+  "differs_from": "t36_v_net_mux_w_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "sel",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 6,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 6,
+      "type": "",
+      "declared": "reg"
+    },
+    {
+      "scope": "tb",
+      "name": "w",
+      "width": 6,
+      "type": "",
+      "records": 3,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "sel",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 30,
+      "signal": "sel",
+      "value": "1"
+    },
+    {
+      "time_ns": 60,
+      "signal": "sel",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "XXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "a",
+      "value": "000001"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "XXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "b",
+      "value": "000001"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "XXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "w",
+      "value": "000000"
+    },
+    {
+      "time_ns": 10,
+      "signal": "w",
+      "value": "000001"
+    }
+  ]
+}
