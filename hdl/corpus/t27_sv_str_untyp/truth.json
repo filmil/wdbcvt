@@ -1,0 +1,38 @@
+{
+  "case": "t27_sv_str_untyp",
+  "axis": "parameter P = \"hello\", untyped, in a .sv file",
+  "differs_from": "t26_sv_str_prm__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "P",
+      "type": "",
+      "width": 40,
+      "declared": "parameter, a 40 bit string",
+      "value": "0110100001100101011011000110110001101111"
+    }
+  ]
+}

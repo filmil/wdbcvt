@@ -1,0 +1,26 @@
+{
+  "case": "t27_sv_int_str__",
+  "axis": "int s = \"a\", a string literal into an int",
+  "differs_from": "t26_sv_v8_str___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "int"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "97"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

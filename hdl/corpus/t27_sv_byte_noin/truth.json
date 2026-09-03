@@ -1,0 +1,26 @@
+{
+  "case": "t27_sv_byte_noin",
+  "axis": "byte s without an initializer",
+  "differs_from": "t25_sv_byte_szd_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "byte"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "5"
+    }
+  ]
+}

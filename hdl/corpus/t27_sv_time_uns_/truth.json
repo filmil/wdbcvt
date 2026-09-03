@@ -1,0 +1,26 @@
+{
+  "case": "t27_sv_time_uns_",
+  "axis": "time s = 0 in a .sv file",
+  "differs_from": "t25_sv_time_lit_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "time"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "50"
+    }
+  ]
+}

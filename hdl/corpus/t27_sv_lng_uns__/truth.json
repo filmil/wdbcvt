@@ -1,0 +1,28 @@
+{
+  "case": "t27_sv_lng_uns__",
+  "axis": "longint unsigned s = 0",
+  "differs_from": "t11_sv_longint__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "longint",
+      "unsigned": true,
+      "declared": "longint unsigned"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "case": "t27_v_intg_uns__",
+  "axis": "integer unsigned s = 0 in a .v file",
+  "differs_from": "t27_sv_intg_uns_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 32,
+      "type": "integer",
+      "unsigned": true,
+      "declared": "integer unsigned"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "165"
+    }
+  ]
+}

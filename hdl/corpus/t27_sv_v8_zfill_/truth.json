@@ -1,0 +1,27 @@
+{
+  "case": "t27_sv_v8_zfill_",
+  "axis": "logic [7:0] s = 'z",
+  "differs_from": "t27_sv_v8_xfill_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "ZZZZZZZZ"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "10100101"
+    }
+  ]
+}

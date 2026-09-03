@@ -1,0 +1,26 @@
+{
+  "case": "t27_sv_real_szd_",
+  "axis": "real s = 8'h05, a sized literal into a real",
+  "differs_from": "t25_sv_real_lit_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 64,
+      "type": "real"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "5"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "2.5"
+    }
+  ]
+}

@@ -43,6 +43,12 @@ type truthSignal struct {
 	// one value included, for the cases that count the X records of a
 	// net at time 0: t16_v_wire_rd1. Absent means not counted.
 	Records int `json:"records"`
+	// Unsigned is true for an integral type declared unsigned, such as
+	// int unsigned or byte unsigned. The database does not record the
+	// qualifier, so the reader spells the value as signed, and the test
+	// reads it back as an unsigned number of Width bits before the
+	// comparison: t27_sv_int_uns against t11_sv_int.
+	Unsigned bool `json:"unsigned"`
 }
 
 // truthRun is a long train of transitions written as a rule rather than
@@ -182,6 +188,17 @@ func truthValue(raw json.RawMessage) (string, error) {
 // has more than one spelling are compared numerically: a time in `7 ns`
 // against `7000 ps`, a real `0.0` against `0`, and a boolean literal
 // `FALSE` against `false`.
+// asUnsigned respells a signed decimal as the unsigned number of the
+// same width bits. Anything that is not a negative decimal is returned
+// as it is.
+func asUnsigned(v string, width int) string {
+	n, err := strconv.ParseInt(v, 10, 64)
+	if err != nil || n >= 0 || width >= 64 {
+		return v
+	}
+	return strconv.FormatUint(uint64(n)+uint64(1)<<uint(width), 10)
+}
+
 func sameValue(f *File, typ int, want, got string) bool {
 	if strings.EqualFold(want, got) {
 		return true
@@ -432,6 +449,12 @@ func TestCorpus(t *testing.T) {
 			// Values over time. Truth names a signal either by its full
 			// path or by its name below the scope; try both.
 			got, types := decodedChanges(t, f)
+			unsigned := map[string]int{}
+			for _, s := range tr.Signals {
+				if s.Unsigned {
+					unsigned[s.Scope+"."+s.Name] = s.Width
+				}
+			}
 			want := map[string][]change{}
 			for _, x := range tr.Transitions {
 				path := x.Signal
@@ -476,6 +499,9 @@ func TestCorpus(t *testing.T) {
 					continue
 				}
 				for i := range w {
+					if width, ok := unsigned[path]; ok {
+						g[i].value = asUnsigned(g[i].value, width)
+					}
 					if g[i].time != w[i].time || !sameValue(f, types[path], w[i].value, g[i].value) {
 						t.Errorf("%s change %d: got %d %s %q, truth says %d %q", path, i, g[i].time, f.TimeUnit(), g[i].value, w[i].time, w[i].value)
 					}

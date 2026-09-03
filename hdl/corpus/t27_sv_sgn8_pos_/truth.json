@@ -1,0 +1,29 @@
+{
+  "case": "t27_sv_sgn8_pos_",
+  "axis": "logic signed [7:0] s = 5, positive into signed",
+  "differs_from": "t26_sv_sgn8_neg_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 8,
+      "type": "",
+      "range": "7 downto 0",
+      "signed": true,
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "00000101"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "00000000"
+    }
+  ]
+}
