@@ -136,26 +136,59 @@ func (f *File) recordBytes(dc Decl) (int, error) {
 	return n, nil
 }
 
-// changesVerilog lists the changes of a Verilog object. Every record is
-// one change. A record holds the whole value, or one or more of its 32
-// bit word pairs keyed at the handle plus eight times the index of the
-// first pair, and the pairs it does not hold keep their last value:
-// t11_v_vec64x writes 8 bytes at handle+8 when bit 40 alone changes,
-// and the memories of tier 11 write the pair that holds the written
-// element. A reg initialised in a declaration gets an all X record and
-// then its value, both at time zero: t11_v_bit_edge. A memory written
-// element by element in an initial block gets one record per element,
-// all at time zero: t11_v_mem8 has eight.
+// changesVerilog lists the changes of a Verilog object. A record holds
+// the whole value, or one or more of its 32 bit word pairs keyed at the
+// handle plus eight times the index of the first pair, and the pairs it
+// does not hold keep their last value: t11_v_vec64x writes 8 bytes at
+// handle+8 when bit 40 alone changes, and the memories of tier 11 write
+// the pair that holds the written element. A reg initialised in a
+// declaration gets an all X record and then its value, both at time
+// zero: t11_v_bit_edge. A memory written element by element in an
+// initial block gets one record per element, all at time zero:
+// t11_v_mem8 has eight.
+//
+// A whole value of chunkWhole record bytes or more is written as the
+// chunks Chunks predicts, split at an arena boundary like a VHDL value,
+// and the split falls inside a word pair: t12_v_vec1089 writes 280
+// bytes as four records of 70. A pair write into such an object is
+// still one record at its pair address: t12_v_vec4800x writes 8 bytes
+// at handle+600 for bit 2400. So every record at one time is either a
+// piece of a whole write, one of the addresses and lengths of
+// chunkStarts, or a pair write, and the pieces of one whole write are
+// joined by taking the i-th record at every piece address, the way
+// Changes does for VHDL.
+//
+// Records of one arena are in write order, and records of different
+// arenas at the same time cannot be ordered against each other. The
+// records of the arena holding the handle set the order: a whole write
+// sits where its first piece sits, and the pair writes of the other
+// arenas follow them at that time, arena by arena. t12_v_mem40_t0
+// writes forty elements at time zero across two arenas and the file
+// keeps only which arena each went to.
 func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 	type rec struct {
 		time, addr uint64
 		data       []byte
+		arena      int
+		piece      int // index into starts, or -1 for a pair write
+	}
+	size := end - start
+	starts := chunkStarts(start, size)
+	pieceAt := map[uint64]int{}
+	for i, a := range starts {
+		pieceAt[a] = i
+	}
+	pieceLen := func(i int) uint64 {
+		if i+1 < len(starts) {
+			return starts[i+1] - starts[i]
+		}
+		return end - starts[i]
 	}
 	var recs []rec
 	first, last := int(start/arenaSpan), int((end-1)/arenaSpan)
 	for k := first; k <= last; k++ {
 		if f.Arenas[k].Offset == 0 {
-			return nil, fmt.Errorf("object handle %#x with %d bytes spans arena %d, which was never written", o.Handle, end-start, k)
+			return nil, fmt.Errorf("object handle %#x with %d bytes spans arena %d, which was never written", o.Handle, size, k)
 		}
 		for _, pg := range f.Pages[k] {
 			for _, r := range pg.Records {
@@ -163,10 +196,13 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 				if addr >= end || addr+uint64(len(r.Data)) <= start {
 					continue
 				}
-				if (addr-start)%8 != 0 || len(r.Data)%8 != 0 {
-					return nil, fmt.Errorf("object handle %#x: record at %#x of %d bytes is not whole word pairs", o.Handle, addr, len(r.Data))
+				piece := -1
+				if i, ok := pieceAt[addr]; ok && uint64(len(r.Data)) == pieceLen(i) {
+					piece = i
+				} else if (addr-start)%8 != 0 || len(r.Data)%8 != 0 {
+					return nil, fmt.Errorf("object handle %#x: record at %#x of %d bytes is neither a chunk nor whole word pairs", o.Handle, addr, len(r.Data))
 				}
-				recs = append(recs, rec{r.TimePS, addr, r.Data})
+				recs = append(recs, rec{r.TimePS, addr, r.Data, k, piece})
 			}
 		}
 	}
@@ -174,9 +210,9 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 		return nil, fmt.Errorf("object handle %#x is logged but has no records", o.Handle)
 	}
 	sort.SliceStable(recs, func(i, j int) bool { return recs[i].time < recs[j].time })
-	cur := make([]byte, end-start)
+	cur := make([]byte, size)
 	var out []Change
-	for _, r := range recs {
+	apply := func(r rec) {
 		lo, hi := r.addr, r.addr+uint64(len(r.data))
 		if lo < start {
 			lo = start
@@ -185,7 +221,71 @@ func (f *File) changesVerilog(o Object, start, end uint64) ([]Change, error) {
 			hi = end
 		}
 		copy(cur[lo-start:hi-start], r.data[lo-r.addr:hi-r.addr])
-		out = append(out, Change{TimePS: r.time, Data: append([]byte(nil), cur...)})
+	}
+	for lo := 0; lo < len(recs); {
+		hi := lo
+		for hi < len(recs) && recs[hi].time == recs[lo].time {
+			hi++
+		}
+		group := recs[lo:hi]
+		// The i-th record at every piece address forms whole write i.
+		// A pair write can have the address and length of a piece: the
+		// 8 byte rest of a chunk split at an arena boundary looks like
+		// the element write t12_v_mem40_t0 makes at that address. The
+		// piece addresses with the fewest records set the count of
+		// whole writes, and the surplus records elsewhere, taken from
+		// the end, are pair writes.
+		pieces := make([][]rec, len(starts))
+		for _, r := range group {
+			if r.piece >= 0 {
+				pieces[r.piece] = append(pieces[r.piece], r)
+			}
+		}
+		count := len(pieces[0])
+		for _, p := range pieces {
+			if len(p) < count {
+				count = len(p)
+			}
+		}
+		for i := range pieces {
+			if len(pieces[i]) == count {
+				continue
+			}
+			if l := pieceLen(i); l%8 != 0 || (starts[i]-start)%8 != 0 {
+				return nil, fmt.Errorf("object handle %#x at %d ps: chunk at %#x has %d records, another has %d", o.Handle, recs[lo].time, starts[i], len(pieces[i]), count)
+			}
+			for _, r := range pieces[i][count:] {
+				for j := range group {
+					if group[j].addr == r.addr && group[j].arena == r.arena && group[j].piece >= 0 && &group[j].data[0] == &r.data[0] {
+						group[j].piece = -1
+					}
+				}
+			}
+			pieces[i] = pieces[i][:count]
+		}
+		whole := 0
+		emit := func(r rec) {
+			if r.piece < 0 {
+				apply(r)
+			} else {
+				for _, p := range pieces {
+					apply(p[whole])
+				}
+				whole++
+			}
+			out = append(out, Change{TimePS: r.time, Data: append([]byte(nil), cur...)})
+		}
+		for _, r := range group {
+			if r.arena == first && (r.piece <= 0) {
+				emit(r)
+			}
+		}
+		for _, r := range group {
+			if r.arena != first && r.piece < 0 {
+				emit(r)
+			}
+		}
+		lo = hi
 	}
 	return out, nil
 }

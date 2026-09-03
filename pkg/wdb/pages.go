@@ -212,10 +212,11 @@ func Chunks(size uint64) (count, length uint64) {
 	return count, size / count
 }
 
-// checkChunks refuses a run of record addresses that is not the one
-// Chunks predicts for a value of size bytes at handle, allowing for the
-// split of a chunk at an arena boundary.
-func checkChunks(handle, size uint64, addrs []uint64) error {
+// chunkStarts lists the record addresses Chunks predicts for a value of
+// size bytes at handle, allowing for the split of a chunk at an arena
+// boundary: the chunk goes on in the next arena as a record of its own
+// at key 0.
+func chunkStarts(handle, size uint64) []uint64 {
 	count, length := Chunks(size)
 	var want []uint64
 	next := handle
@@ -231,6 +232,14 @@ func checkChunks(handle, size uint64, addrs []uint64) error {
 	if b := (next/arenaSpan + 1) * arenaSpan; b < handle+size {
 		want = append(want, b)
 	}
+	return want
+}
+
+// checkChunks refuses a run of record addresses that is not the one
+// Chunks predicts for a value of size bytes at handle.
+func checkChunks(handle, size uint64, addrs []uint64) error {
+	count, length := Chunks(size)
+	want := chunkStarts(handle, size)
 	if len(want) != len(addrs) {
 		return fmt.Errorf("object handle %#x with %d bytes has records at %d addresses, the chunk rule predicts %d (%d chunks of %d)", handle, size, len(addrs), len(want), count, length)
 	}
