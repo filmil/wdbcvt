@@ -1,0 +1,35 @@
+{
+  "case": "t44_str_var_____",
+  "axis": "object kind. A string(1 to 5) process variable, to see whether it gets a declaration and a size the way an integer variable does.",
+  "differs_from": "t6_var_int______",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "v",
+      "type": "string",
+      "kind": "variable",
+      "initial": "hello"
+    }
+  ]
+}

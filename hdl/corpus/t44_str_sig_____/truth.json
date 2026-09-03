@@ -1,0 +1,27 @@
+{
+  "case": "t44_str_sig_____",
+  "axis": "type: string. A string(1 to 5) signal, to see how a VHDL string is typed, sized and recorded.",
+  "differs_from": "t2_character____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 40,
+      "type": "string",
+      "range": "1 to 5"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "hello"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "world"
+    }
+  ]
+}

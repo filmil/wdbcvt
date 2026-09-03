@@ -1,0 +1,26 @@
+{
+  "case": "t44_time_5s_____",
+  "axis": "time width. A change at 5 s, to see whether a time past 2^40 is stored whole.",
+  "differs_from": "t44_time_5ms____",
+  "end_time_ns": 10000000000,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5000000000,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "case": "t44_time_late___",
+  "axis": "time width. A first change at 1 ns and a second at 5 ms, so the page's second word, the span, is the one past 2^32.",
+  "differs_from": "t44_time_5ms____",
+  "end_time_ns": 5000002,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 1,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 5000001,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

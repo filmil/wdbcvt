@@ -1,0 +1,32 @@
+{
+  "case": "t44_v_time_5ms__",
+  "axis": "time width. A Verilog change at 5 ms under 1ns/1ps, to see whether the 64 bit time is stored the same way as in VHDL.",
+  "differs_from": "t44_time_5ms____",
+  "end_time_ns": 10000000,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "reg"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 5000000,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}
