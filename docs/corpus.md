@@ -987,9 +987,49 @@ Word 1 is the index of the value class entry.
 The reader keeps it, checks it, and the dump prints the class beside
 each declaration.
 
+Tier 32 came from the first design that was not written for the
+ladder.
+`//hdl/counter:sim`, the counter this repository started with, bundles
+`clk`, `reset` and `enable` into one record and drives them one field
+at a time, and the reader that reproduced 549 cases refused it: the
+record had records at three addresses where the chunk rule predicts
+one.
+Every corpus case through tier 31 assigned VHDL signals whole, so the
+rule that a VHDL record is the whole value had never been tested.
+Twenty eight cases move one assignment through the parts of a record,
+a vector and an array, the number of parts, their adjacency, the
+delta, the driver and the width.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t32_rec_whole___` | the whole record | 8 bytes at the handle |
+| `t32_rec_field___` | `r.b` alone | 1 byte at `+1` |
+| `t32_rec_conc____` | `r.b` from a concurrent assignment | the same record |
+| `t32_rec_two_adj_` | `r.b`, `r.c` in one delta | one record of 2 bytes at `+1` |
+| `t32_rec_two_gap_` | `r.a`, `r.c` in one delta | two records, `+0` and `+2`, at one time |
+| `t32_rec_delta___` | `r.a`, then `r.b` after `wait for 0 ns` | two records at one time |
+| `t32_rec_wthenf__`, `t32_rec_fthenw__` | the whole record and a field in one delta | one whole record with the result |
+| `t32_rec_vecfield` | a slice of a vector field | 4 bytes at `+5` |
+| `t32_rec_intfld__`, `t32_rec_intlast_` | an integer field, and the field behind it | 4 bytes at `+0`; 1 byte at `+4` |
+| `t32_vec_slice___`, `t32_vec_elem____`, `t32_vec_to_slice` | a slice, an element, a `to` slice | `+4`, `+5`, `+0` |
+| `t32_vec_two_slc_`, `t32_vec_adj_slc_` | two slices apart, two slices touching | two records in source order; one of 6 bytes |
+| `t32_vec_slc_conc` | a concurrent slice assignment | the same record as the process |
+| `t32_vec_slc_over` | the whole vector then a slice | one whole record |
+| `t32_arr_elem____`, `t32_arr_row_____`, `t32_arr_row_bit_`, `t32_arr2d_elem__` | array parts | `+4`, `+8`, `+13`, `+3` |
+| `t32_wide_slice__`, `t32_wide_top____` | 300 of 600 bytes | four chunks of 75 from the write's address |
+| `t32_wide_small__` | 4 of 600 bytes | one record at `+596` |
+| `t32_wide_field__`, `t32_wide_tail___`, `t32_wide_tail_a_` | a 300 byte field before and behind a `std_ulogic` | chunks at `+0` and `+1`; 1 byte at `+0` |
+
+A VHDL record is one write: the bytes one delta changed in one driver,
+merged where they touch, chunked when 275 bytes or more.
+The reader overlays writes, and the counter design decodes.
+Its VCD is now part of `TestVCD`, the first check against a database
+the corpus did not produce.
+
 Not written yet: a `string` value, which has no object to hold one,
-see `t11_sv_str`; a typedef of an unpacked struct array; and a
-realistic design.
+see `t11_sv_str`; a typedef of an unpacked struct array; a Verilog
+partial write of 275 bytes or more; and a realistic design beyond the
+counter.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -1044,8 +1084,9 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 549 cases through tier 31, and
-   matches the VCD of every one of them where the VCD holds anything.
+5. The reader now reproduces all 577 cases through tier 32, and
+   matches the VCD of every one of them, and of `//hdl/counter:sim`,
+   where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

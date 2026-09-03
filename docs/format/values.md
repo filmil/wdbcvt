@@ -255,11 +255,15 @@ and 67 in arena 1, which is the only reason arena 1 exists in that
 file.
 A reader joins the pieces by address: it collects every record whose
 key range overlaps the object's `[handle, handle + size)` from every
-arena the range crosses, sorts them by address, and concatenates the
-i-th record at each address into the i-th value.
-The reader checks that the pieces are contiguous, that every address
-holds the same number of records, and that the records joined into one
-value carry the same time.
+arena the range crosses, keeps them in file order within a time, and
+takes the longest run of records of one time that start where the
+previous one ends and sit at the addresses the rule predicts for the
+run's length as one write.
+A record that starts no such run is a write of its own, and the reader
+refuses one of 275 bytes or more, which is how the rule is checked on
+every case.
+The first write of an object covers it, and the reader checks that
+too.
 
 The split is in bytes and does not respect elements.
 `t9_int73`, an array of 73 `integer`, 292 bytes, is chunked exactly as
@@ -315,6 +319,30 @@ What 24 and 299 are is open.
 `t10_real40`, 40 reals of 8 bytes, is chunked exactly as
 `t10_vec320`, 80 bytes four times, so the element type does not enter.
 
+The rule applies to a write, not to the value the write lands in.
+A partial write, see the VHDL partial writes section, of 275 bytes or
+more is chunked as a value of its own length from its own address.
+`v(299 downto 0) <= (others => '1')` on a 600 byte vector,
+`t32_wide_slice__`, writes four chunks of 75 bytes at the handle plus
+300, 375, 450 and 525, where the whole vector at time 0 was six chunks
+of 100.
+`v(599 downto 300)`, `t32_wide_top____`, writes the same four chunks
+at the handle.
+`r.v <= (others => '1')` on the 300 byte field of a 304 byte record,
+`t32_wide_field__`, writes four chunks of 75 at the handle, where the
+whole record was four of 76, and with the field one byte in,
+`t32_wide_tail___`, the four chunks start at the handle plus 1.
+A write of 4 bytes into the 600 byte vector, `t32_wide_small__`, is
+one record of 4 bytes at the handle plus 596.
+
+*Found by* `t32_wide_slice__` against `t32_vec_slice___`, the same
+slice assignment on a vector of 600 bytes for one of 8, which came
+back as four records where the 8 byte vector gave one.
+*Confirmed by* `t32_wide_top____`, `t32_wide_field__` and
+`t32_wide_tail___`, whose chunks sit at the write's address, and by
+`t32_wide_small__` and `t32_wide_tail_a_`, whose short writes into a
+chunked value are one record.
+
 An arena is `0x800` handles and a value can be longer than that.
 `t9_vec12000` spans arenas 0 to 6, and the page directory lists seven
 arena records for one object.
@@ -358,13 +386,15 @@ reader that follows the directory does not care about the order.
 
 ## Value encodings
 
-The value bytes of a record are the object's whole value after the
-change.
-There is no delta encoding.
-The length is the declaration's value size, word 4 of the declaration
-record, in every VHDL case.
-Verilog values are stored differently, in word pairs and in partial
-records; see the Verilog section below.
+The value bytes of a record are the bytes of one write: the whole
+value at time 0 and after an assignment to the whole object, or the
+bytes of the part that a partial assignment names; see the VHDL
+partial writes section below.
+There is no delta encoding inside a record.
+The length of a whole write is the declaration's value size, word 4 of
+the declaration record.
+Verilog values are stored differently, in word pairs; see the Verilog
+section below.
 
 | Type | Encoding |
 | :--- | :--- |
@@ -434,6 +464,81 @@ in the type table, and the 8 matches the alignment.
 Whether it is the alignment or something else is open, because both a
 5 byte and a 9 byte inner record produce 8.
 See [types.md](types.md).
+
+
+## VHDL partial writes
+
+An assignment to a field, a slice or an element of a VHDL signal does
+not write the whole value.
+It writes a record of the bytes the part occupies, keyed at the handle
+plus the byte offset of the part's first byte in the value encoding
+above, and the reader overlays it on the value the earlier records
+built.
+Every record was seen with a `-debug typical` file; the t32 cases hold
+one signal `s` that toggles at 50 ns and the object under test, which
+the process assigns after `s`.
+
+| Case | Assignment | Record at 50 ns |
+| :--- | :--- | :--- |
+| `t32_rec_whole___` | `r <= ('1', '1', '1')`, a 3 field record of `std_ulogic` | 8 bytes at the handle |
+| `t32_rec_field___` | `r.b <= '1'` | 1 byte at `+1` |
+| `t32_rec_conc____` | `r.b <= s`, a concurrent assignment | 1 byte at `+1` |
+| `t32_rec_two_adj_` | `r.b <= '1'; r.c <= '1'` in one delta | 2 bytes at `+1` |
+| `t32_rec_two_gap_` | `r.a <= '1'; r.c <= '1'` in one delta | 1 byte at `+0`, then 1 byte at `+2` |
+| `t32_rec_delta___` | `r.a <= '1'; wait for 0 ns; r.b <= '1'` | 1 byte at `+0`, then 1 byte at `+1` |
+| `t32_rec_wthenf__` | `r <= ('1', '1', '1'); r.b <= '0'` in one delta | 8 bytes at the handle, `03 02 03` |
+| `t32_rec_fthenw__` | `r.b <= '1'; r <= ('1', '0', '1')` in one delta | 8 bytes at the handle, `03 02 03` |
+| `t32_rec_vecfield` | `r.v(3 downto 0) <= x"F"` with `v(7 downto 0)` after a `std_ulogic` | 4 bytes at `+5` |
+| `t32_rec_intfld__` | `r.i <= 5` with an `integer` before a `std_ulogic` | 4 bytes at `+0` |
+| `t32_rec_intlast_` | `r.a <= '1'` behind the `integer` | 1 byte at `+4` |
+| `t32_vec_slice___` | `v(3 downto 0) <= x"F"` of `v(7 downto 0)` | 4 bytes at `+4` |
+| `t32_vec_elem____` | `v(2) <= '1'` | 1 byte at `+5` |
+| `t32_vec_to_slice` | `v(0 to 3) <= x"F"` of `v(0 to 7)` | 4 bytes at `+0` |
+| `t32_vec_two_slc_` | `v(3 downto 0) <= x"F"; v(7 downto 6) <= "11"` in one delta | 4 bytes at `+4`, then 2 bytes at `+0` |
+| `t32_vec_adj_slc_` | `v(3 downto 0) <= x"F"; v(5 downto 4) <= "11"` in one delta | 6 bytes at `+2` |
+| `t32_vec_slc_conc` | `v(3 downto 0) <= (others => s)`, a concurrent assignment | 4 bytes at `+4` |
+| `t32_vec_slc_over` | `v <= x"FF"; v(3 downto 0) <= x"0"` in one delta | 8 bytes at the handle, `03 03 03 03 02 02 02 02` |
+| `t32_arr_elem____` | `a(1) <= 5` of `array (0 to 3) of integer` | 4 bytes at `+4` |
+| `t32_arr_row_____` | `a(1) <= x"FF"` of an array of `std_ulogic_vector(7 downto 0)` | 8 bytes at `+8` |
+| `t32_arr_row_bit_` | `a(1)(2) <= '1'` | 1 byte at `+13` |
+| `t32_arr2d_elem__` | `m(1, 0) <= '1'` of `array (0 to 1, 0 to 2)` | 1 byte at `+3` |
+| `t32_wide_small__` | `v(3 downto 0) <= x"F"` of `v(599 downto 0)` | 4 bytes at `+596` |
+| `t32_wide_tail_a_` | `r.a <= '1'` before a 300 byte field | 1 byte at `+0` |
+| `t32_wide_slice__`, `t32_wide_top____`, `t32_wide_field__`, `t32_wide_tail___` | 300 byte parts | four chunks of 75, see the chunk section |
+
+The offset is the byte offset of the value encoding: a field sits at
+its aligned offset, an element at its index from the left bound times
+the element size, and a slice at its leftmost element, so
+`v(3 downto 0)` of `v(7 downto 0)` is at `+4` and `v(0 to 3)` of
+`v(0 to 7)` at `+0`.
+A record is one write, and a write is what one delta leaves changed in
+one driver, merged where the parts touch: two adjacent fields or
+slices assigned in one delta are one record, two parts with a gap
+between them are two records at one time, in the order of the
+assignments, and a whole assignment beside a partial one in the same
+delta is one whole record holding the result.
+Two deltas at one time are two records.
+A concurrent assignment writes the same record as a process.
+An integer field is written as its 4 bytes, and a `std_ulogic` field
+behind it at its aligned offset 4.
+
+The reader overlays the records of an object on its value in file
+order and returns one value per write, so a time with two records
+gives two values, and the corpus test compares the last value at each
+time for the signals of `t32_rec_two_gap_` and `t32_vec_two_slc_`.
+
+*Found by* `//hdl/counter:sim` against the corpus: its `ctl` record of
+`clk`, `reset` and `enable` is driven one field at a time, and the
+first reader, which took every VHDL record for the whole value,
+refused it with records at three addresses where the chunk rule
+predicts one.
+*Confirmed by* the 28 t32 cases above, each written to move one
+thing: the field, its position, the number of parts, their adjacency,
+the delta, the driver, the index direction, the dimension and the
+element type.
+`t32_rec_two_adj_` against `t32_rec_two_gap_` separated merging by
+adjacency from merging by delta, and `t32_rec_wthenf__` against
+`t32_rec_delta___` separated one delta from two.
 
 
 ## Which objects get records
@@ -661,7 +766,8 @@ top.
 and 24 bytes of the next, and arena 2 the remaining 112, four of 136,
 and the last of 144.
 
-A partial write into a chunked value is not chunked.
+A pair write into a chunked value is one record, below the 275 byte
+threshold that a write is chunked at.
 It is the 8 byte pair record of the partial records rule, at the
 handle plus 8 times the pair index, wherever that address falls:
 `t12_v_vec4800x` sets bit 2400 at 75 ns and writes one 8 byte record
