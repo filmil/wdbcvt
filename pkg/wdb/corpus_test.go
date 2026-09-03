@@ -136,9 +136,10 @@ type truthVariable struct {
 	// and Value: the 70000 generate indexes of t46_gen_70000.
 	Count int `json:"count"`
 	// Storage, when set, is word 28 of the instance record: 2 for a
-	// generic, constant, variable or loop index, 3 for a scalar
-	// subprogram local, 4 for an array one and 6 for a signal
-	// parameter, tier 49. Absent means not checked.
+	// generic, constant, variable or loop index, 3 for a scalar or
+	// access subprogram local, 4 for an array, string or record one
+	// and 6 for a signal parameter, tiers 49 and 50. Absent means not
+	// checked.
 	Storage *int `json:"storage"`
 }
 

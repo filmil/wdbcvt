@@ -326,8 +326,9 @@ type Object struct {
 	// Storage is word 28 of the instance record, read as the storage
 	// class of the object: 0 for a signal, 1 for a port on a language
 	// boundary, 2 for a generic, constant, variable or loop index, 3
-	// for a scalar subprogram local, 4 for an array subprogram local
-	// and 6 for a signal parameter of a subprogram, tier 49.
+	// for a scalar or access subprogram local, 4 for an array, string
+	// or record subprogram local and 6 for a signal parameter of a
+	// subprogram, whatever the class and mode, tiers 49 and 50.
 	Storage uint32
 	// Position is the tenth word of the instance record: for a Verilog
 	// port, its place in the module's port list counted from 0, by the

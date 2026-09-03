@@ -1,0 +1,45 @@
+{
+  "case": "t50_ord_proc_con",
+  "axis": "a process with a constant above a variable, against t6_var_int with the variable alone",
+  "differs_from": "t6_var_int______",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "c",
+      "type": "integer",
+      "kind": "constant",
+      "port": "",
+      "storage": 2,
+      "value": "3"
+    },
+    {
+      "scope": "tb.p",
+      "name": "v",
+      "type": "integer",
+      "kind": "variable",
+      "port": "",
+      "storage": 2
+    }
+  ]
+}

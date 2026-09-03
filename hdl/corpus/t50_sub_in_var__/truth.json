@@ -1,0 +1,52 @@
+{
+  "case": "t50_sub_in_var__",
+  "axis": "a procedure with an in mode scalar variable parameter under -debug subprogram",
+  "differs_from": "t49_sub_var_prm_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "n",
+      "type": "integer",
+      "kind": "variable",
+      "port": "",
+      "storage": 2
+    },
+    {
+      "scope": "tb.show",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "in",
+      "storage": 3
+    },
+    {
+      "scope": "tb.show",
+      "name": "q",
+      "type": "std_ulogic",
+      "kind": "signal param",
+      "port": "out",
+      "storage": 6
+    }
+  ]
+}

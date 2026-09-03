@@ -1,0 +1,44 @@
+{
+  "case": "t50_sub_func_prm",
+  "axis": "a function with a constrained vector parameter and a scalar local under -debug subprogram",
+  "differs_from": "t49_sub_vec_prm_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.low",
+      "name": "a",
+      "type": "std_ulogic_vector",
+      "kind": "local",
+      "port": "in",
+      "storage": 4
+    },
+    {
+      "scope": "tb.low",
+      "name": "r",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "",
+      "storage": 3
+    }
+  ]
+}
