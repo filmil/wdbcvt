@@ -1,0 +1,43 @@
+{
+  "case": "t31_sv_w1_swap__",
+  "axis": "int i = 5 before logic s",
+  "differs_from": "t31_sv_w1_i5____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "i",
+      "width": 32,
+      "type": "int"
+    },
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "i",
+      "value": "5"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "i",
+      "value": "165"
+    }
+  ]
+}
