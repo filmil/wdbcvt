@@ -695,6 +695,55 @@ The union crashed the reader on an unseen layout word.
 | `t24_sv_fork` | `fork ... join` | a `vprocess` scope per branch |
 | `t24_sv_clocking` | `clocking cb @(posedge clk)` | nothing |
 
+Tier 25 goes after DBG header word 13, which tier 24 left open, by
+varying what was different in the cases where it was not `1`:
+Verilog parameters in every form, `always_ff`, `always_comb` and
+`always_latch` alone, a `wire` in a `.sv` file, and packages holding
+one thing each.
+The count followed the types and initializers of the objects, so the
+second half of the tier varies the initializer of one object at a
+time.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t25_v_prm_dflt` | `#(.K(5))` over a default of 5 | nothing but the value |
+| `t25_v_prm_none` | no override | the same |
+| `t25_v_prm_two` | two parameters overridden | two objects |
+| `t25_v_prm_lp` | `localparam L = K + 1` | an object with the computed value |
+| `t25_v_prm_lp_ind` | `localparam L = 3` | the same |
+| `t25_v_defparam` | `defparam dut.K = 7` | nothing but the value |
+| `t25_v_prm_tb` | a parameter of the root module | `tb.K` |
+| `t25_sv_alw_ff` | `always_ff` alone | an `Always` scope; word 13 `1` |
+| `t25_sv_alw_comb` | `always_comb` alone | word 13 `2`: the uninitialized output |
+| `t25_sv_alw_latch` | `always_latch` alone | the same |
+| `t25_sv_always` | `always` in a `.sv` file | word 13 `1` |
+| `t25_sv_wire` | `wire` in a `.sv` file | word 13 `2`: the net |
+| `t25_sv_pkg_tdef` | a package with a typedef only | the unit and scope, no object |
+| `t25_sv_pkg_prm` | a package with a parameter only, used in a cast | no package at all |
+| `t25_sv_pkg_unusd` | the package imported and not used | the same, `0xf8` less handle space |
+| `t25_sv_logic_int` | `logic s = 0` | class 4 |
+| `t25_sv_vec8_int` | `logic [7:0] s = 0` | class 4 |
+| `t25_sv_vec8_sz` | `logic [7:0] s = 8'h00` | class 1 |
+| `t25_sv_int_sized` | `int s = 32'h0` | class 3 |
+| `t25_sv_int_noini` | `int s` | class 3 |
+| `t25_sv_two_class` | `logic s = 1'b0` beside `int i = 5` | two entries, word 13 `2` |
+| `t25_sv_two_same` | two `logic` with sized literals | one entry |
+| `t25_sv_real_lit` | `real s = 1.5` | class 0 |
+| `t25_sv_time_lit` | `time s = 10ns` | class 4; an implicit process, `X` then `10` |
+| `t25_sv_time_noin` | `time s` | class 4; one `X` record |
+| `t25_v_reg_int` | `reg s = 0` in `.v` | class 0 |
+| `t25_v_vec8_sz` | `reg [7:0] s = 8'h00` in `.v` | class 0, where `.sv` gives 1 |
+| `t25_v_int_sized` | `integer s = 32'h0` in `.v` | class 3 |
+| `t25_v_int_noinit` | `integer s` in `.v` | class 3 |
+| `t25_v_prm_real` | a `real` parameter beside an `integer` | `[3 0 0] [0 0 0]` |
+| `t25_sv_net_init` | `wire w = s` | class 0 for the net |
+| `t25_sv_bit_unsz` | `bit s = 0` | class 4 |
+| `t25_sv_logic_one` | `logic s = '1` | class 1 |
+| `t25_sv_v64_unsz` | `logic [63:0] s = 0` | class 4 |
+| `t25_sv_byte_szd` | `byte s = 8'h05` | class 1 |
+| `t25_sv_logic_exp` | `logic s = 1'b0 \| 1'b0` | class 1 |
+| `t25_sv_logic_x` | `logic s = 1'bx` | class 1 |
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`; a typedef of an unpacked struct array; and a
 realistic design.
@@ -752,7 +801,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 363 cases through tier 24, and
+5. The reader now reproduces all 400 cases through tier 25, and
    matches the VCD of every one of them where the VCD holds anything.
    The next cases are the ones listed as not written yet.
 

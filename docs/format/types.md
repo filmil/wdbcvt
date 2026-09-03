@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 363 of 363 cases decoding with the entry lengths chaining
+*Confirmed by* 400 of 400 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 

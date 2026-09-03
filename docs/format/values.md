@@ -818,7 +818,16 @@ records once too.
 `t11_sv_enum4`, whose initializer gets an implicit process, records
 `XXXX` and then `A`, while `t11_sv_enum` over `int` records `IDLE`
 once, because the implicit process writes the value it already holds.
-A `real` records `0` once for the same reason.
+A `real` records `0` once for the same reason, and so does
+`real s = 1.5` in `t25_sv_real_lit`.
+A `time` with an initializer, `time s = 10ns` in `t25_sv_time_lit`,
+records all `X` and then `10`, the value in the `timescale` unit, as
+the `.v` `time s = 0` of `t11_v_time` does, and `t25_sv_time_noin`
+without one holds the `X` record alone.
+An unsized literal changes nothing here: `logic s = 0` in
+`t25_sv_logic_int` and `int s = 32'h0` in `t25_sv_int_sized` each
+record once, while `integer s = 32'h0` in a `.v` file,
+`t25_v_int_sized`, records `X` and then `0`.
 Without an initializer there is no implicit process: `t12_v_noinit`,
 a `reg` first written at 50 ns, and `t12_sv_noinit`, the same with
 `logic`, each hold one `X` record at time 0 and the write.

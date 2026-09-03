@@ -55,7 +55,7 @@ the instance records start there.
 | 14 | statement index | 2 words per file |
 | 15 | statement lines | 1 word per executable statement |
 | 16 | empty in every case | |
-| 17 | 16 zero bytes when there are objects, else empty | |
+| 17 | value class entries, one per distinct class among the objects | 3 words, padded to 8 bytes at the end |
 
 Every word is a uint32 or int32; `-1` means absent.
 A name is an offset into the pool named for it.
@@ -74,7 +74,7 @@ The 17 header words are, in order:
 | 10 | number of files again | |
 | 11 | number of words in region 15, `0` without `-debug line` | `t2_flat3` 6; `t24_dbg_drv_only` 0 |
 | 12 | 0 | |
-| 13 | `0` without objects, `1` in 351 cases, `2` or `3` in ten Verilog cases | `t0_nosig`, `t11_sv_str` 0; `t12_v_params` 3 |
+| 13 | number of value class entries in region 17 | `t25_sv_two_class` 2 against `t25_sv_two_same` 1 |
 | 14 | debug flags: byte 0 `1`, byte 1 `-debug drivers`, byte 2 `-debug readers` | `t24_dbg_drv_only`, `t24_dbg_readers` |
 | 15 | debug flags: byte 0 `1`, byte 1 `-debug line`, byte 2 `-debug subprogram`, both under `line` alone | `t24_dbg_line`, `t24_dbg_sub_only` |
 | 16 | `0x10000` | |
@@ -82,14 +82,9 @@ The 17 header words are, in order:
 Words 14 and 15 are byte flags that record the `-debug` levels the
 design was elaborated with; the debug level section below has the
 table.
-Word 13 is `0` in the two cases without objects, `t0_nosig` and
-`t11_sv_str`, `1` in 351 cases, `2` in `t11_v_param`,
-`t12_v_param64`, `t13_v_str_param`, `t21_v_param_same`,
-`t21_v_param_diff`, `t13_sv_pkg`, `t15_sv_pkg_log`,
-`t13_sv_alwaysff` and `t19_sv_uwire`, and `3` in `t12_v_params`.
-It is not the page count, the arena count, the object count or the
-parameter count of those cases.
-What it counts is open.
+Word 13 counts the entries of region 17, which is 16 bytes long for
+one entry and empty without objects; the value class section at the
+end of this file has what an entry holds.
 Word 16 is `0x10000` in every case.
 The reader keeps the 17 words as `Debug.Words` and the dump prints
 them as `header words`.
@@ -674,9 +669,25 @@ The typedef is a type entry and not an object, as in VHDL.
 Its scope and object cost handle space: `t13_sv_pkg` has `0xafc`
 where `t12_sv_typedef`, the same typedef inside `tb`, has `0x91c`.
 
+A SystemVerilog package enters the file when a declaration uses one of
+its types, and its parameters come along whether they are used or not.
+`t25_sv_pkg_tdef`, a package with only `typedef logic [7:0] byte_t`
+and a `byte_t s` in `tb`, has the unit and the scope `p` with no
+object.
+`t25_sv_pkg_prm`, a package with only `parameter int W = 8` used in
+the cast `W'(8'ha5)`, and `t25_sv_pkg_unusd`, the same package
+imported and not used, have no unit, no scope and no object for `p`,
+and `W` is nowhere in the file.
+`t13_sv_pkg` uses `W` in the same cast, and has the object `p.W`
+because `byte_t` of the same package types its `s`.
+The cast still costs handle space: `t25_sv_pkg_prm` has `0xac4` and
+`t25_sv_pkg_unusd` `0x9cc`, `0xf8` apart, the stride of a dynamic
+object; see the Verilog section below.
+
 *Found by* `t9_port_rec` against `t2_record`, where the extra scope
 sat between `tb` and `tb.dut` in the scope list.
-*Confirmed by* `t13_sv_pkg` against `t12_sv_typedef`.
+*Confirmed by* `t13_sv_pkg` against `t12_sv_typedef`, and
+`t25_sv_pkg_prm` against `t25_sv_pkg_tdef` for the condition.
 
 
 ## Implicit processes
@@ -1310,3 +1321,56 @@ it holds, and the class member `x` is not there either.
 *Confirmed by* `t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class`.
 The clock toggle due at the `$finish` time in `t11_v_always` is not
 recorded, so the last record of `clk` is at 75 ns in a 100 ns run.
+
+## Value classes
+
+Region 17 holds one entry of three words per distinct value class
+among the objects of the file, in the order the classes first appear
+in the object list, and header word 13 counts the entries.
+The first word of an entry is the class code and the other two are 0
+in every case.
+The region is padded to 8 bytes at the end: 16 bytes for one entry,
+24 for two, 40 for three, and empty for none.
+The reader keeps the entries as `Debug.Classes`, checks the region
+length against word 13, and the dump prints them as `value classes`.
+
+Every VHDL object is class 0, and every VHDL case with objects holds
+the one entry `[0 0 0]`.
+A Verilog or SystemVerilog object is classed by its type and by the
+form of its initializer:
+
+| Class | Objects | Found by |
+| ---: | :--- | :--- |
+| 0 | every VHDL object; a `reg`, `logic`, `bit` or net with no initializer; every `.v` variable with an initializer, which runs as an implicit process; an enum, unpacked struct, packed struct from a `'{}` pattern, `real` or `shortreal` with any initializer; a `real` parameter | `t11_v_bit_edge`, `t12_sv_noinit`, `t11_sv_enum`, `t25_sv_real_lit`, `t25_v_prm_real` |
+| 1 | a sized literal into a `logic`, `bit`, `byte`, packed struct, vector or parameter: `1'b0`, `1'bx`, `'0`, `'1`, `1'b0 \| 1'b0`, `8'h00`, `8'h5a`, `64'h0`, `byte s = 8'h05` | `t11_sv_logic`, `t25_sv_logic_x`, `t25_sv_logic_one`, `t25_sv_logic_exp`, `t25_sv_byte_szd`, `t12_v_param64` |
+| 3 | `int`, `integer`, `longint` or `byte` with an unsized literal, a sized literal or no initializer; an untyped, `integer` or `int` parameter or localparam, in a module or a package | `t11_sv_int`, `t25_sv_int_sized`, `t25_sv_int_noini`, `t11_v_integer`, `t25_v_int_noinit`, `t11_v_param`, `t13_sv_pkg` |
+| 4 | an unsized literal into a `logic` or `bit` scalar or vector: `logic s = 0`, `bit s = 0`, `logic [7:0] s = 0`, `logic [63:0] s = 0`; every `time`, with `= 0`, `= 10ns` or no initializer | `t25_sv_logic_int`, `t25_sv_bit_unsz`, `t25_sv_vec8_int`, `t25_sv_v64_unsz`, `t11_v_time`, `t25_sv_time_noin` |
+| 6 | a string parameter | `t13_v_str_param` |
+
+The classes 2 and 5 have not been seen.
+The entries follow the objects: `t12_v_params` lists `s`, `K`, `P`,
+`Q`, `R`, `L` and holds `[0 0 0] [3 0 0] [1 0 0]`, `s` the `reg`,
+`K` the untyped parameter, `P` the `[7:0]` one, with `Q` and `L`
+merging into class 3 and `R` into class 0.
+`t25_sv_two_class`, `logic s = 1'b0` beside `int i = 5`, holds
+`[1 0 0] [3 0 0]`, and `t25_sv_two_same`, the same `logic` beside
+`logic t = 1'b1`, holds `[1 0 0]`.
+A net after a `logic` with a sized initializer adds class 0 after
+class 1: `t25_sv_wire`, `t19_sv_uwire`, `t25_sv_net_init`, and so does
+the uninitialized output of `always_comb`, `always_latch` and
+`always_ff`, `t25_sv_alw_comb`, `t25_sv_alw_latch`, `t13_sv_alwaysff`.
+The same declaration classes differently in the two languages: `reg
+[7:0] s = 8'h00` in `t25_v_vec8_sz` is class 0 and `logic [7:0] s =
+8'h00` in `t25_sv_vec8_sz` is class 1, while `integer s = 32'h0` in
+`t25_v_int_sized` and `int s = 32'h0` in `t25_sv_int_sized` are both
+class 3.
+What the codes stand for is open; the split between a `.v`
+initializer, which runs as a process, and a `.sv` one, which is taken
+at declaration, and between a sized and an unsized literal, suggests
+a class of how the initial value is produced.
+
+*Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
+13 went from 1 to 2 with the second object's type, and region 17 from
+16 to 24 bytes.
+*Confirmed by* the region length check in 400 of 400 cases, and the
+tier 25 sweep over the initializer forms.
