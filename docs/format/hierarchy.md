@@ -80,7 +80,7 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 63 cases.
+They are the same in all 79 cases.
 
 
 ## Scope records
@@ -166,7 +166,8 @@ offset 8, and the `tb` scope names the same offset 5.
 
 ## Declaration records
 
-A declaration is one signal, generic or variable, before elaboration.
+A declaration is one signal, port, generic, constant or variable, before
+elaboration.
 The record has 11 words, and the region is padded to a multiple of 8
 bytes after the last record:
 
@@ -181,17 +182,35 @@ bytes after the last record:
 | 6 | number of range records |
 | 7 | index of the first range record, `-1` if none |
 | 8 | kind, below |
-| 9 | 5 |
+| 9 | port mode, below |
 | 10 | noise for a signal, 0 for a variable |
 
 The kinds seen:
 
 | Kind | Meaning | Found by |
 | ---: | :--- | :--- |
-| `0x0e` | signal | every case with a signal |
+| `0x0e` | signal, including a port | every case with a signal |
 | `0x0f` | variable declared in a process | `t6_var_int`, `t6_proc2` |
 | `0x12` | generic | `t4_gen_default` |
-| `0x13` | loop index of a `for` loop or a `for generate` | `t5_tr1000`, `t6_tr1300`, `t7_gen_for` |
+| `0x13` | constant: an architecture constant, a loop index or a generate index | `t8_gen_if`, `t5_tr1000`, `t6_tr1300`, `t7_gen_for` |
+
+Word 9 was recorded as the constant 5 through tier 7, where no case had
+a port.
+It is the port mode:
+
+| Word 9 | Mode | Found by |
+| ---: | :--- | :--- |
+| 0 | `inout` | `t8_port_inout` |
+| 1 | `in` | `t8_port_in`, `t8_port_open`, `t8_port_vec8` |
+| 2 | `out` | `t8_port_out`, `t8_port_open` |
+| 3 | `buffer` | `t8_port_buffer` |
+| 5 | not a port | every declaration through tier 7 |
+
+The reader exposes it as `Decl.Mode`, and the corpus test checks it
+against the `port` field of each signal in `truth.json`.
+A port is otherwise an ordinary signal: kind `0x0e`, declared in the
+child entity's unit, and an object in the child's scope.
+Where its handle comes from is in the instance record section below.
 
 Word 10 was called noise because it differs between two runs of the
 same design.
@@ -283,11 +302,39 @@ value's size, then `0xe8` bytes of something per signal.
 Nothing in the file depends on the reading, and the decoder does not
 use it.
 
-Generics and variables get handles from somewhere else: `0xe98` for the
-lone generic of `t4_gen_default`, `0xf88` and `0x10a0` for the two of
-`t4_gen_diff_two`, `0xdf8` for the loop index of `t5_tr1000`, `0xde0`
-for the variable of `t6_var_int`, and `0xf08` and `0xf0c` for the two
-variables of `t6_proc2`, which are 4 bytes apart.
+A port connected to a signal has no handle of its own.
+Its object carries the handle of the signal it is connected to, and so
+does every port further down a chain.
+In `t8_port_in`, `tb.x` and `tb.dut.a` both hold `0x768`, and in
+`t8_port_chain` the signal `tb.x`, the port `tb.dut.a` and the port
+`tb.dut.u.b` below it all hold `0x768`.
+The mode does not matter: `t8_port_out`, `t8_port_inout` and
+`t8_port_buffer` share the handle the same way.
+So a net is one handle, and the objects on it are names for it.
+The reader reports each object separately and the value records under
+each of them, since a record is looked up by handle.
+
+A port left `open` gets its own handle, and it costs `0xb8` plus the
+value size rounded up to 8, where a signal costs `0xe8` plus the same.
+`t8_port_open3` has one signal `x` at `0x768`, then three open one bit
+ports at `0x858`, `0x918` and `0x9d8`, `0xc0` apart, then a signal `s`
+of the child at `0xa98`.
+`t8_port_vec8` and `t8_port_vec16` have one open vector port at `0x768`
+and the child's signal `s` at `0x828` and `0x830`, so the port's stride
+is `0xb8` plus 8 and `0xb8` plus 16.
+
+| Object | Handle stride | Found by |
+| :--- | :--- | :--- |
+| signal | `0xe8` plus the size rounded up to 8 | the table above |
+| open port | `0xb8` plus the size rounded up to 8 | `t8_port_open3`, `t8_port_vec8`, `t8_port_vec16` |
+| connected port | none, it shares the signal's handle | `t8_port_in`, `t8_port_chain` |
+
+Generics, constants and variables get handles from somewhere else:
+`0xe98` for the lone generic of `t4_gen_default`, `0xf88` and `0x10a0`
+for the two of `t4_gen_diff_two`, `0xdf8` for the loop index of
+`t5_tr1000`, `0xde0` for the variable of `t6_var_int`, `0xf08` and
+`0xf0c` for the two variables of `t6_proc2`, which are 4 bytes apart,
+and `0xda8` for the architecture constant of `t8_gen_if`.
 There is no pattern yet that predicts them, and none is needed: the
 handle is read from the record.
 
@@ -371,9 +418,82 @@ backslashes, or add them.
 The decoder's test compares `tb.g(0).dut.s` from `truth.json` against
 the pool's `tb.\g(0)\.dut.s` that way.
 
-*Found by* `t7_gen_for`, the only generate case, which failed on both
+*Found by* `t7_gen_for`, the first generate case, which failed on both
 the arena record order and the path spelling before the reader was
 taught both.
+
+
+## Nested for generate
+
+`t8_gen_nest` nests `h: for j in 0 to 1 generate` inside
+`g: for i in 0 to 1 generate`, with one `child` per inner iteration.
+The shape repeats at every level.
+
+```
+[1]  tb
+[2]  tb.\g(0)\                   generate, 1 declaration: i
+[3]  tb.\g(1)\                   generate, 1 declaration: i
+[4]  tb.g                        generate, empty
+[5]  tb.p                        process
+[6]  tb.\g(0)\.\h(0)\            generate, 1 declaration: j
+[7]  tb.\g(0)\.\h(1)\            generate, 1 declaration: j
+[8]  tb.\g(0)\.h                 generate, empty
+[9]  tb.\g(1)\.\h(0)\            generate, 1 declaration: j
+[10] tb.\g(1)\.\h(1)\            generate, 1 declaration: j
+[11] tb.\g(1)\.h                 generate, empty
+[12] tb.\g(0)\.\h(0)\.dut        child(sim), 2 declarations: s, k
+...
+```
+
+Every outer iteration gets its own empty `h` beside its two `\h(j)\`
+scopes, and one empty `g` sits beside the `\g(i)\` scopes.
+The four instances have four different `k`, so there are four
+`child(sim)` units: 20 scopes, 20 units, 14 declarations and 14
+objects.
+
+*Found by* `t8_gen_nest` against `t7_gen_for`.
+
+
+## If generate
+
+`t8_gen_if` has `g: if with_dut generate` and
+`h: if not with_dut generate`, with `with_dut` an architecture
+constant `true`, and one `child` in each branch.
+
+```
+[1]  tb              entity, 1 declaration: with_dut
+[2]  tb.g            generate, no declarations
+[3]  tb.h            generate, no declarations, no children
+[4]  tb.p            process
+[5]  tb.g.dut        child(sim), 2 declarations: s, k
+[6]  tb.g.dut.p      process
+```
+
+An `if` generate is one scope per label, named plainly, unit kind
+`0x0c` like a `for` generate.
+The false branch is still there, as an empty scope, so a reader cannot
+tell which condition held from the scope list alone; it has to look for
+children.
+There is no index and no extended identifier.
+
+The constant `with_dut` is a declaration of kind `0x13` in the entity
+unit, an object in `tb`, and gets one record at time 0 holding its
+value, like a generic.
+That is what made `0x13` a constant kind rather than a loop index kind.
+
+*Found by* `t8_gen_if` against `t7_gen_for` and `t4_gen_explicit`.
+
+
+## Implicit processes
+
+A concurrent signal assignment such as `q <= a;` in an architecture is
+an implicit process.
+It gets a process scope named `line__NN`, where `NN` is the source line
+of the statement, with a process unit pointing at the same line.
+`t8_port_open` has `tb.dut.line__18` and `t8_port_vec8` has the same,
+both from one concurrent assignment in `child`.
+
+*Found by* `t8_port_open`, whose child has no labelled process.
 
 
 ## Variables
@@ -384,13 +504,14 @@ No arena is allocated for it and no value record is ever written.
 Found by `t6_var_int`, whose variable changes twice and leaves no
 trace, and `t6_proc2`, which has two.
 
-A `for` loop index in a process is a declaration of kind `0x13`.
+A `for` loop index in a process is a declaration of kind `0x13`, the
+constant kind.
 It gets one record at time 0, holding 0, whatever the loop's first
 value is.
 Found by `t5_tr1000` and `t6_tr1300`, whose loops run `0 to 999` and
 `0 to 1299`.
-A `for generate` index is the same kind and records its value instead;
-see above.
+A `for generate` index and an architecture constant are the same kind
+and record their value instead; see above.
 
 Both kinds count toward the marker only when they have a record.
 See the marker section of [container.md](container.md).

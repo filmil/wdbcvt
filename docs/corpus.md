@@ -259,12 +259,38 @@ its test failed until the path spelling was normalised.
 The five record cases were written two at a time as each answer raised
 the next question, and the table lists them in that order.
 
-Not written yet, in order: a chain of three deltas, to see whether
-every delta or only every change is recorded; an inner record with a
-real field beside a vector; a nested generate and an if generate;
-different timescales; and then the same ladder in Verilog and
-SystemVerilog, to find out whether the source language reaches the
-database at all.
+Tier 8 takes the questions tier 7 left in the open list, and the
+first axis no earlier tier had touched: entity ports.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t8_delta3` | three assignments across three deltas | one record per delta |
+| `t8_delta_same`, `t8_same` | assignments of the value already held | no record without a change |
+| `t8_ps` | waits of 1 ps, 998 ps and 1500 fs | picosecond unit; femtoseconds truncated |
+| `t8_rec_realv` | a `real` beside a vector in the inner record | the real contributes no triple |
+| `t8_port_in` | an `in` port on the child | declaration word 9 is the port mode; a connected port shares the signal's handle |
+| `t8_port_out`, `t8_port_inout`, `t8_port_buffer` | the other modes | modes 2, 0 and 3; the handle is shared whatever the mode |
+| `t8_port_open` | both ports left open | an open port owns a handle; the `line__NN` scope of a concurrent assignment |
+| `t8_port_open3` | three open ports beside a signal | an open port's stride is `0xc0` |
+| `t8_port_vec8`, `t8_port_vec16` | an open 8 and 16 bit port | the stride is `0xb8` plus the rounded size |
+| `t8_port_chain` | a port connected through two levels | all objects on the net share the handle, one time 0 record each |
+| `t8_gen_if` | an `if` generate with a constant condition | plain branch scopes, an empty false branch, kind `0x13` is a constant |
+| `t8_gen_nest` | a `for` generate inside a `for` generate | the shape repeats per level |
+
+Two port cases had to be redesigned before their truth was right.
+An `inout` or `buffer` port with no driver inside the child and an
+unresolved `std_ulogic` type stays `'U'`, since the testbench and the
+port are two sources on one unresolved signal.
+The `inout` case uses `std_logic` and drives `'Z'` from inside, and the
+`buffer` case is driven only from inside.
+And `t8_ps` first claimed a change at 1001 ps for a wait of 1500 fs,
+which the simulator cut to 1 ps, so the truth was wrong and the file
+was right; the xsim VCD settled it.
+
+Not written yet, in order: a `linkage` port, to fill mode 4; a
+generic of a type other than integer; and then the same ladder in
+Verilog and SystemVerilog, to find out whether the source language
+reaches the database at all.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -319,7 +345,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 63 cases through tier 7.
+5. The reader now reproduces all 79 cases through tier 8.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

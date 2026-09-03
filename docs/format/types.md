@@ -30,7 +30,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 63 of 63 cases decoding with the entry lengths chaining
+*Confirmed by* 79 of 79 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -106,6 +106,8 @@ An inner vector field contributes its bounds.
 An inner scalar field contributes its type's range: `(0, 8, 1)` for
 `std_ulogic`, whose nine literals are numbered 0 to 8, `(0, 1, 1)` for
 `bit`, and `(-2147483648, 2147483647, 1)` for `integer`.
+An inner `real` field contributes nothing, so the list can be shorter
+than the field count.
 The list is written only when the inner record has at least one array
 field.
 An inner record of scalars alone, whatever its size, gives the outer
@@ -120,6 +122,7 @@ field `nranges` 0.
 | `t7_rec_intv` | `integer`, a vector | `(-2147483648 to 2147483647) (3 downto 0)` |
 | `t7_rec_in2` | two `std_ulogic` | none |
 | `t7_rec_in16` | `std_ulogic`, `integer`, `real` | none |
+| `t8_rec_realv` | `real`, `std_ulogic_vector(3 downto 0)` | `(3 downto 0)` |
 
 *Found by* `t2_record_nested` against `t2_record2`, which showed the
 extra `(0, 8, 1)`.
@@ -133,6 +136,8 @@ moved after the bounds, which made it a per field entry.
 became that scalar's range.
 *Confirmed by* `t7_rec_in2v`, whose two vectors and one scalar give
 exactly three triples in field order.
+`t8_rec_realv` put a `real` beside the vector and got the vector's
+bounds alone, so a `real` has no range to contribute and is skipped.
 
 ## What the earlier size measurements meant
 

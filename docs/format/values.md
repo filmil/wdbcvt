@@ -113,6 +113,42 @@ keeps only the last value at a time loses one of them.
 *Found by* `t7_gen_for` for the order and `t7_delta` for the delta,
 each written to ask that one question.
 
+Only a change gets a record.
+`t8_delta3` assigns `'1'`, `'0'`, `'1'` across three deltas at 10 ns
+and holds three records there, `03 02 03`.
+`t8_delta_same` assigns `'1'` twice across two deltas and holds one
+record at 10 ns.
+`t8_same` assigns the initial value `'0'` at 10 ns and holds only the
+time 0 record.
+So the rule is one record per delta in which the value changes, and no
+record for an assignment of the value already held.
+
+*Found by* `t8_delta3`, `t8_delta_same` and `t8_same` against
+`t7_delta`.
+
+The time unit is the picosecond, and nothing finer is kept.
+`t8_ps` waits `1 ps`, `998 ps` and `1500 fs`, and its records sit at
+1, 999 and 1000, so the third wait was cut to 1 ps, and the end time is
+11000.
+That is the simulator's resolution as much as the file's: xsim runs the
+corpus at its default 1 ps precision, and the VCD it writes agrees.
+
+*Found by* `t8_ps` against `t1_bit_two_edges`.
+
+A net shared by a signal and the ports connected to it is one handle,
+see [hierarchy.md](hierarchy.md), and its records show the connection
+twice over.
+`t8_port_chain` has a signal, a port and a port below that, all on
+handle `0x768`, and the page holds three records at time 0, one per
+object on the net, then one record for the change at 10 ns.
+`t8_port_in` holds two at time 0 for its two objects.
+So the count of time 0 records on a handle is the number of objects
+that share it, and a reader that keys the initial values by handle
+alone sees duplicates.
+After time 0 a change is one record, whichever object drove it.
+
+*Found by* `t8_port_chain` and `t8_port_in` against `t1_hier1`.
+
 
 ## Overflow
 
@@ -207,7 +243,10 @@ See [types.md](types.md).
 | Object | Records |
 | :--- | :--- |
 | signal | one at time 0 with the initial value, then one per change |
+| port connected to a signal | one at time 0 on the signal's handle, then nothing of its own |
+| port left `open` | as a signal, on its own handle |
 | generic | one at time 0 with the value |
+| constant of an architecture | one at time 0 with the value |
 | loop index of a process `for` loop | one at time 0 holding 0 |
 | loop index of a `for generate` | one at time 0 holding the iteration's value |
 | variable declared in a process | none |
@@ -221,6 +260,13 @@ records hold 0, 1 and 2, where the process loop index of `t5_tr1000`
 holds 0 whatever the loop later does.
 The generate index is a constant of the elaborated design and is
 written like a generic.
+`t8_gen_if` shows an architecture constant `with_dut : boolean := true`
+written the same way, one record at time 0 holding `01`, under the
+same declaration kind `0x13`.
+`t8_port_open` shows an open `in` port with a default `'1'` recording
+`03` at time 0 and the open `out` port it drives recording `00`, the
+`'U'` it starts from, and then `03` in the first delta, each on its own
+handle.
 
 The initial value at time 0 is the declared default or the type's
 leftmost literal.
