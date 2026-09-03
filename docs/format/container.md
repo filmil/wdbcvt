@@ -45,13 +45,13 @@ See [values.md](values.md).
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 49 cases |
-| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 49 cases |
-| `0x30` | 8 | `uint64` `0x40` | same | constant in all 49 cases |
+| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 63 cases |
+| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 63 cases |
+| `0x30` | 8 | `uint64` `0x40` | same | constant in all 63 cases |
 | `0x38` | 4 | `uint32` Unix time the database was written | the noise mask, two runs of `t3_tr1` | decodes to the file's own mtime |
-| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 49 cases |
-| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 49 cases |
-| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 49 cases |
+| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 63 cases |
+| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 63 cases |
+| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 63 cases |
 | `0xc4` | 4 | `uint32` per run duration, noise | the noise mask | differs between two runs of one case |
 
 The three `uint32` at `0x98` and the `3` at `0xc0` have not moved in any
@@ -74,22 +74,48 @@ The trailer starts where the table ends, and the first directory
 pointer at `0x48` names the `WDB.Event` entry that follows the trailer,
 so the table's length is `(pointer - 0x48 - 0xc8) / 8`.
 
-| Case | Objects | Arenas | Slots |
-| :--- | ---: | ---: | ---: |
-| every case with 1 to 5 objects | 1 to 5 | 1 to 3 | 3 |
-| `t5_sig10` | 10 | 2 | 4 |
-| `t6_sig12` | 12 | 3 | 4 |
-| `t6_sig20` | 20 | 4 | 6 |
+| Case | Objects | Handle space | Arenas | Slots |
+| :--- | ---: | ---: | ---: | ---: |
+| `t0_nosig` | 0 | `0x1088` | 0 | 3 |
+| `t1_bit_one_edge` | 1 | `0x11d0` | 1 | 3 |
+| `t6_sig05` | 5 | `0x16f0` | 2 | 3 |
+| `t7_sig07` | 7 | `0x1988` | 2 | 4 |
+| `t5_sig10` | 10 | `0x1d60` | 2 | 4 |
+| `t6_sig12` | 12 | `0x1ff0` | 3 | 4 |
+| `t7_sig14` | 14 | `0x2280` | 3 | 5 |
+| `t7_sig16` | 16 | `0x2518` | 3 | 5 |
+| `t6_sig20` | 20 | `0x2a38` | 4 | 6 |
+| `t7_sig24` | 24 | `0x2f60` | 4 | 6 |
+
+The slot count is `ceil(handle space / 0x800)`, where the handle space
+is the trailer word at `0x18`, described below.
+The reader checks that rule on every file it opens, and it holds in all
+63 corpus cases.
 
 *Found by* `t5_sig10` against `t2_flat3`: the trailer and every
 directory entry sat 8 bytes later, and the `0x48` pointer said so.
-*Confirmed by* `t6_sig05`, `t6_sig12` and `t6_sig20`, written for the
-purpose, which the decoder reads with no special case.
+An earlier guess, `max(3, ceil(objects / 4) + 1)`, fitted every case
+through tier 6 and failed on `t7_sig07`, which has four slots for seven
+objects.
+`t7_sig14`, `t7_sig16` and `t7_sig24` then pinned the boundaries at
+`0x1800`, `0x2000` and `0x2800` of handle space.
+*Confirmed by* the reader's check across all 63 cases.
 
 The slot count is not the arena count: `t6_sig05` has two arenas and
 three slots, `t5_sig10` two arenas and four.
-It fits `max(3, ceil(objects / 4) + 1)` in every case, and that is a
-guess recorded in the open questions, not a finding.
+Slots past the last arena hold `0`.
+
+The records the slots point at are not in slot order.
+They sit in the page directory in the order the arenas were first
+written to.
+`t7_gen_for` has slots `0x14b3 0x1973 0xff3`: arena 2, which holds the
+generate loop indexes and the generics, was written at elaboration,
+before the signals in arenas 0 and 1 had a record.
+The reader accepts any order and checks that the records are
+contiguous.
+
+*Found by* `t7_gen_for`, the first case the reader refused, with
+`arena record 0 at 0x14b3, want 0xff3`.
 
 Before the table was understood, the `0xd0` word was recorded as "a file
 offset, non-zero only in multi signal designs".
@@ -105,26 +131,34 @@ three slot header.
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 8 | `uint64` simulation end time in picoseconds | the correlation sweep across all cases | 49 of 49 against `end_time_ns` in `truth.json` |
-| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 49 cases |
-| `0x0c` | 4 | `uint32` `3` | hex dump | constant in all 49 cases |
-| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 49 cases |
-| `0x18` | 8 | `uint64` that grows with the object count | comparing cases | open; see below |
-| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 49 cases |
-| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 49 cases |
-| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 49 cases |
+| `0x00` | 8 | `uint64` simulation end time in picoseconds | the correlation sweep across all cases | 63 of 63 against `end_time_ns` in `truth.json` |
+| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 63 cases |
+| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 63 of 63 cases |
+| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 63 cases; the arena span, by its value |
+| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 63 of 63 cases |
+| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 63 cases; the arena table's offset, by its value |
+| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 63 cases |
+| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 63 cases |
 | `0x30` | 8 | `uint64` `1` when any object is logged, `0` in `t0_nosig` | the correlation sweep | `0` for `t0_nosig` alone |
-| `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 48 of 48 cases with a marker |
+| `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 62 of 62 cases with a marker |
 | `0x40` | 4 | `uint32` `0x2800`, the size a value page inflates to | inflating a page | every page in every case inflates to 10240 bytes |
-| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 49 cases |
+| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 63 cases |
 
 The word at `0x18` is `0x11d0` for one bit with one edge, `0x1318` for
 two bits, and `0x2a38` for twenty.
-It grows by about `0x148` per signal object and by a few bytes per type
-entry.
 It is larger than the file in every case, so it is not a file offset.
-It is left open.
+It grows by `0x148` per one bit signal in the runs of the tier 6 and
+tier 7 signal count cases, and each signal's handle is `0xf0` past the
+previous one, so a signal costs `0x58` beyond its handle stride.
+The arena table has one slot per `0x800` of it, which is what makes it
+the size of the handle space.
+Where the first `0x1088` and the `0x58` per signal go is open.
 
+Three trailer words describe the arena table together: `0xc8` at `0x20`
+is where it starts, the word at `0x0c` is how many slots it has, and
+`0x800` at `0x10` is how much handle space each slot covers.
+The first and last of those are read off their values and are constant,
+so that is a consistent reading and not a finding.
 
 ## The directory
 
@@ -161,7 +195,7 @@ cases.
 `t6_var_int` broke it: two objects, one a declared process variable
 with no records, and `N` is `0`.
 `N` is the number of objects that have at least one record, minus one,
-in all 48 cases with a marker.
+in all 62 cases with a marker.
 The decoder checks that and refuses a file where it does not hold.
 
 *Found by* `t2_flat3` against `t1_two_bits`: `N` was `2` and `1`.

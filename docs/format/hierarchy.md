@@ -80,13 +80,13 @@ The 17 header words are, in order:
 | 16 | `0x10000` | |
 
 The meaning of the last three is open.
-They are the same in all 49 cases.
+They are the same in all 63 cases.
 
 
 ## Scope records
 
 A scope is one node of the elaborated hierarchy: the root, an entity
-instance, or a process.
+instance, a generate iteration, or a process.
 The record has 9 words:
 
 | Word | Meaning |
@@ -135,7 +135,7 @@ The record has 9 words:
 | ---: | :--- |
 | 0 | entity name, offset into the scope name pool, `-1` if none |
 | 1 | architecture name, same pool, `-1` if none |
-| 2 | kind: `0x13` the root, `0x09` an entity, `0x0d` a process |
+| 2 | kind: `0x13` the root, `0x09` an entity, `0x0c` a generate, `0x0d` a process |
 | 3 | number of declarations |
 | 4 | 0, see below |
 | 5 | file index of the architecture |
@@ -191,7 +191,7 @@ The kinds seen:
 | `0x0e` | signal | every case with a signal |
 | `0x0f` | variable declared in a process | `t6_var_int`, `t6_proc2` |
 | `0x12` | generic | `t4_gen_default` |
-| `0x13` | loop index of a `for` loop | `t5_tr1000`, `t6_tr1300` |
+| `0x13` | loop index of a `for` loop or a `for generate` | `t5_tr1000`, `t6_tr1300`, `t7_gen_for` |
 
 Word 10 was called noise because it differs between two runs of the
 same design.
@@ -324,6 +324,58 @@ The default and the explicit value produce the same layout, found by
 `t4_gen_default` against `t4_gen_explicit`.
 
 
+## For generate
+
+`t7_gen_for` elaborates `g: for i in 0 to 2 generate` with one
+instance of `child` per iteration, `generic map (k => i)`.
+
+```
+[0]  _top
+[1]  tb
+[2]  tb.\g(0)\          unit 2, generate, 1 declaration: i
+[3]  tb.\g(1)\          unit 3, generate, 1 declaration: i
+[4]  tb.\g(2)\          unit 4, generate, 1 declaration: i
+[5]  tb.g               unit 5, generate, no declarations, no children
+[6]  tb.p               unit 6, process
+[7]  tb.\g(0)\.dut      unit 7, child(sim), 2 declarations: s, k
+[8]  tb.\g(1)\.dut      unit 8, child(sim)
+[9]  tb.\g(2)\.dut      unit 9, child(sim)
+[10] tb.\g(0)\.dut.p    unit 10, process
+[11] tb.\g(1)\.dut.p    unit 11, process
+[12] tb.\g(2)\.dut.p    unit 12, process
+```
+
+Each iteration is a scope whose leaf name is the label with the index
+in parentheses, spelled as a VHDL extended identifier: `\g(0)\`, with
+the backslashes in the name pool.
+A fourth scope named plainly `g` sits beside them with no children,
+no declarations and no objects.
+All four have unit kind `0x0c`, which no other case produces, and no
+entity or architecture name.
+Their file and line point at the `generate` statement.
+
+Each iteration scope declares the loop index `i`, kind `0x13`, and
+that object gets one record at time 0 holding the iteration's value,
+0, 1 and 2.
+That is unlike a process loop index, which records 0; see
+[values.md](values.md).
+
+The three `child` instances have different generics, and as in
+`t4_gen_diff_two` that costs a `child(sim)` unit each with its own two
+declarations, so the section holds 13 scopes, 13 units, 9 declarations
+and 9 objects.
+The generic `k` records 0, 1 and 2.
+
+A reader that matches paths from another tool has to strip the
+backslashes, or add them.
+The decoder's test compares `tb.g(0).dut.s` from `truth.json` against
+the pool's `tb.\g(0)\.dut.s` that way.
+
+*Found by* `t7_gen_for`, the only generate case, which failed on both
+the arena record order and the path spelling before the reader was
+taught both.
+
+
 ## Variables
 
 A variable declared in a process is a declaration of kind `0x0f` in the
@@ -332,11 +384,13 @@ No arena is allocated for it and no value record is ever written.
 Found by `t6_var_int`, whose variable changes twice and leaves no
 trace, and `t6_proc2`, which has two.
 
-A `for` loop index is a declaration of kind `0x13`.
+A `for` loop index in a process is a declaration of kind `0x13`.
 It gets one record at time 0, holding 0, whatever the loop's first
 value is.
 Found by `t5_tr1000` and `t6_tr1300`, whose loops run `0 to 999` and
 `0 to 1299`.
+A `for generate` index is the same kind and records its value instead;
+see above.
 
 Both kinds count toward the marker only when they have a record.
 See the marker section of [container.md](container.md).

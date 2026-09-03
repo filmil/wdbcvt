@@ -222,7 +222,7 @@ Tier 5 moves alignment, the object count and the page size.
 | `t5_rec_real` | a record with a `real` field | a real aligns to 8 |
 | `t5_rec_sub5` | a nested record whose inner record is 5 bytes | a record field aligns to 8 |
 | `t5_sig10` | ten one bit signals | the arena table grows; the trailer moves; `handle >> 11` |
-| `t5_tr1000` | 1000 transitions | pages overflow at 600 records; the marker moves |
+| `t5_tr1000` | 1000 transitions | pages overflow at 600 one byte records; the marker moves |
 
 Tier 6 moves the same axes further, to turn a guess into a rule.
 
@@ -239,13 +239,32 @@ declared line each.
 The `truth.json` of each is still written from the design, not from the
 database.
 
-Not written yet, in order: a signal wider than one byte with more than
-600 changes, to separate the page byte limit from the record limit;
-6 to 9 and 13 to 16 objects, to pin the arena table rule; an inner
-record with a real field, to separate alignment from a constant in the
-record type triple; for-generate; different timescales; and then the
-same ladder in Verilog and SystemVerilog, to find out whether the source
-language reaches the database at all.
+Tier 7 asks the questions tiers 5 and 6 left open, one case per
+question.
+
+| Case | Axis | Found |
+| :--- | :--- | :--- |
+| `t7_sig07`, `t7_sig14`, `t7_sig16`, `t7_sig24` | 7, 14, 16 and 24 signals | slots are `ceil(trailer +0x18 / 0x800)`; the earlier guess was wrong |
+| `t7_int700`, `t7_wide700` | 700 changes of a 4 byte and an 8 byte value | pages hold 510 and 425 records; the limit is 10240 bytes |
+| `t7_delta` | two assignments separated by `wait for 0 ns` | two records at the same time, in order |
+| `t7_rec_in2`, `t7_rec_in16` | an inner record of scalars only, 2 and 16 bytes | no extra range triple at all |
+| `t7_rec_vfirst` | the inner vector before the scalar | the `(0, 8, 1)` follows its field |
+| `t7_rec_bitv`, `t7_rec_intv` | the inner scalar is a `bit`, an `integer` | the triple is the scalar's own range |
+| `t7_rec_in2v` | two inner vectors | one triple per inner field |
+| `t7_gen_for` | three instances under a `for generate` | generate scopes `\g(0)\`; arena records in write order; records at one time unsorted |
+
+`t7_gen_for` is the one case that broke the reader rather than a guess:
+it refused the file until it accepted arena records in any order, and
+its test failed until the path spelling was normalised.
+The five record cases were written two at a time as each answer raised
+the next question, and the table lists them in that order.
+
+Not written yet, in order: a chain of three deltas, to see whether
+every delta or only every change is recorded; an inner record with a
+real field beside a vector; a nested generate and an if generate;
+different timescales; and then the same ladder in Verilog and
+SystemVerilog, to find out whether the source language reaches the
+database at all.
 
 Realistic designs come last, not first.
 A FIFO or a UART is where the reader gets confirmed, not where it gets
@@ -300,7 +319,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 49 cases through tier 6.
+5. The reader now reproduces all 63 cases through tier 7.
    The next cases are the ones listed as not written yet.
 
 A writer comes after a reader that works.

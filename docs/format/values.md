@@ -48,6 +48,12 @@ A generic or a loop index has a handle outside the signal sequence,
 and lands in whatever arena that handle names.
 `t5_tr1000` has the loop index at `0xdf8`, arena 1, key `0x5f8`, and
 arena 1 holds nothing else.
+`t7_gen_for` puts its three generate indexes and three generics in
+arena 2 at `0x1040`, `0x1130`, `0x1070`, `0x1248`, `0x10a0` and
+`0x1360`, in elaboration order, while its three signals take `0x768`,
+`0x858` and `0x948` in arenas 0 and 1.
+The elaboration time objects were written first, so arena 2's record is
+the first in the page directory; see [container.md](container.md).
 
 
 ## Arena records and pages
@@ -86,20 +92,47 @@ Its page 1 has `t0` 600000 and `t1` 400000, with the last record at
 1000000.
 A page holding one record at time 0 has both words 0.
 
-Records are written in simulation order.
-Two objects that change at the same time appear in declaration order,
-which is also handle order, found by `t2_flat3`, where `bravo` and
-`charlie` change together at 50 ns.
+Records are written in simulation order, and nothing sorts them
+afterwards.
+Two objects that change at the same time appear in the order the
+simulator processed them.
+`t2_flat3`, where `bravo` and `charlie` change together at 50 ns, has
+them in declaration order, which is also handle order, and that was the
+first reading.
+`t7_gen_for` shows that it is not a rule: at 10 ns arena 1 holds key
+`0x148`, the third instance's signal, before key `0x58`, the second
+instance's, while at time 0 the same two keys come the other way round.
+A reader must not assume that records at one time are sorted by key.
+
+A delta cycle leaves two records at the same time.
+`t7_delta` assigns `'1'`, waits `0 ns`, and assigns `'0'`, and its page
+holds `t=10000 03` followed by `t=10000 02`.
+The database keeps every delta, in order, and a VCD conversion that
+keeps only the last value at a time loses one of them.
+
+*Found by* `t7_gen_for` for the order and `t7_delta` for the delta,
+each written to ask that one question.
 
 
 ## Overflow
 
-A page holds 600 one byte records: 20 bytes of header and 600 times 17
-is 10220, and a 601st would not fit.
-`t5_tr1000` writes 1001 records for its signal and fills pages of 600
-and 401.
-`t6_tr1300` writes 1301 and fills pages of 600, 600 and 101.
-The arena record of arena 0 lists 2 and 3 pages.
+A page holds 10240 bytes: 20 bytes of header and then whole records.
+The limit is the byte count, not the record count.
+
+| Case | Value size | Record size | Records per full page | Pages |
+| :--- | ---: | ---: | ---: | :--- |
+| `t5_tr1000` | 1 | 17 | 600 | 600, 401 |
+| `t6_tr1300` | 1 | 17 | 600 | 600, 600, 101 |
+| `t7_int700` | 4 | 20 | 510 | 510, 191 |
+| `t7_wide700` | 8 | 24 | 425 | 425, 276 |
+
+`20 + 600 * 17` is 10220, `20 + 510 * 20` is 10220, and `20 + 425 * 24`
+is 10220: in each case the next record would not fit in 10240.
+
+*Found by* `t5_tr1000`, whose 1001 records split 600 and 401.
+That fitted a byte limit and a record limit equally well.
+*Confirmed by* `t7_int700` and `t7_wide700`, written to separate the
+two, which split at 510 and 425.
 
 The page that overflowed was written before the end of the simulation,
 so it sits before the marker in the file, and the pages written at the
@@ -110,13 +143,6 @@ at `0x1bbc`.
 at `0x2408`.
 The page directory is written last and points at all of them, so a
 reader that follows the directory does not care about the order.
-
-Whether a page of larger values holds fewer records, so that the limit
-is the byte size and not the count, has not been separated by an
-experiment.
-The 10240 byte page size and the observed 600 records agree with a byte
-limit, and 600 is not otherwise a round number, so that reading is the
-working assumption.
 
 
 ## Value encodings
@@ -182,13 +208,19 @@ See [types.md](types.md).
 | :--- | :--- |
 | signal | one at time 0 with the initial value, then one per change |
 | generic | one at time 0 with the value |
-| loop index | one at time 0 holding 0 |
+| loop index of a process `for` loop | one at time 0 holding 0 |
+| loop index of a `for generate` | one at time 0 holding the iteration's value |
 | variable declared in a process | none |
 
 A signal that never changes has exactly one record, found by
 `t0_bit_const`.
 `t3_late` puts its only change at 1000 ns, and the page holds two
 records, at 0 and 1000000.
+`t7_gen_for` has one object `i` per generate iteration, and their
+records hold 0, 1 and 2, where the process loop index of `t5_tr1000`
+holds 0 whatever the loop later does.
+The generate index is a constant of the elaborated design and is
+written like a generic.
 
 The initial value at time 0 is the declared default or the type's
 leftmost literal.

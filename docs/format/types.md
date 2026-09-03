@@ -30,7 +30,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 49 of 49 cases decoding with the entry lengths chaining
+*Confirmed by* 63 of 63 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -99,17 +99,40 @@ Each field is `name NUL [u32 type][u32 nranges]` then that many
 triples.
 A field of a scalar type has no triples.
 A field of a vector type carries its bounds, `(7 downto 0)`.
-A field whose type is itself a record carries one extra triple first,
-`(0, 8, 1)`, before the inner record's own triples.
-It is `8` for an inner record of one scalar and one 8 bit vector, and
-still `8` for one scalar and one 4 bit vector, so it does not count
-scalars or bits.
-Its meaning is open.
+A field whose type is itself a record carries the inner record's
+constraint, flattened: one triple per inner field, in the inner
+record's field order.
+An inner vector field contributes its bounds.
+An inner scalar field contributes its type's range: `(0, 8, 1)` for
+`std_ulogic`, whose nine literals are numbered 0 to 8, `(0, 1, 1)` for
+`bit`, and `(-2147483648, 2147483647, 1)` for `integer`.
+The list is written only when the inner record has at least one array
+field.
+An inner record of scalars alone, whatever its size, gives the outer
+field `nranges` 0.
 
-*Found by* `t2_record_nested` against `t2_record2`.
-*Confirmed by* `t5_rec_sub5`, written to move the inner width, which
-left the `8` unchanged.
+| Case | Inner record | Triples on the outer field |
+| :--- | :--- | :--- |
+| `t5_rec_sub5` | `std_ulogic`, `std_ulogic_vector(3 downto 0)` | `(0 to 8) (3 downto 0)` |
+| `t7_rec_vfirst` | `std_ulogic_vector(3 downto 0)`, `std_ulogic` | `(3 downto 0) (0 to 8)` |
+| `t7_rec_in2v` | `std_ulogic`, two vectors | `(0 to 8) (3 downto 0) (1 downto 0)` |
+| `t7_rec_bitv` | `bit`, a vector | `(0 to 1) (3 downto 0)` |
+| `t7_rec_intv` | `integer`, a vector | `(-2147483648 to 2147483647) (3 downto 0)` |
+| `t7_rec_in2` | two `std_ulogic` | none |
+| `t7_rec_in16` | `std_ulogic`, `integer`, `real` | none |
 
+*Found by* `t2_record_nested` against `t2_record2`, which showed the
+extra `(0, 8, 1)`.
+`t5_rec_sub5` moved the inner width and left the `8` unchanged, which
+ruled out a size.
+`t7_rec_in2` and `t7_rec_in16` removed the vector and the triple went
+with it.
+`t7_rec_vfirst` moved the vector before the scalar and the `(0, 8, 1)`
+moved after the bounds, which made it a per field entry.
+`t7_rec_bitv` and `t7_rec_intv` replaced the scalar and the triple
+became that scalar's range.
+*Confirmed by* `t7_rec_in2v`, whose two vectors and one scalar give
+exactly three triples in field order.
 
 ## What the earlier size measurements meant
 
