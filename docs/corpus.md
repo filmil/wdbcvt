@@ -214,6 +214,34 @@ differs from the baseline in hundreds of ways at once, so on its own it
 would teach nothing about which byte means what.
 
 
+## Record which comparison produced which finding
+
+A finding is only as good as the comparison behind it, and a comparison
+that looked sound can turn out not to be. That already happened here:
+the two byte difference between `t2_unsigned8` and `t2_signed8` was
+recorded as evidence about type names when it was really the directory
+names, and the only way to catch that was to know which pair the number
+came from.
+
+So the findings table in [format.md](format.md) has a **Found by**
+column and a **Confirmed by** column, and every row fills both. Naming
+the pair costs a few words and makes a wrong finding recoverable instead
+of merely wrong.
+
+Three shapes of comparison are in use, and they find different things:
+
+* **A pair of cases differing in one axis.** Finds anything whose size or
+  bytes move with that axis. Blind to fields that are the same in both.
+* **Two runs of one case**, the noise mask. Finds the clocks, and
+  nothing else, which is what makes it a mask.
+* **The correlation sweep across all cases**, described in
+  [format.md](format.md). Finds fields that are correct everywhere, and
+  which a pairwise diff therefore never shows.
+
+Reach for the third when a field is expected to exist but no pair moves
+it.
+
+
 ## Working order
 
 1. Run the noise experiment. Produce the mask.
