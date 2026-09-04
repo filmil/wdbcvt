@@ -1,0 +1,50 @@
+{
+  "case": "t62_str_vec_1drv",
+  "axis": "strength. a vector with one driver beside a logic, under typical, to see whether a net's drive strength, a pull source, a switch or a gate primitive leaves anything in the declaration, the hierarchy or the records.",
+  "differs_from": "t62_str_wire____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "",
+      "records": 3,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "XXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "1101"
+    }
+  ]
+}
