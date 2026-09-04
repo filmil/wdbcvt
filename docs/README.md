@@ -24,6 +24,7 @@ not be used.
 | [corpus.md](corpus.md) | The differential corpus, and the method: minimal pairs, the noise mask, and the ground truth files. |
 | [provenance.md](provenance.md) | How the knowledge was obtained, what guards it, and the limits of it. |
 | [fst-output.md](fst-output.md) | The FST output format, its licence position, and the route chosen for writing it. |
+| [handoff.md](handoff.md) | Where the work stands: what is decoded, what is not and why, and the plan for whoever continues. |
 
 
 ## How a finding gets written down
