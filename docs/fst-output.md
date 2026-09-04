@@ -266,6 +266,19 @@ too large for memory.
 The time is dominated by decoding a value per change and spelling its
 leaves, about 3.8 us per change.
 
+## Every database has a conversion test
+
+`bazel test //...` converts every waveform database in the repository
+and fails if any conversion does. Each corpus case gets a `:fst`
+target from `wdb_case`, and each design outside the corpus has one of
+its own, which is 1055 tests whose only question is whether that
+database converts at all.
+
+They say less than `//pkg/fstout:fstout_test`, which reads the output
+back through libfst and compares it against the case's truth file, and
+they say it per database: when a change breaks conversion for one
+design, the name of the failing test is the name of that design.
+
 ## What is left to build
 
 *   Spelling straight from the record bytes for a wire or a vector,

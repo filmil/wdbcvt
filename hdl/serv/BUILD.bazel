@@ -5,6 +5,7 @@ load(
     "vivado_library",
     "vivado_simulation",
 )
+load("//build:fst_test.bzl", "fst_conversion_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -42,4 +43,13 @@ vivado_simulation(
         "-timescale",
         "1ns/1ps",
     ],
+)
+
+# The database of this design converts to FST. It holds 9233899 value
+# changes, so the conversion takes about nine seconds.
+fst_conversion_test(
+    name = "fst",
+    size = "small",
+    timeout = "short",
+    sim = ":sim",
 )

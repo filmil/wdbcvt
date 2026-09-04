@@ -5,6 +5,7 @@ load(
     "vivado_library",
     "vivado_simulation",
 )
+load("//build:fst_test.bzl", "fst_conversion_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -29,4 +30,11 @@ vivado_simulation(
     name = "sim",
     library = ":lib",
     top = "testbench",
+)
+
+# The database of this design converts to FST.
+fst_conversion_test(
+    name = "fst",
+    size = "small",
+    sim = ":sim",
 )

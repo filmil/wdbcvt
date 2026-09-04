@@ -7,6 +7,7 @@ load(
     "vivado_library",
     "vivado_simulation",
 )
+load("//build:fst_test.bzl", "fst_conversion_test")
 
 def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = [], data = []):
     """Declares one corpus case.
@@ -17,8 +18,9 @@ def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = [], data = []
     confound when two databases are compared. See //docs/corpus.md.
 
     Produces `<name>_sim.wdb` and `<name>_sim.vcd` under this package,
-    and a `truth.json` filegroup that tests read as the ground truth for
-    what the simulation did.
+    a `truth.json` filegroup that tests read as the ground truth for
+    what the simulation did, and a `:fst` test that converts the
+    database and fails if the conversion does.
 
     Example:
 
@@ -79,4 +81,10 @@ def wdb_case(name, srcs, extra_deps = [], tcl = None, xelab_args = [], data = []
         name = "truth",
         srcs = ["truth.json"],
         visibility = ["//visibility:public"],
+    )
+
+    # One test per database: does this case convert to FST at all.
+    fst_conversion_test(
+        name = "fst",
+        sim = ":sim",
     )

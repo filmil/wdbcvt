@@ -16,7 +16,7 @@ go_library(
 
 go_test(
     name = "fstout_test",
-    size = "medium",
+    size = "small",
     srcs = ["fstout_test.go"],
     data = [
         "//hdl/corpus:all_truth",

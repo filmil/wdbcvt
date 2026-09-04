@@ -105,6 +105,8 @@ where the tool should not be used.
 * `pkg/fstout/` maps a decoded database onto FST variables: what a
   record or an array flattens into, and how each value is spelled.
   `wdbcvt -in <file>.wdb -fst <file>.fst` writes one.
+  Every database in the repository also has a `:fst` test that converts
+  it, so a conversion that breaks names the design it broke on.
 * `docs/latex/` holds the report on the whole effort, in the IEEEtran
   class, built by `bazel build //docs/latex:report` and attached to
   every release as `wdbcvt-report.pdf`.

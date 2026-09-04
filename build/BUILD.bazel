@@ -7,5 +7,16 @@ package(default_visibility = ["//visibility:public"])
 bzl_library(
     name = "wdb_case",
     srcs = ["wdb_case.bzl"],
-    deps = ["@rules_vivado//build/vivado:rules"],
+    deps = [
+        ":fst_test",
+        "@rules_vivado//build/vivado:rules",
+    ],
 )
+
+bzl_library(
+    name = "fst_test",
+    srcs = ["fst_test.bzl"],
+    deps = ["@rules_shell//shell:rules_bzl"],
+)
+
+exports_files(["fst_convert_test.sh"])
