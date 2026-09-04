@@ -21,6 +21,17 @@ go_sdk.from_file(go_mod = "//:go.mod")
 
 go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
+
+# Vivado writes VCD identifier codes over the printable ASCII range, so
+# a design with enough variables gets codes such as `#0`, which the
+# parser's lexer reads as a timestamp. //hdl/neorv32:sim is the first
+# design here large enough to produce one. The patch lets the value
+# change rules take a timestamp token as an identifier code.
+go_deps.module_override(
+    patch_strip = 1,
+    patches = ["//third_party/go_vcd_parser:0001-read-the-id-code-after-a-value-as-a-word.patch"],
+    path = "github.com/filmil/go-vcd-parser",
+)
 use_repo(go_deps, "com_github_filmil_go_vcd_parser")
 
 # Hermetic, Bazel-managed Vivado. Selected by
@@ -71,6 +82,19 @@ http_archive(
     sha256 = "f81c37b9f9d548c658e23bb7eb90fbed8b54e2e9e51fa42b8cd2f34cecc472ab",
     strip_prefix = "serv-1.4.0",
     urls = ["https://github.com/olofk/serv/archive/refs/tags/1.4.0.tar.gz"],
+)
+
+# PicoRV32, a size optimised RISC-V core in Verilog, as a second design
+# nobody wrote for this repository. Its `testbench_ez.v` carries a six
+# instruction program in an `initial` block, so the run needs no
+# firmware image and no toolchain. Pinned to a commit, because the
+# project publishes no releases.
+http_archive(
+    name = "picorv32",
+    build_file = "//third_party/picorv32:picorv32.BUILD",
+    sha256 = "050ba03d03eaacadb5953f3ba2218b49866c71d505c2476e49a0c0f5fe14e36c",
+    strip_prefix = "picorv32-a473fc8fca393771d83b0ffcf0b14db3393339d8",
+    urls = ["https://github.com/YosysHQ/picorv32/archive/a473fc8fca393771d83b0ffcf0b14db3393339d8.tar.gz"],
 )
 
 http_archive(

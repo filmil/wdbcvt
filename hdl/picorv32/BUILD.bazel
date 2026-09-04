@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+# The PicoRV32 sources come from the archive named in MODULE.bazel.
+# Nothing is written here: the project's own `testbench_ez.v` carries
+# the program it runs.
+vivado_library(
+    name = "lib",
+    srcs = [
+        "@picorv32//:bench",
+        "@picorv32//:rtl",
+    ],
+    library_name = "picorv32",
+)
+
+# bazel build //hdl/picorv32:sim
+#
+# Runs PicoRV32 on the six instruction program of the project's own
+# bench under xsim and writes the waveform database to
+# bazel-bin/hdl/picorv32/sim.wdb, next to sim.vcd.
+vivado_simulation(
+    name = "sim",
+    library = ":lib",
+    top = "testbench",
+)
