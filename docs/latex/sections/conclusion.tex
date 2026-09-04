@@ -21,9 +21,47 @@ corpus covers SystemVerilog only in miniature, and the two defects
 found by large designs were both found in the parts of the format that
 only a large design exercises.
 
+\section*{How it is built, and why}
+
+Everything here is built by Bazel: the Vivado installation, every
+corpus simulation, the reader, the converter, the C library it calls,
+and this report. That is not a preference for a build tool. The method
+of Section~\ref{sec:method} rests on a case differing from another
+case in one way, so the rest of the environment has to be pinned:
+the simulator version, the source files, the compile order, the flags,
+and the tool that reads the result. Bazel gives declared inputs,
+cached outputs and nothing rebuilt without a reason, which is what
+makes a difference between two databases a difference in the design
+rather than in the machine that produced it.
+
+The installation is provisioned into a shared cache by
+\texttt{rules\_vivado}, so the simulator itself is a build input
+rather than something a person installed. The corpus is 1049
+simulation targets, and one command re-runs them all. The C library
+of Section~\ref{sec:output} is built with a Bazel-fetched toolchain,
+so the release binary does not depend on the compiler of the machine
+that built it.
+
+The reasoning behind that setup, and the pinning it requires, is
+written up on the author's site: hermetic, ephemeral and reproducible
+builds~\cite{her}, the whole hardware stack under one build
+system~\cite{btd}, an ephemeral machine to run them
+on~\cite{homelab}, and the Vivado rules
+themselves~\cite{rulesvivado}.
+
 \section*{Availability}
 
 The repository, the corpus, the format documents and the tool are at
 \url{https://git.hdlfactory.com/HDL/wdbcvt}. This report is built from
 \texttt{//docs/latex} in that repository and is attached to each
 release.
+
+The forge is private, and the reason is the runner. A build here needs
+a machine with the Vivado installation and the shared caches on it,
+because every corpus case is a simulation; a hosted runner cannot do
+that. The repository is therefore where the runner is.
+
+If you would like the source in a public place and are willing to
+sponsor a runner that can hold a Vivado installation, please get in
+touch through \url{https://hdlfactory.com}. That is the one thing
+standing between this work and a public mirror.
