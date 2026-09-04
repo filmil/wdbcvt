@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 977 corpus cases of tiers
-1 to 61 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 999 corpus cases of tiers
+1 to 62 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -32,10 +32,15 @@ Decoded and confirmed, with the case that found each in `format.md`:
   placeholder record of a string or class handle, and what the VCD
   keeps of the same run.
 
-Tier 60, the last complete tier, established what `-debug all` adds to
-a SystemVerilog file; see `format/types.md` "Under -debug all",
-`format/hierarchy.md` "What -debug all brings back" and
-`format/values.md` "Placeholder records under -debug all".
+Tiers 60 and 61 established what `-debug all` adds to a SystemVerilog
+file and how its numbering runs; see `format/types.md` "Under -debug
+all" and "The numbering", `format/hierarchy.md` "What -debug all
+brings back" and `format/values.md` "Placeholder records under -debug
+all".
+Tier 62 established that drive strengths are resolved and not
+recorded, that gates and pull sources are `Forked` process scopes,
+and that a net with two or more drivers records bit by bit; see
+`format/values.md` "Drive strength, pull sources and gates".
 
 
 ## What we do not have, and why
@@ -66,10 +71,10 @@ whole classes of objects came first.
 
 Work on branch `ai-dev-20260904-mzq-tier61`, PR #11, until it merges;
 then branch from `hd/main`.
-The generators of tiers 57 to 61 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t61.py`.
-The registration anchor for tier 62 in `hdl/corpus/BUILD.bazel` is the
-last tier 61 case in sorted order, `t61_num_two_cls_`.
+The generators of tiers 57 to 62 are in `tools/corpus/`, see its
+README; a new tier starts by copying `gen_t62.py`.
+The registration anchor for tier 63 in `hdl/corpus/BUILD.bazel` is the
+last tier 62 case in sorted order, `t62_str_wire____`.
 
 1. Pick the next lead from the open questions of `format.md` and
    design minimal pairs for it, one variable per case, the case names
@@ -79,12 +84,12 @@ last tier 61 case in sorted order, `t61_num_two_cls_`.
    open part.
 2. Generate, register, build, dump, and write the truths from the
    dump only after reading the raw records; then run
-   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t62|TestVCD/t62'`.
+   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t63|TestVCD/t63'`.
 3. Document in the `format/` page for the area, then `format.md`:
    findings rows before "Whole file properties, also measured:",
-   comparison rows after the tier 61 rows, guesses in the open
+   comparison rows after the tier 62 rows, guesses in the open
    questions; a tier section in `corpus.md` before "Record which
-   comparison produced which finding"; and the count 977 upward
+   comparison produced which finding"; and the count 999 upward
    everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
    `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in

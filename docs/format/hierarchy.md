@@ -1916,6 +1916,8 @@ and a counter:
 | `always_ff` at line 13 | `Always13_1` | `t13_sv_alwaysff` |
 | `always_comb` at line 14 | `Always14_2` | `t13_sv_alwaysff` |
 | `fork` branch at line 13 | `Forked13_1` | `t24_sv_fork` |
+| `and (w, s, 1'b1)` at line 11 | `Forked11_1` | `t62_str_and_____` |
+| `pullup (w)` at line 11 | `Forked11_1` | `t62_str_pullup__` |
 
 The counter after the underscore is per design.
 `always_ff` and `always_comb` are `Always` scopes with nothing to tell
@@ -1951,6 +1953,45 @@ scope, unit, declaration or object for `cb` or its input.
 
 *Found by* `t24_sv_fork` against `t11_v_always`, and
 `t24_sv_clocking` against `t11_sv_logic`.
+
+A gate primitive, a switch primitive or a pull source is a `Forked`
+scope too, one per instance, at the line of the instantiation and on
+the same counter.
+`t62_str_and_____` has `and (w, s, 1'b1);` at line 11 and the file
+has `tb.Forked11_1`, a `vprocess` unit at line 11, beside
+`tb.Initial13_0`, where `t62_str_wire____` has `tb.NetRegassign11_1`
+for `assign w = s;` at the same line.
+`t62_str_and_2___` instantiates two gates in one statement and has
+`tb.Forked11_1` and `tb.Forked11_2`.
+The instance name is not used: `bufif1 g1 (w, 1'b1, s);` of
+`t62_str_bufif_n_` leaves the same `tb.Forked11_1` as the unnamed
+gate of `t62_str_bufif___`.
+A pull source is one instance whatever its width: `pullup (w);` of
+`t62_str_pullup__` and `pullup p [3:0] (v);` of `t62_str_vec_pu__`
+each leave one `Forked` scope.
+A gate delay, `and #3` of `t62_str_gate_dly`, adds nothing to the
+gate's scope, and a drive strength on an `assign` leaves its
+`NetRegassign` scope as it is; the net's declaration is the same net
+kind word with the same type in every case of the tier.
+The handle space moves with them, all against the `0xadc` of
+`t62_str_wire____`: a pullup alone `0xadc`, an `and` gate `0xc6c`, a
+`bufif1` or `nmos` `0xc84`, the delayed gate `0xcbc`, a second plain
+`assign` `0xbd4`, a second driver with a strength on either `0xbdc`,
+a pullup beside the driver `0xbcc`, a second driver of a 4 bit net
+`0xc4c` and four pullups beside it `0xc34`.
+So a strength costs 8 once, a gate delay `0x50`, and the second driver
+of a 4 bit net `0x78` more than of a scalar; none of it is read.
+`tran`, `tranif1` and `trireg` do not elaborate in this version:
+`xelab` reports `Primitive "tran" is not supported` and
+`Trireg is not supported`.
+
+*Found by* `t62_str_and_____` against `t62_str_wire____`, the scope
+name.
+*Confirmed by* `t62_str_and_2___`, `t62_str_bufif___`,
+`t62_str_bufif_n_`, `t62_str_nmos____`, `t62_str_gate_dly`,
+`t62_str_pullup__`, `t62_str_pulldn__`, `t62_str_vec_pu__`, and the
+strength cases `t62_str_weak____`, `t62_str_strong__`,
+`t62_str_mixed___`, `t62_str_supply__` and `t62_str_wand____`.
 
 **Implicit initial scopes.**
 A module whose variables have initializers, `reg s = 1'b0;`, gets one
@@ -2321,10 +2362,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 977 of 977 cases, and the
+*Confirmed by* the region length check in 999 of 999 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 977 of 977 cases and
+and *confirmed by* the reader's range check in 999 of 999 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

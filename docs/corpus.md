@@ -1934,6 +1934,41 @@ container `"logged": false`.
 | `t61_num_q_then_a` | `int q[$]` then `int a[string]` | `t61_num_a_then_q`: the queue `1`, the assoc `3` |
 | `t61_num_ai_thn_q` | `int a[int]` then `int q[$]` | `t61_num_a_then_q`: the assoc `3`, the queue `4` |
 
+**Tier 62: net strengths, pull sources and gate primitives.**
+A `logic s` written at 50 ns beside one net, under typical, to see
+whether a drive strength, a pull source, a switch or a gate primitive
+leaves anything in the declaration, the hierarchy or the records.
+Nothing of the strength does; a gate or pull is a `Forked` scope; a
+net with two or more drivers records bit by bit.
+Each net's raw record count is pinned as `records`.
+`tran`, `tranif1` and `trireg` were tried and do not elaborate in
+this version.
+
+| Case | The net | Differs from |
+|---|---|---|
+| `t62_str_none____` | none | `t11_sv_logic____`: the tier's base |
+| `t62_str_wire____` | `wire w; assign w = s;` | `t62_str_none____`: `NetRegassign11_1`; `X`, `0`, `1` |
+| `t62_str_tri_____` | `tri` | `t62_str_wire____`: kind `0x06` |
+| `t62_str_uwire___` | `uwire` | `t62_str_wire____`: kind `0x03` |
+| `t62_str_pullup__` | `wire w; pullup (w);` | `t62_str_wire____`: `Forked11_1`; `X`, `1`; the same handle space |
+| `t62_str_pulldn__` | `pulldown (w)` | `t62_str_pullup__`: `X`, `0` |
+| `t62_str_pu_drv__` | a pullup under `assign w = s ? 1'bz : 1'b0;` | `t62_str_pullup__`: `X`, `0`, `0`, then `1` |
+| `t62_str_weak____` | `assign (weak0, weak1) w = 1'b1;` under the same driver | `t62_str_pu_drv__`: the same records |
+| `t62_str_strong__` | a weak literal `0` and a strong `s` | `t62_str_wire____`: `X`, `0`, `0`, `1`; 8 more of handle space |
+| `t62_str_equal___` | the same two drivers without strengths | `t62_str_strong__`: `X` at 50 ns; one record fewer at time 0 |
+| `t62_str_mixed___` | `(strong0, weak1) w = s` against a pulled `1` | `t62_str_strong__`: `0` then `1` |
+| `t62_str_supply__` | a supply literal `0` against `s` | `t62_str_strong__`: `0` throughout |
+| `t62_str_wand____` | `wand` with a weak `0` and a strong `s` | `t62_str_strong__`: `1` at 50 ns, as the VCD |
+| `t62_str_bufif___` | `bufif1 (w, 1'b1, s);` | `t62_str_wire____`: `Forked11_1`; `X`, `Z`, `Z`, `1` |
+| `t62_str_bufif_n_` | the gate named `g1` | `t62_str_bufif___`: nothing |
+| `t62_str_and_____` | `and (w, s, 1'b1);` | `t62_str_bufif___`: `X`, `0`, `1` |
+| `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
+| `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
+| `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1101` |
+| `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
+| `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1971,7 +2006,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 977 cases through tier 61, and
+5. The reader now reproduces all 999 cases through tier 62, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

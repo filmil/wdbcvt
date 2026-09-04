@@ -1675,6 +1675,78 @@ does not name the objects.
 `t60_dbg_class_2_`, `t60_dbg_class_d_`, `t60_dbg_str_log_` and
 `t60_dbg_q_log___`.
 
+**Drive strength, pull sources and gates.**
+A drive strength is not in the file.
+`t62_str_strong__` drives a `wire` from `assign (weak0, weak1) w =
+1'b0;` and `assign (strong0, strong1) w = s;`, and the net's records
+are the two bit values of `0`, `1`, `Z` and `X` as in every other
+case, with the resolved value: `0` then `1` at 50 ns.
+`t62_str_equal___`, the same two drivers without strengths, records
+`X` at 50 ns, and `t62_str_supply__`, a `supply0` driver against the
+strong one, stays `0`.
+So the writer resolves the strengths and records the value, and a
+reader of the file sees nothing of them.
+A `wand` with a weak `0` and a strong `s`, `t62_str_wand____`,
+resolves to `1` at 50 ns in this version, the strong driver over the
+wired and, and the VCD holds the same.
+
+A pull source and a gate write records as drivers do.
+`t62_str_pullup__` holds `X` then `1` at time 0 for `pullup (w);`
+with no other driver, `t62_str_pulldn__` `X` then `0`, and
+`t62_str_pu_drv__` holds `X`, `0`, `0` for a pullup under
+`assign w = s ? 1'bz : 1'b0;`, then `1` at 50 ns when the driver
+releases.
+`t62_str_and_____` holds `X`, `0`, `1` for `and (w, s, 1'b1);`, as
+the `assign` of `t62_str_wire____` does, and `and #3` of
+`t62_str_gate_dly` holds `X` at 0, `0` at 3 ns and `1` at 53 ns, the
+delay applied and nothing written in between.
+`bufif1 (w, 1'b1, s);` and `nmos (w, 1'b1, s);` each hold `X`, `Z`,
+`Z`, then `1` at 50 ns: two writes of the output at time 0 where the
+`and` gate writes once.
+
+The records at time 0 beyond the objects' `X` follow the drivers
+loosely, and tier 62 adds to what tier 19 left open.
+Two plain `assign` drivers, one of them a literal, `t62_str_equal___`,
+hold one record after the `X`, where tier 19's two `reg` drivers held
+two; the same two drivers with strengths, `t62_str_strong__`, hold two,
+and so do a weak literal beside a plain driver, `t62_str_weak____`, a
+pulled literal beside a strength driver, `t62_str_mixed___`, a supply
+literal, `t62_str_supply__`, the `wand` and the pullup beside a
+driver.
+The extra record holds the resolved value, `0`, not the `X` of tier
+19.
+A literal driver with no strength, then, adds nothing at time 0, and
+one with a strength adds one record; why is open, and the counts are
+pinned as `records` in the truths.
+
+A net with two or more drivers writes bit by bit.
+`t62_str_vec_2drv` drives `wire [3:0] v` from
+`assign v = s ? 4'bzz01 : 4'b0000;` and `assign v = 4'bz1zz;`, and
+holds `XXXX`, `XXX0`, `XX00`, `XX00`, `0X00` at time 0, one record per
+bit from bit 0 up, the third for bit 2 that stays `X` where `1` meets
+`0`, and `0X01`, `0X01`, `0101`, `Z101` at 50 ns, again one per bit
+with the second repeating the value.
+`t62_str_vec_1drv`, the first driver alone, holds `XXXX`, `0000`,
+`1101`: one record per write.
+`t62_str_vec_pu__`, the first driver under `pullup p [3:0] (v);`,
+holds nine records at time 0, the `X`, four for the bits of the
+driver, and four more `0000` for the four pull instances, and four at
+50 ns, `0001`, `0001`, `0101`, `1101`, the pulled bits resolving to
+`1` one at a time.
+The value between the records is a value the net never held as a
+whole, so a reader that wants the resolved vector at a time must take
+the last record of that time, which is what the tests do.
+
+*Found by* `t62_str_strong__` against `t62_str_equal___`, the same
+values with a strength and without; `t62_str_vec_2drv` against
+`t62_str_vec_1drv`, per bit records against one.
+*Confirmed by* `t62_str_weak____`, `t62_str_mixed___`,
+`t62_str_supply__`, `t62_str_wand____`, `t62_str_pullup__`,
+`t62_str_pulldn__`, `t62_str_pu_drv__`, `t62_str_and_____`,
+`t62_str_and_2___`, `t62_str_gate_dly`, `t62_str_bufif___`,
+`t62_str_bufif_n_`, `t62_str_nmos____` and `t62_str_vec_pu__`, each
+count pinned in its truth, and the VCD of each.
+
 **Writes of the value held, from a clocked process or a shared net.**
 `//hdl/serv:sim`, a RISC-V core, holds 2965811 records that repeat
 the value before them, and the tier 17 rule above covers none of
