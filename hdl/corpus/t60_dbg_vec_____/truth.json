@@ -1,0 +1,44 @@
+{
+  "case": "t60_dbg_vec_____",
+  "axis": "debugging. a 4 bit logic vector beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
+  "differs_from": "t60_dbg_none____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "0101"
+    }
+  ]
+}
