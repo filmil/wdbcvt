@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+package(default_visibility = ["//visibility:public"])
+
+go_library(
+    name = "fst",
+    srcs = ["fst.go"],
+    cdeps = ["@libfst//:fst"],
+    cgo = True,
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/pkg/fst",
+)
+
+go_test(
+    name = "fst_test",
+    size = "small",
+    srcs = ["fst_test.go"],
+    embed = [":fst"],
+)
