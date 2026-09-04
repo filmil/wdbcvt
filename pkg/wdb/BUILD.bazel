@@ -32,6 +32,8 @@ go_test(
         "//hdl/corpus:all_truth",
         "//hdl/corpus:all_wdb",
         "//hdl/counter:sim",
+        "//hdl/neorv32:sim",
+        "//hdl/picorv32:sim",
         "//hdl/potato:sim",
         "//hdl/serv:sim",
         "//hdl/uart:sim",

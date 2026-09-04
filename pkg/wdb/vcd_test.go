@@ -344,7 +344,7 @@ var vcdDeviations = map[string]string{
 // bit offsets of Verilog ports bound to slices. //hdl/potato:sim is
 // Potato, a RISC-V core in VHDL, whose 32768 byte memories found the
 // second split of a wide value's last chunk.
-var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv", "hdl/potato"}
+var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv", "hdl/potato", "hdl/picorv32", "hdl/neorv32"}
 
 // changesOnly drops the records that repeat the value before them.
 func changesOnly(ch []change) []change {
