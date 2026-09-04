@@ -84,6 +84,24 @@ established that there was nothing left to teach:
         four lines; finding it took a design of that size.
 \end{itemize}
 
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/neorv32-soc-surfer.png}
+  \caption{The largest design in the suite after conversion: signals
+  from four modules of one NEORV32 core at once, the instruction
+  frontend, the load and store unit, the register file and the bus
+  switch between them. The database holds 5696 objects in 4832 scopes;
+  the rows that read \texttt{TRUE} and \texttt{FALSE} are VHDL
+  generics, and the rows that read \texttt{80001fc8} are integers and
+  vectors, none of which Vivado's VCD of the same run declares.}
+  \label{fig:soc}
+\end{figure*}
+
+Fig.~\ref{fig:soc} shows that design after conversion, with signals
+from four of its modules on one screen. A design of that size is also
+the only kind that exercises the parts of the format a small case
+never reaches, which is what the two defects above have in common.
+
 \subsection{A defect found in the checker}
 
 NEORV32 also exposed a limitation in the VCD parser used as guard~2. A
