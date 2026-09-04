@@ -91,14 +91,13 @@ func Read(d []byte) (*File, error) {
 			f.Objects[i].Logged = true
 		}
 	}
-	for i, o := range f.Objects {
-		ch, err := f.Changes(o)
-		if err != nil {
-			return nil, fmt.Errorf("object %d (%s): %w", i, f.ObjectPath(o), err)
-		}
-		if (len(ch) > 0) != o.Logged {
-			return nil, fmt.Errorf("object %d (%s) has %d records, the logged ranges say logged=%v", i, f.ObjectPath(o), len(ch), o.Logged)
-		}
+	// Every logged object is decoded once here, so a file that opens is
+	// a file the reader read whole. Stream does it in one pass over the
+	// records rather than one pass per object, which is what makes
+	// opening a large database affordable: //hdl/neorv32:sim has 5696
+	// objects and 18875466 changes.
+	if err := f.Stream(func(int, uint64, []byte) error { return nil }); err != nil {
+		return nil, err
 	}
 	return f, nil
 }

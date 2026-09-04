@@ -213,6 +213,18 @@ type Scope struct {
 	Unit int
 }
 
+// Children lists the indexes of a scope's children in File.Scopes.
+func (s Scope) Children() []int {
+	if s.FirstChild < 0 {
+		return nil
+	}
+	out := make([]int, s.NumChildren)
+	for i := range out {
+		out[i] = s.FirstChild + i
+	}
+	return out
+}
+
 // Unit is one elaborated design unit: the root, an entity plus
 // architecture, or a process. Instances of an entity with equal generics
 // share one unit; different generics give one unit each.

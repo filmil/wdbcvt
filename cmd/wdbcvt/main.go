@@ -9,10 +9,13 @@
 //
 //	bazel run //cmd/wdbcvt -- -in $PWD/bazel-bin/hdl/counter/sim.wdb
 //	bazel run //cmd/wdbcvt -- -dump -in $PWD/bazel-bin/hdl/counter/sim.wdb
+//	bazel run //cmd/wdbcvt -- -in $PWD/bazel-bin/hdl/counter/sim.wdb -fst out.fst
 //
 // Without -dump the tool probes: it reports the measurements a decoder
 // has to be built on. With -dump it decodes every structure it knows
-// and prints them, ending with each object's values over time.
+// and prints them, ending with each object's values over time. With
+// -fst it converts the database into an FST waveform file, which
+// GTKWave, Surfer and nvc read; see //docs/fst-output.md.
 package main
 
 import (
@@ -20,19 +23,38 @@ import (
 	"fmt"
 	"os"
 
+	"git.hdlfactory.com/HDL/wdbcvt/pkg/fstout"
 	"git.hdlfactory.com/HDL/wdbcvt/pkg/wdb"
 )
+
+// runFST converts the database at in into an FST file at out.
+func runFST(in, out string) error {
+	if in == "" {
+		return fmt.Errorf("-in is required")
+	}
+	f, err := wdb.ReadFile(in)
+	if err != nil {
+		return err
+	}
+	if err := fstout.Write(f, out); err != nil {
+		return fmt.Errorf("%s: %w", out, err)
+	}
+	return nil
+}
 
 func main() {
 	in := flag.String("in", "", "the .wdb file to inspect (required)")
 	dump := flag.Bool("dump", false, "decode the file and print every known structure")
+	out := flag.String("fst", "", "convert the file into an FST waveform file at this path")
 	maxStrings := flag.Int("max_strings", 40, "how many printable runs to print")
 	maxBlocks := flag.Int("max_blocks", 16, "how many entropy blocks to print")
 	flag.Usage = usage
 	flag.Parse()
 
 	var err error
-	if *dump {
+	if *out != "" {
+		err = runFST(*in, *out)
+	} else if *dump {
 		err = runDump(*in)
 	} else {
 		err = run(*in, *maxStrings, *maxBlocks)

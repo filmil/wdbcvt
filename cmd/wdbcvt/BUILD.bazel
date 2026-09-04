@@ -5,7 +5,10 @@ go_library(
     srcs = ["main.go"],
     importpath = "git.hdlfactory.com/HDL/wdbcvt/cmd/wdbcvt",
     visibility = ["//visibility:private"],
-    deps = ["//pkg/wdb"],
+    deps = [
+        "//pkg/fstout",
+        "//pkg/wdb",
+    ],
 )
 
 go_binary(

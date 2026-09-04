@@ -140,6 +140,15 @@ func (f *File) Size(dc Decl) (int, error) {
 	return l.size, nil
 }
 
+// ValueBytes is the number of bytes a change of the declaration holds:
+// what Changes and Stream hand back, and what Decode takes.
+func (f *File) ValueBytes(dc Decl) (int, error) { return f.recordBytes(dc) }
+
+// Base follows an alias entry to the type entry it names and returns
+// that entry. Every reading of a type goes through it, because a
+// SystemVerilog typedef is an entry of its own.
+func (f *File) Base(t int) *Type { return &f.Types[f.resolve(t)] }
+
 // Decode turns the raw bytes of a change into a Value, using the
 // declaration's type and index constraints.
 func (f *File) Decode(dc Decl, data []byte) (Value, error) {
