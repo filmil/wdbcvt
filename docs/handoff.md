@@ -62,6 +62,13 @@ places the instance at the `bind` line, and a `specify` path delay
 delays the records; see `format/hierarchy.md` on process scopes.
 
 
+Two designs from outside the repository were added after tier 66:
+`//hdl/picorv32:sim`, PicoRV32 under its own `testbench_ez.v`, which
+read and matched its VCD unchanged, and `//hdl/neorv32:sim`, NEORV32
+1.11.7 under its own testbench, 5696 objects, which found that the
+chunk map of an object's records belongs to the signal at its handle
+and not to the object; see `docs/corpus.md`.
+
 ## What we do not have, and why
 
 **The content of dynamic objects.**

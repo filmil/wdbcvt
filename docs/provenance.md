@@ -76,6 +76,13 @@ checker is the failure this avoids. The one thing the test does to the
 VCD text before the parser sees it is to hide the escaped identifiers
 that v0.1.0 cannot read, and put them back afterwards; values, times
 and codes reach the test as the parser reports them.
+One patch is applied to the parser itself, in
+`third_party/go_vcd_parser`: v0.1.0 reads an identifier code that
+spells another token, `#0` or `R0`, as a timestamp or a real, which no
+design here produced before NEORV32. The patch is upstream as
+https://github.com/filmil/go-vcd-parser/pull/23 and touches the lexer
+only; the checker stays an implementation this project did not
+write.
 
 **3. Ground truth declared before the file is opened.**
 Each corpus case ships a `truth.json` stating the signals, widths,

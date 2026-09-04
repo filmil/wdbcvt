@@ -1172,6 +1172,55 @@ array generic is declared with the range of its value, not of its
 subtype, tier 40, so a string generic set on the command line has the
 length of what was given.
 
+`//hdl/picorv32:sim` is **PicoRV32** at commit `a473fc8`, the size
+optimised RISC-V core by Claire Xen, under the project's own
+`testbench_ez.v`, which holds a six instruction program in an
+`initial` block and so needs no firmware image and no tool chain.
+Nothing is written here but the build file in
+`third_party/picorv32`; the core has no release to pin, so the archive
+is pinned to a commit.
+The database holds 280 objects over 62 scopes, 40589 values and 11 us
+of run, and the reader read every value and agreed with the VCD on the
+first attempt.
+It taught nothing new, which is what a design of a language the corpus
+already covers is expected to do.
+
+`//hdl/neorv32:sim` is **NEORV32** 1.11.7, the RISC-V processor in
+VHDL by Stephan Nolting, under the project's own `neorv32_tb`, booting
+the instruction memory image the release ships, as a dual core system
+with caches, an external bus and every peripheral the testbench turns
+on.
+The testbench has no stop of its own, because GHDL's `--stop-time`
+ends it, so `hdl/neorv32/tb.ent.vhdl` instantiates it and calls
+`std.env.stop` after 200 us; that is the only file written here.
+The database holds 5696 objects over 4832 scopes, 3025 units, 198
+types and 1395 arenas, 18875466 values, and a handle space of
+`0x2b931c`, an order of magnitude past SERV.
+
+NEORV32 taught one thing, and the reader was wrong on 39 of its 5696
+objects before it: the records of an object belong to the signal at
+its handle, so the signal's size sets the chunk boundaries, not the
+object's.
+`bus_req_i` of the DMA is a 88 byte record port at offset 1408 of
+`iodev_req`, an array of 1760 bytes, and the array's initial write is
+chunked at 146 bytes, so a chunk boundary falls inside the port's own
+bytes: the port sees the ends of two chunks and no record that covers
+it.
+The reader took the chunk map from the object and refused the file
+with `a first write of 146 bytes at 0x9422, which does not cover it`.
+It now takes the chunk map from the largest object on the handle, and
+checks that the first write's records together cover the object
+rather than that one of them does.
+Every design and all 1049 cases pass unchanged.
+
+NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
+code may be any printable ASCII, and a design this size gets codes
+such as `#0`, which the parser's lexer reads as a timestamp, and `R0`,
+which it reads as a real.
+`third_party/go_vcd_parser` holds the patch, applied to the module in
+`MODULE.bazel`, until the fix is released:
+https://github.com/filmil/go-vcd-parser/pull/23.
+
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`.
 

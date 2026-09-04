@@ -61,6 +61,14 @@ where the tool should not be used.
   in VHDL, under its own bench and a hand assembled program.
   `third_party/potato/` holds the build file and the patch for the
   pinned Potato archive.
+* `hdl/picorv32/` holds PicoRV32 under the project's own
+  `testbench_ez.v`, which carries the program it runs, so nothing but
+  the build file in `third_party/picorv32/` is written here.
+* `hdl/neorv32/` holds NEORV32, a dual core RISC-V processor in VHDL,
+  under the project's own testbench, booting the instruction memory
+  image of the release.
+  Only the wrapper that stops the run is written here;
+  `third_party/neorv32/` holds the build file for the pinned archive.
 * `cmd/wdbcvt/` is the command line tool.
   Today it probes a `.wdb` and reports measurements; it grows into a
   converter as the format becomes known.
