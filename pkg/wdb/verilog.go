@@ -89,6 +89,10 @@ func (f *File) bitsOf(t int, rs *[]Range) (int, error) {
 		return f.bitsOf(ty.Elem, &brs)
 	case KindReal:
 		return 32, nil
+	case KindString, KindClass, KindQueue, KindDynArray, KindAssoc:
+		// Under -debug all a string, a class handle or a dynamic
+		// container declares 32 bits, tier 60.
+		return 32, nil
 	case KindArray:
 		dims, err := f.arrayDims(ty, rs)
 		if err != nil {
@@ -316,6 +320,17 @@ func (f *File) decodeBits(t int, bits []byte, rs *[]Range) (Value, error) {
 			}
 		}
 		v.Scalar = f.String(bv)
+		return v, nil
+	case KindString, KindClass, KindQueue, KindDynArray, KindAssoc:
+		// The 32 bits are the record of a string or class handle
+		// under -debug all, zero at time 0 in every file seen and
+		// never written again: t60_dbg_str_____, t60_dbg_class___.
+		// They read as a plain bit string.
+		var b strings.Builder
+		for _, bit := range bits {
+			b.WriteByte("01ZX"[bit&3])
+		}
+		v.Scalar = b.String()
 		return v, nil
 	case KindArray:
 		dims, err := f.arrayDims(ty, rs)

@@ -300,6 +300,11 @@ func (f *File) vcdOmitted(o Object) string {
 		if ty.Kind == KindArray && ty.Layout == LayoutUnpacked && f.Types[dc.Type].Kind != KindAlias {
 			return "an unpacked array not declared through a typedef"
 		}
+		if ty.Kind == KindString || ty.Kind == KindClass {
+			// Kept by -debug all with a placeholder record, tier
+			// 60, and left out of the VCD.
+			return "a string or class handle under -debug all"
+		}
 		return ""
 	}
 	switch dc.Kind {
