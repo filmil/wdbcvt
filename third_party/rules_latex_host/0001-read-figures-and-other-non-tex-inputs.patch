@@ -1,0 +1,60 @@
+Subject: [PATCH] latex: let a document read figures and other non-tex inputs
+
+A paper is more than its .tex files. The srcs of latex_document
+accepted .tex alone, so a figure could not be named as a dependency
+and \includegraphics had nothing to find. The rule already copies
+every src into the work directory under its package relative path, so
+accepting the other file types a document reads is the whole change.
+
+Upstream as https://github.com/filmil/bazel_rules_latex_host/pull/5;
+drop this patch when a release carries it.
+
+diff --git a/latex/defs.bzl b/latex/defs.bzl
+index 99a0bf2..ca75e1a 100644
+--- a/latex/defs.bzl
++++ b/latex/defs.bzl
+@@ -59,7 +59,31 @@ _latex_document = rule(
+     implementation = _latex_document_impl,
+     attrs = {
+         "main": attr.string(mandatory = True, doc = "Main .tex filename in this package."),
+-        "srcs": attr.label_list(allow_files = [".tex"], mandatory = True),
++        # A document is more than its .tex files: figures, a bibliography,
++        # and a class or style file that ships with the paper rather than
++        # with the TeX distribution. Every one of them is copied into the
++        # work directory under its package relative path, so
++        # \includegraphics{figures/plot} finds figures/plot.png.
++        "srcs": attr.label_list(
++            allow_files = [
++                ".tex",
++                ".sty",
++                ".cls",
++                ".clo",
++                ".bib",
++                ".bst",
++                ".png",
++                ".jpg",
++                ".jpeg",
++                ".pdf",
++                ".eps",
++                ".ps",
++                ".svg",
++                ".csv",
++                ".dat",
++            ],
++            mandatory = True,
++        ),
+     },
+     toolchains = [_TC],
+ )
+@@ -70,7 +94,10 @@ def latex_document(name, main, deps = [], visibility = ["//visibility:public"],
+     Args:
+       name: target name.
+       main: the main .tex file (e.g. "paper.tex").
+-      deps: extra inputs it `\\input`s (e.g. glob(["sections/*.tex"])).
++      deps: extra inputs the document reads: files it `\\input`s, and the
++        figures, bibliography, class or style files it names (e.g.
++        glob(["sections/*.tex"]) + glob(["figures/*.png"])). Each is
++        copied into the work directory under its package relative path.
+       visibility: target visibility (public by default so a `combined_pdf`
+         target can consume the produced PDF across packages).
+       **kwargs: forwarded to the underlying rule.

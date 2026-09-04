@@ -18,6 +18,18 @@ bazel_dep(name = "rules_cc", version = "0.2.14")
 # lives in the registry named first in .bazelrc.
 bazel_dep(name = "rules_latex_host", version = "0.2.0")
 
+# The report includes two screenshots, and 0.2.0 accepts only .tex
+# files as inputs to a document, so a figure cannot be named as a
+# dependency. The patch widens that list; it is upstream as
+# https://github.com/filmil/bazel_rules_latex_host/pull/5 and can go
+# when a release carries the change.
+single_version_override(
+    module_name = "rules_latex_host",
+    patch_strip = 1,
+    patches = ["//third_party/rules_latex_host:0001-read-figures-and-other-non-tex-inputs.patch"],
+    version = "0.2.0",
+)
+
 # A hermetic C toolchain for the one cgo target, libfst. The host has a
 # compiler but no libstdc++ development files, which the cgo link step
 # asks for, and the release must not inherit the build machine's glibc.

@@ -2,6 +2,19 @@
 \section{Output: FST through libfst}
 \label{sec:output}
 
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/counter-surfer.png}
+  \caption{A small VHDL counter, converted from \texttt{.wdb} and
+  opened in Surfer. \texttt{full\_scale} is an integer constant,
+  \texttt{period} is a \texttt{time} with its unit, and
+  \texttt{running} is a \texttt{boolean}: Vivado's VCD of the same run
+  holds none of the three. Below them a VHDL record appears as its
+  fields, \texttt{tb.ctl.clk}, \texttt{tb.ctl.enable} and
+  \texttt{tb.ctl.reset}, which is the flattening described above.}
+  \label{fig:counter}
+\end{figure*}
+
 \subsection{Why not VCD}
 
 The converter's output format has to hold what the database holds. VCD
@@ -45,6 +58,11 @@ leaves; the reverse does not hold.
 Two objects that share a handle are declared as one FST variable and
 an alias of it, so a signal seen from several scopes is written once.
 
+Fig.~\ref{fig:counter} shows the result on the counter design of this
+repository. The three rows at the top are types the VCD of the same
+run omits, and the rows below them are one VHDL record seen as its
+fields.
+
 \subsection{Streaming}
 
 The database stores each object's records where that object's storage
@@ -85,3 +103,19 @@ them.
 Time is dominated by decoding a value and rendering its leaves for
 every change, about 3.8~\textmu s per change. Memory is dominated by
 holding the inflated pages of the whole database.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/neorv32-surfer.png}
+  \caption{NEORV32 after conversion: the register file of core~0
+  during execution, with the operand addresses, the write enable and
+  the register outputs, beside the generics of the same instance. The
+  database holds 18\,875\,466 value changes over 5696 objects in a
+  4832 scope hierarchy, and the FST file it converts to is 690~kB.}
+  \label{fig:neorv32}
+\end{figure*}
+
+Fig.~\ref{fig:neorv32} is the largest design of Table~\ref{tab:designs}
+after conversion, which is the case that matters for a tool meant for
+real work rather than for examples: a viewer opens the output of a 24
+MB database as it opens any other waveform file.

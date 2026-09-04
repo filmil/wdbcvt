@@ -13,5 +13,8 @@ package(default_visibility = ["//visibility:public"])
 latex_document(
     name = "report",
     main = "report.tex",
-    deps = glob(["sections/*.tex"]),
+    deps = glob([
+        "sections/*.tex",
+        "figures/*.png",
+    ]),
 )
