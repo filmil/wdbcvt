@@ -4,9 +4,12 @@
 # reference waveform database. The .wdb is the sample every format decoding
 # experiment starts from, so it is worth having a stable download for it.
 #
-# forgejo-release is a composite action made of bash steps, so it runs on
-# the node-less `vivado` host. The checkout still cannot use
-# actions/checkout for that same reason.
+# The Publish step uses the vendored copy of forgejo-release in
+# //.forgejo/actions/forgejo-release, not the upstream action. Upstream
+# v2.13.4 embeds an actions/cache step whose `if` guard is always true,
+# and actions/cache is a node action, which the node-less `vivado` host
+# cannot run. The vendored copy drops that step and is bash only. The
+# checkout cannot use actions/checkout for the same reason.
 name: Release
 
 on:
@@ -57,7 +60,7 @@ jobs:
           ls -l dist/release
 
       - name: Publish
-        uses: https://code.forgejo.org/actions/forgejo-release@v2.13.4
+        uses: ./.forgejo/actions/forgejo-release
         with:
           direction: upload
           url: ${{ github.server_url }}

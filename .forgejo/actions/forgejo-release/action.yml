@@ -1,0 +1,136 @@
+# SPDX-License-Identifier: MIT
+#
+# Vendored copy of https://code.forgejo.org/actions/forgejo-release at
+# v2.13.4, with one change: the actions/cache step for the release notes
+# assistant is removed. Its `if: ${{ inputs.release-notes-assistant }}`
+# guard does not work: the string 'false' is truthy in the expression
+# language, so the step always runs, and it is a node action, which the
+# node-less `vivado` runner host cannot execute. This repository does not
+# use the release notes assistant, so the step is dropped instead.
+name: 'Forgejo release download and upload'
+author: 'Forgejo authors'
+description: |
+  Upload or download the assets of a release to a Forgejo instance.
+inputs:
+  url:
+    description: 'URL of the Forgejo instance'
+    default: '${{ env.FORGEJO_SERVER_URL }}'
+  repo:
+    description: 'owner/project relative to the URL'
+    default: '${{ forge.repository }}'
+  tag:
+    description: 'Tag of the release'
+    default: '${{ forge.ref_name }}'
+  title:
+    description: 'Title of the release (defaults to tag)'
+  sha:
+    description: 'SHA of the release'
+    default: '${{ forge.sha }}'
+  token:
+    description: 'Forgejo application token (must have `write:repository`)'
+    default: '${{ forge.token }}'
+  release-dir:
+    description: 'Directory in which release assets are uploaded or downloaded'
+    default: 'dist/release'
+  release-notes:
+    description: 'Release notes'
+  release-notes-file:
+    description: 'Path to a file containing your release notes (takes priority over `release-notes`)'
+  direction:
+    description: 'Can either be `download` or `upload`'
+    required: true
+  gpg-private-key:
+    description: 'GPG Private Key to sign the release artifacts'
+  gpg-passphrase:
+    description: 'Passphrase of the GPG Private Key'
+  download-retry:
+    description: 'Number of times to retry if the release is not ready (default 1)'
+  download-latest:
+    description: 'Download the latest release'
+    default: 'false'
+  verbose:
+    description: 'Increase the verbosity level'
+    default: 'false'
+  override:
+    description: 'Override an existing release by the same `{tag}`'
+    default: 'false'
+  prerelease:
+    description: 'Mark Release as Pre-Release'
+    default: 'false'
+  release-notes-assistant:
+    description: 'Generate release notes with Release Notes Assistant'
+    default: 'false'
+  hide-archive-link:
+    description: 'Hide the archive links'
+    default: 'false'
+  skip-assets:
+    description: Skip uploading release assets
+    default: 'false'
+
+runs:
+  using: "composite"
+  steps:
+    - run: echo "${{ forge.action_path }}" >> $FORGEJO_PATH
+      shell: bash
+    - run: |
+        export FORGEJO="${{ inputs.url }}"
+        # A trailing / will mean http://forgejo//api/v1 is used
+        # and it always 401 as of v1.19, because of the double slash
+        FORGEJO=${FORGEJO%%/}
+        export SCHEME=${FORGEJO%://*}
+        export HOST=${FORGEJO#*://}
+
+        export REPO="${{ inputs.repo }}"
+
+        export TAG="${{ inputs.tag }}"
+
+        export TITLE="${{ inputs.title }}"
+
+        export DOWNLOAD_LATEST="${{ inputs.download-latest }}"
+
+        export PRERELEASE="${{ inputs.prerelease }}"
+
+        export RELEASE_NOTES_ASSISTANT="${{ inputs.release-notes-assistant }}"
+        export RELEASE_NOTES_ASSISTANT_WORKDIR=${{ forge.action_path }}/rna
+
+        export HIDE_ARCHIVE_LINK="${{ inputs.hide-archive-link }}"
+
+        export TOKEN=${{ inputs.token }}
+
+        export RELEASE_DIR="${{ inputs.release-dir }}"
+
+        export RELEASENOTES=$(cat << 'EOF'
+        ${{ inputs.release-notes }}
+        EOF
+        )
+
+        RELEASENOTES_FILE="${{ inputs.release-notes-file }}"
+        if [ ! -z "$RELEASENOTES_FILE" ]; then
+          if [ ! -f "$RELEASENOTES_FILE" ]; then
+            echo "! Release notes file $RELEASENOTES_FILE does not exist."
+            exit 1
+          fi
+
+          export RELEASENOTES=$(cat "$RELEASENOTES_FILE")
+        fi
+
+        export SHA="${{ inputs.sha }}"
+
+        export OVERRIDE="${{ inputs.override }}"
+
+        export VERBOSE="${{ inputs.verbose }}"
+
+        export RETRY="${{ inputs.download-retry }}"
+
+        export TMP_DIR=$(mktemp -d)
+        trap "rm -fr $TMP_DIR" EXIT
+
+        echo -n "${{ inputs.gpg-private-key }}" > $TMP_DIR/gpg-private-key
+        export GPG_PRIVATE_KEY=$TMP_DIR/gpg-private-key
+        echo -n "${{ inputs.gpg-passphrase }}" > $TMP_DIR/gpg-passphrase
+        export GPG_PASSPHRASE="$TMP_DIR/gpg-passphrase"
+
+        export SKIP_ASSETS="${{ inputs.skip-assets }}"
+
+        forgejo-release.sh ${{ inputs.direction }}
+      shell: bash

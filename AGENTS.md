@@ -90,7 +90,16 @@ The host has no `node`, so a JavaScript action cannot run in these
 workflows.
 Do not add `actions/checkout` or any other JavaScript action.
 Check out with plain `git`, the way the existing workflows do.
-A composite action made of bash steps is fine; `forgejo-release` is one.
+A composite action is fine only if every one of its steps is bash, and
+that includes the steps of any action it `uses` itself.
+A skipped step does not make it safe: an `if` guard of the form
+`if: ${{ inputs.x }}` is true even when the input is `false`, because
+the string `false` is truthy in the expression language.
+Upstream `forgejo-release` fails exactly this way: its v2.13.4 embeds an
+`actions/cache` step, a node action, behind such a guard.
+The release workflow therefore uses the vendored, bash only copy in
+`//.forgejo/actions/forgejo-release`.
+Vendor and trim any other action before using it here.
 
 Host mode also gives the job a **pseudo-terminal**: a step's stdin is a
 `/dev/pts` device, not `/dev/null`.
