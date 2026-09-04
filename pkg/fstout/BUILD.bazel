@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+package(default_visibility = ["//visibility:public"])
+
+go_library(
+    name = "fstout",
+    srcs = ["fstout.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/pkg/fstout",
+    deps = [
+        "//pkg/fst",
+        "//pkg/wdb",
+    ],
+)
+
+go_test(
+    name = "fstout_test",
+    size = "medium",
+    srcs = ["fstout_test.go"],
+    data = [
+        "//hdl/corpus:all_truth",
+        "//hdl/corpus:all_wdb",
+        "//hdl/counter:sim",
+        "//hdl/picorv32:sim",
+        "//hdl/potato:sim",
+        "//hdl/uart:sim",
+    ],
+    deps = [
+        ":fstout",
+        "//pkg/fst",
+        "//pkg/wdb",
+    ],
+)

@@ -6,7 +6,10 @@ package(default_visibility = ["//visibility:public"])
 
 go_library(
     name = "fst",
-    srcs = ["fst.go"],
+    srcs = [
+        "fst.go",
+        "iter.c",
+    ],
     cdeps = ["@libfst//:fst"],
     cgo = True,
     importpath = "git.hdlfactory.com/HDL/wdbcvt/pkg/fst",
