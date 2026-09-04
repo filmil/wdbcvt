@@ -1969,6 +1969,33 @@ this version.
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
+**Tier 63: partial drivers on a net.**
+A `logic s` written at 50 ns beside one net, under typical, to see
+whether a driver of a bit, a slice or a port bound to part of a net
+records the whole net or the part.
+The driver writes the pairs its bits fall in, whole; the first record
+holds `X` on the driven bits and `Z` on the rest; an output port on
+part of a net shares the handle with the bit offset.
+Each net's raw record count is pinned as `records`.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t63_pdr_bit0____` | `wire [3:0] v; assign v[0] = s;` | `t62_str_vec_1drv`: `ZZZX`, `ZZZ0`, `ZZZ1` |
+| `t63_pdr_bit3____` | `assign v[3] = s;` | `t63_pdr_bit0____`: `XZZZ`, `0ZZZ`, `1ZZZ` |
+| `t63_pdr_two_bits` | `v[0] = s` and `v[3] = ~s` | `t63_pdr_bit0____`: five records, one per driver write |
+| `t63_pdr_slice___` | `wire [7:0] v; assign v[3:0] = {4{s}};` | `t63_pdr_bit0____`: `ZZZZXXXX`, `ZZZZ0000`, `ZZZZ1111` |
+| `t63_pdr_w64_bit0` | `wire [63:0] v; assign v[0] = s;` | `t63_pdr_bit0____`: a 16 byte first record, 8 byte writes at the handle |
+| `t63_pdr_w64_bit6` | `assign v[63] = s;` | `t63_pdr_w64_bit0`: the writes at the handle plus 8 |
+| `t63_pdr_w64_hi__` | `assign v[63:32] = {32{s}};` | `t63_pdr_w64_bit0`: the same as bit 63 |
+| `t63_pdr_w64_all_` | `assign v = {64{s}};` | `t63_pdr_w64_hi__`: three whole records; 16 more of handle space |
+| `t63_pdr_2400_bit` | `wire [2399:0] v; assign v[0] = s;` | `t63_pdr_w64_bit0`: the first record chunked, the writes 8 bytes |
+| `t63_pdr_2400_hi_` | `assign v[2399:2000] = {400{s}};` | `t63_pdr_2400_bit`: 104 byte writes at byte 96 of chunk 4 |
+| `t63_pdr_2400_all` | `assign v = {2400{s}};` | `t63_pdr_2400_hi_`: three chunked records |
+| `t63_pdr_concat__` | `wire a, b; assign {a, b} = {s, ~s};` | `t62_str_wire____`: two handles, three records each |
+| `t63_pdr_port_bit` | `child u(.i(s), .o(v[1]));` on 4 bits | `t63_pdr_bit0____`: `tb.u.o` on the net's handle, offset 1; `ZZXZ` twice |
+| `t63_pdr_port_slc` | `.o(v[7:4])` on 8 bits | `t63_pdr_port_bit`: offset 4 |
+| `t63_pdr_port_hi_` | `.o(v[63:32])` on 64 bits | `t63_pdr_port_slc`: offset 32; the writes at the handle plus 8 |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2006,7 +2033,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 999 cases through tier 62, and
+5. The reader now reproduces all 1014 cases through tier 63, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

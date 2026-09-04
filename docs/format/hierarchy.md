@@ -433,11 +433,15 @@ A Verilog port bound to a slice of a net holds the offset in bits
 from bit 0 of the net: `wb_mem_adr[12:2]` in `//hdl/serv:sim` gives
 offset 2, `o_dbus_dat[26:24]` gives 24, and `v[39:34]` of a 40 bit
 wire in `t37_v_port_pair1` gives 34, into the second word pair.
+An output port bound to a slice holds the same word: `.o(v[1])` in
+`t63_pdr_port_bit` gives 1, `.o(v[7:4])` in `t63_pdr_port_slc` 4 and
+`.o(v[63:32])` in `t63_pdr_port_hi_` 32, each on the net's handle.
 See [values.md](values.md).
 
 *Found by* `//hdl/serv:sim` against `t9_port_slice`.
 *Confirmed by* `t37_v_port_slc__`, `t37_v_port_bit__`,
-`t37_v_port_pair1` and `t37_v_port_span_`.
+`t37_v_port_pair1`, `t37_v_port_span_`, `t63_pdr_port_bit`,
+`t63_pdr_port_slc` and `t63_pdr_port_hi_`.
 
 The word at `40` was recorded as 0 through tier 47, when every case
 with a Verilog port had read as 0 or 1.
@@ -2362,10 +2366,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 999 of 999 cases, and the
+*Confirmed by* the region length check in 1014 of 1014 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 999 of 999 cases and
+and *confirmed by* the reader's range check in 1014 of 1014 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

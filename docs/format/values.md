@@ -1747,6 +1747,77 @@ values with a strength and without; `t62_str_vec_2drv` against
 `t62_str_bufif_n_`, `t62_str_nmos____` and `t62_str_vec_pu__`, each
 count pinned in its truth, and the VCD of each.
 
+**Partial drivers on a net.**
+A driver of part of a net writes the pairs its bits fall in, whole,
+the tier 11 partial record rule with the net's resolved value in the
+bits it does not drive, and the first record of the net marks the
+driven bits `X` and the rest `Z`.
+`assign v[0] = s;` on a `wire [3:0] v`, `t63_pdr_bit0____`, holds
+`ZZZX`, `ZZZ0`, `ZZZ1`, one pair each, where the whole driver of
+`t62_str_vec_1drv` holds `XXXX`, `0000`, `1101`.
+`t63_pdr_bit3____` holds `XZZZ`, `0ZZZ`, `1ZZZ`, and
+`t63_pdr_slice___`, `v[3:0]` of 8 bits, `ZZZZXXXX`, `ZZZZ0000`,
+`ZZZZ1111`.
+On a 64 bit net, `t63_pdr_w64_bit6` drives bit 63: the first record
+is the whole net, 16 bytes at the handle, 63 `Z` and an `X`, and each
+write is the 8 bytes of pair 1 at the handle plus 8.
+`t63_pdr_w64_bit0` and `t63_pdr_w64_hi__`, bit 0 and bits 63 to 32,
+write pair 0 and pair 1 in the same way.
+On a 2400 bit net the first record is the whole net in the six chunks
+of the chunk rule, and the write goes to the chunk address of its
+first pair: `t63_pdr_2400_bit` writes 8 bytes at the handle, and
+`t63_pdr_2400_hi_`, bits 2399 to 2000, writes 104 bytes, pairs 62 to
+74, at `0x158` of arena 1, which is byte 96 of chunk 4, where pair 62
+lives, and runs on into chunk 5 behind it.
+Two partial drivers write one record each, and each record holds the
+other driver's bits as they stand: `t63_pdr_two_bits`, `v[0] = s` and
+`v[3] = ~s`, holds `XZZX`, `XZZ0`, `1ZZ0` at time 0 and `1ZZ1`,
+`0ZZ1` at 50 ns, five records where the whole driver holds three.
+So a partial driver is not a bit by bit write like the two whole
+drivers of `t62_str_vec_2drv`, and the reader overlays it as any
+partial record.
+The whole driver of the same width, `t63_pdr_w64_all_` and
+`t63_pdr_2400_all`, holds three whole records, `X` then the two
+values, as `t62_str_vec_1drv` does.
+A concatenation on the left, `assign {a, b} = {s, ~s};` of
+`t63_pdr_concat__`, is two drivers of two nets on two handles, `X`,
+`0`, `1` on `a` and `X`, `1`, `0` on `b`.
+
+An output port bound to part of a net is the tier 37 input case from
+the other side: the port shares the net's handle with the offset word
+counting from bit 0, and holds no record of its own.
+`child u(.i(s), .o(v[1]));` of `t63_pdr_port_bit` gives `tb.u.o`
+handle `0x768` with offset 1 beside `tb.v` on `0x768`, and the net
+holds `ZZXZ` twice, one first record per object on the handle as the
+tier 19 count says, then `ZZ0Z` and `ZZ1Z`, so the port reads `X`,
+`X`, `0`, `1`.
+`t63_pdr_port_slc`, `.o(v[7:4])` of 8 bits, holds offset 4 and
+`XXXXZZZZ` twice, `0000ZZZZ`, `1111ZZZZ`, and `t63_pdr_port_hi_`,
+`.o(v[63:32])` of 64 bits, holds offset 32 and writes pair 1 at the
+handle plus 8.
+A `[0:0]` port is a vector of one bit and gets the unnamed vector
+type, so `tb.u.o` in `t63_pdr_port_bit` is declared `output o`
+without a range.
+The handle space, against the `0xadc` of `t62_str_wire____` and
+`t62_str_vec_1drv`: a partial driver of a 4 or 8 bit net `0xadc`, of
+a 64 bit net `0xae4` and of a 2400 bit net `0xd2c` for one pair,
+`0xd8c` for the 13 pairs of `t63_pdr_2400_hi_`, two partial drivers
+`0xbbc`, the whole driver of 64 bits `0xaf4` and of 2400 bits
+`0xf84`, the concatenation `0xbfc`, a child on a bit or a nibble
+`0xd74` and on a word `0xd7c`.
+So the space grows by 8 per pair a driver writes beyond its first,
+and a whole driver of `n` pairs takes 8 more than a partial driver of
+`n` pairs; none of it is read.
+
+*Found by* `t63_pdr_bit0____` against `t62_str_vec_1drv`, `ZZZX` for
+`XXXX` at time 0 and `ZZZ1` for `1101` at 50 ns.
+*Confirmed by* `t63_pdr_bit3____`, `t63_pdr_slice___`,
+`t63_pdr_w64_bit0`, `t63_pdr_w64_bit6`, `t63_pdr_w64_hi__`,
+`t63_pdr_w64_all_`, `t63_pdr_2400_bit`, `t63_pdr_2400_hi_`,
+`t63_pdr_2400_all`, `t63_pdr_two_bits`, `t63_pdr_concat__`,
+`t63_pdr_port_bit`, `t63_pdr_port_slc` and `t63_pdr_port_hi_`, each
+count pinned in its truth, and the VCD of each.
+
 **Writes of the value held, from a clocked process or a shared net.**
 `//hdl/serv:sim`, a RISC-V core, holds 2965811 records that repeat
 the value before them, and the tier 17 rule above covers none of
