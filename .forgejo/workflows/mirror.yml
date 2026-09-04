@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Mirrors `main` to the read-only GitHub copy at
+# Mirrors the branch `main` to the read-only GitHub copy at
 # https://github.com/filmil/wdbcvt, so the work can be read and linked
 # from a place people already look. Development stays here: the Vivado
 # runner this repository builds on answers to this forge and is not
 # integrated with GitHub, so the mirror carries the source and none of
 # the CI.
 #
-# The job needs one secret, `GH_MIRROR_TOKEN`: a GitHub fine grained
-# personal access token whose only repository is `filmil/wdbcvt` and
-# whose only permission is Contents: read and write. Without it the job
+# The job needs one secret, `GH_MIRROR_KEY`: the private half of an SSH
+# deploy key that the mirror repository accepts for writing. A deploy
+# key is bound to that one repository and can do nothing else, which a
+# personal access token cannot promise. The public half is already on
+# the mirror as "forgejo mirror (push)". Without the secret the job
 # says so and stops, rather than failing the push.
 #
 # The `vivado` label is the only runner here, and that host has no
@@ -42,27 +44,49 @@ jobs:
           git init -q .
           git remote add origin "${SERVER_URL}/${REPOSITORY}.git"
           # A mirror carries the history, so this fetch has no --depth.
-          # Tags come along because the releases point at them.
+          # Tags stay here: the forge tags nightly and debug builds, and
+          # the mirror is the branch.
           git -c "http.extraheader=Authorization: Basic ${auth}" \
-              fetch -q --tags origin "+refs/heads/main:refs/heads/main"
+              fetch -q --no-tags origin "+refs/heads/main:refs/heads/main"
           git --no-pager log --oneline -1 refs/heads/main
 
       - name: Push to the GitHub mirror
         env:
           MIRROR: ${{ vars.GH_MIRROR_REPO }}
-          TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          KEY: ${{ secrets.GH_MIRROR_KEY }}
           GIT_PAGER: cat
         run: |
           set -euo pipefail
           mirror="${MIRROR:-filmil/wdbcvt}"
-          if [ -z "${TOKEN:-}" ]; then
-            echo "::warning::GH_MIRROR_TOKEN is not set; nothing was mirrored"
+          if [ -z "${KEY:-}" ]; then
+            echo "::warning::GH_MIRROR_KEY is not set; nothing was mirrored"
             exit 0
           fi
-          # The token goes in a header rather than in the URL, so it
-          # cannot end up in a log line or in the remote list.
-          auth="$(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
-          git -c "http.extraheader=Authorization: Basic ${auth}" \
-              push --force --tags "https://github.com/${mirror}.git" \
+          dir="$(mktemp -d)"
+          trap 'rm -rf "${dir}"' EXIT
+          umask 077
+          # The secret may hold the key as it comes out of ssh-keygen or
+          # base64 encoded on one line, because a secret store that
+          # eats newlines would otherwise produce an invalid key.
+          if printf '%s' "${KEY}" | base64 -d > "${dir}/key" 2>/dev/null &&
+             grep -q 'PRIVATE KEY' "${dir}/key"; then
+            :
+          else
+            printf '%s\n' "${KEY}" > "${dir}/key"
+          fi
+          chmod 600 "${dir}/key"
+          # GitHub's host keys, pinned, so the push cannot be answered
+          # by somebody else and cannot stop to ask. They are published
+          # at https://api.github.com/meta as `ssh_keys`.
+          {
+            printf 'github.com ssh-ed25519 %s\n' \
+              'AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl'
+            printf 'github.com ecdsa-sha2-nistp256 %s\n' \
+              'AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg='
+          } > "${dir}/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i ${dir}/key -o IdentitiesOnly=yes \
+              -o UserKnownHostsFile=${dir}/known_hosts \
+              -o StrictHostKeyChecking=yes -o BatchMode=yes"
+          git push --force "git@github.com:${mirror}.git" \
               refs/heads/main:refs/heads/main
           echo "mirrored $(git rev-parse --short refs/heads/main) to ${mirror}"

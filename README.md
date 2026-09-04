@@ -25,6 +25,8 @@ do that answers to that forge.
 from a place people already look.
 Issues and pull requests belong on the forge; the mirror has its issue
 tracker turned off so that a report there cannot go unread.
+The push is made by a deploy key that can write to the mirror and
+nothing else.
 
 [forge]: https://git.hdlfactory.com/HDL/wdbcvt
 [mirror]: https://github.com/filmil/wdbcvt
