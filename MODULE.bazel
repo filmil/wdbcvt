@@ -18,15 +18,15 @@ bazel_dep(name = "rules_cc", version = "0.2.14")
 # lives in the registry named first in .bazelrc.
 bazel_dep(name = "rules_latex_host", version = "0.2.0")
 
-# The report includes two screenshots, and 0.2.0 accepts only .tex
-# files as inputs to a document, so a figure cannot be named as a
-# dependency. The patch widens that list; it is upstream as
-# https://github.com/filmil/bazel_rules_latex_host/pull/5 and can go
+# The report includes two screenshots, and a document in 0.2.0 takes
+# .tex files alone, so a figure cannot be named as an input. The patch
+# adds the `data` attribute that non-LaTeX inputs go in; it is upstream
+# as https://github.com/filmil/bazel_rules_latex_host/pull/5 and can go
 # when a release carries the change.
 single_version_override(
     module_name = "rules_latex_host",
     patch_strip = 1,
-    patches = ["//third_party/rules_latex_host:0001-read-figures-and-other-non-tex-inputs.patch"],
+    patches = ["//third_party/rules_latex_host:0001-read-non-latex-inputs-through-data.patch"],
     version = "0.2.0",
 )
 

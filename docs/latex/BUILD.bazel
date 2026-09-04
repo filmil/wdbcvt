@@ -12,9 +12,7 @@ package(default_visibility = ["//visibility:public"])
 # to every release.
 latex_document(
     name = "report",
+    data = glob(["figures/*.png"]),
     main = "report.tex",
-    deps = glob([
-        "sections/*.tex",
-        "figures/*.png",
-    ]),
+    deps = glob(["sections/*.tex"]),
 )
