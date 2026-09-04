@@ -132,66 +132,20 @@ func (f *File) Changes(o Object) ([]Change, error) {
 	if !o.Logged {
 		return nil, nil
 	}
-	dc := f.Decls[o.Decl]
-	n, err := f.recordBytes(dc)
+	d, err := f.newDecoder(o)
 	if err != nil {
 		return nil, err
 	}
-	size := uint64(n)
-	if size == 0 {
-		size = 1
-	}
-	// The object's bytes are [start, end) of the value recorded at its
-	// handle; Offset is nonzero for a port bound to a slice. A VHDL
-	// offset counts bytes. A Verilog offset counts bits from the low
-	// end of the actual, //hdl/serv:sim, so the object takes the word
-	// pairs its bits fall in and shifts them down afterwards.
-	verilog := f.verilog(dc.Type)
-	start := o.Handle + uint64(o.Offset)
-	shift, nbits := 0, 0
-	if verilog && o.Offset != 0 {
-		nbits, err = f.Size(dc)
-		if err != nil {
-			return nil, err
-		}
-		pa, pb := uint64(o.Offset)/32, (uint64(o.Offset)+uint64(nbits)-1)/32
-		start = o.Handle + 8*pa
-		size = 8 * (pb - pa + 1)
-		shift = int(uint64(o.Offset) - 32*pa)
-	}
-	end := start + size
-	first, last := int(start/arenaSpan), int((end-1)/arenaSpan)
-	if last >= len(f.Arenas) {
-		return nil, fmt.Errorf("object handle %#x with %d bytes reaches arena %d of %d", o.Handle, size, last, len(f.Arenas))
-	}
-	// The 16 byte record of an untyped time parameter runs into the
-	// next object, so only the record at its own address is its own,
-	// and only the first 8 bytes of it: t30_sv_ptm_two.
-	timeParam := verilog && f.timeParam(dc)
-	type rec struct {
-		time uint64
-		addr uint64
-		data []byte
-	}
 	var recs []rec
-	for k := first; k <= last; k++ {
+	for k := int(d.start / arenaSpan); k <= int((d.end-1)/arenaSpan); k++ {
 		if f.Arenas[k].Offset == 0 {
-			return nil, fmt.Errorf("object handle %#x with %d bytes spans arena %d, which was never written", o.Handle, size, k)
+			return nil, fmt.Errorf("object handle %#x with %d bytes spans arena %d, which was never written", o.Handle, d.size, k)
 		}
 		for _, pg := range f.Pages[k] {
 			for _, r := range pg.Records {
-				addr := uint64(k)*arenaSpan + uint64(r.Key)
-				if addr >= end || addr+uint64(len(r.Data)) <= start {
-					continue
+				if x, ok := d.take(rec{r.Time, uint64(k)*arenaSpan + uint64(r.Key), r.Data}); ok {
+					recs = append(recs, x)
 				}
-				if timeParam {
-					if addr != start || len(r.Data) < 8 {
-						continue
-					}
-					recs = append(recs, rec{r.Time, addr, r.Data[:8]})
-					continue
-				}
-				recs = append(recs, rec{r.Time, addr, r.Data})
 			}
 		}
 	}
@@ -199,13 +153,93 @@ func (f *File) Changes(o Object) ([]Change, error) {
 		return nil, fmt.Errorf("object handle %#x is logged but has no records", o.Handle)
 	}
 	sort.SliceStable(recs, func(i, j int) bool { return recs[i].time < recs[j].time })
+	var out []Change
+	for lo := 0; lo < len(recs); {
+		hi := lo
+		for hi < len(recs) && recs[hi].time == recs[lo].time {
+			hi++
+		}
+		err := d.group(recs[lo:hi], func(t uint64, data []byte) {
+			out = append(out, Change{Time: t, Data: append([]byte(nil), data...)})
+		})
+		if err != nil {
+			return nil, err
+		}
+		lo = hi
+	}
+	return out, nil
+}
+
+// rec is one record as it reaches an object: its time, its address in
+// the flat handle space, and its bytes.
+type rec struct {
+	time uint64
+	addr uint64
+	data []byte
+}
+
+// decoder replays records onto one object's value. Changes drives it
+// over the records of that object alone; Stream drives every object's
+// decoder from one pass over the file, in time order.
+type decoder struct {
+	f          *File
+	o          Object
+	size       uint64
+	start, end uint64
+	shift      int
+	nbits      int
+	verilog    bool
+	timeParam  bool
+	// starts are the chunk addresses of the signal at the handle, and
+	// wholeEnd the end of that signal, which is the object itself
+	// unless the object is a port bound to a slice of it.
+	starts   []uint64
+	wholeEnd uint64
+	cur      []byte
+	started  bool
+}
+
+func (f *File) newDecoder(o Object) (*decoder, error) {
+	dc := f.Decls[o.Decl]
+	n, err := f.recordBytes(dc)
+	if err != nil {
+		return nil, err
+	}
+	d := &decoder{f: f, o: o, size: uint64(n), verilog: f.verilog(dc.Type)}
+	if d.size == 0 {
+		d.size = 1
+	}
+	// The object's bytes are [start, end) of the value recorded at its
+	// handle; Offset is nonzero for a port bound to a slice. A VHDL
+	// offset counts bytes. A Verilog offset counts bits from the low
+	// end of the actual, //hdl/serv:sim, so the object takes the word
+	// pairs its bits fall in and shifts them down afterwards.
+	d.start = o.Handle + uint64(o.Offset)
+	if d.verilog && o.Offset != 0 {
+		d.nbits, err = f.Size(dc)
+		if err != nil {
+			return nil, err
+		}
+		pa, pb := uint64(o.Offset)/32, (uint64(o.Offset)+uint64(d.nbits)-1)/32
+		d.start = o.Handle + 8*pa
+		d.size = 8 * (pb - pa + 1)
+		d.shift = int(uint64(o.Offset) - 32*pa)
+	}
+	d.end = d.start + d.size
+	if last := int((d.end - 1) / arenaSpan); last >= len(f.Arenas) {
+		return nil, fmt.Errorf("object handle %#x with %d bytes reaches arena %d of %d", o.Handle, d.size, last, len(f.Arenas))
+	}
+	// The 16 byte record of an untyped time parameter runs into the
+	// next object, so only the record at its own address is its own,
+	// and only the first 8 bytes of it: t30_sv_ptm_two.
+	d.timeParam = d.verilog && f.timeParam(dc)
 	// The records belong to the signal at the handle, so its size sets
 	// the chunk boundaries, not the object's. They differ for a port
 	// bound to a slice of a chunked signal: `bus_req_i` of
 	// //hdl/neorv32:sim is 88 bytes at offset 1408 of a 1760 byte
 	// array, and the array's initial write puts a chunk boundary
 	// inside the port's 88 bytes.
-	whole, wholeSize := start, size
+	whole, wholeSize := d.start, d.size
 	if o.Offset != 0 {
 		for _, p := range f.Objects {
 			if p.Handle != o.Handle || p.Offset != 0 {
@@ -220,145 +254,164 @@ func (f *File) Changes(o Object) ([]Change, error) {
 			}
 		}
 	}
-	starts := chunkStarts(whole, wholeSize)
-	pieceLen := func(i int) uint64 {
-		if i+1 < len(starts) {
-			return starts[i+1] - starts[i]
-		}
-		return whole + wholeSize - starts[i]
+	d.starts = chunkStarts(whole, wholeSize)
+	d.wholeEnd = whole + wholeSize
+	d.cur = make([]byte, d.size)
+	return d, nil
+}
+
+func (d *decoder) pieceLen(i int) uint64 {
+	if i+1 < len(d.starts) {
+		return d.starts[i+1] - d.starts[i]
 	}
-	// A chunk of the signal that the object's own bytes do not reach
-	// has no record here: the records were filtered to the object's
-	// window.
-	visible := func(i int) bool {
-		return starts[i] < end && starts[i]+pieceLen(i) > start
+	return d.wholeEnd - d.starts[i]
+}
+
+// visible reports whether chunk i of the signal reaches the object's
+// own bytes. A chunk that does not has no record here, because the
+// records are filtered to the object's window.
+func (d *decoder) visible(i int) bool {
+	return d.starts[i] < d.end && d.starts[i]+d.pieceLen(i) > d.start
+}
+
+// take reports whether r reaches the object, and returns the part of
+// it that does.
+func (d *decoder) take(r rec) (rec, bool) {
+	if r.addr >= d.end || r.addr+uint64(len(r.data)) <= d.start {
+		return rec{}, false
 	}
-	cur := make([]byte, size)
-	var out []Change
-	apply := func(r rec) {
-		lo, hi := r.addr, r.addr+uint64(len(r.data))
-		if lo < start {
-			lo = start
+	if d.timeParam {
+		if r.addr != d.start || len(r.data) < 8 {
+			return rec{}, false
 		}
-		if hi > end {
-			hi = end
-		}
-		copy(cur[lo-start:hi-start], r.data[lo-r.addr:hi-r.addr])
+		r.data = r.data[:8]
 	}
-	// write finds the records of the write group[i] starts, among the
-	// unused records of the time, and returns their indexes.
-	write := func(group []rec, used []bool, i int) ([]int, error) {
-		r := group[i]
-		first := -1
-		for p := range starts {
-			if visible(p) {
-				first = p
-				break
-			}
+	return r, true
+}
+
+func (d *decoder) apply(r rec) {
+	lo, hi := r.addr, r.addr+uint64(len(r.data))
+	if lo < d.start {
+		lo = d.start
+	}
+	if hi > d.end {
+		hi = d.end
+	}
+	copy(d.cur[lo-d.start:hi-d.start], r.data[lo-r.addr:hi-r.addr])
+}
+
+// write finds the records of the write group[i] starts, among the
+// unused records of the time, and returns their indexes.
+func (d *decoder) write(group []rec, used []bool, i int) ([]int, error) {
+	r := group[i]
+	first := -1
+	for p := range d.starts {
+		if d.visible(p) {
+			first = p
+			break
 		}
-		if first >= 0 && r.addr == starts[first] && uint64(len(r.data)) == pieceLen(first) {
-			idx := []int{i}
-			for p := first + 1; p < len(starts); p++ {
-				if !visible(p) {
-					continue
-				}
-				found := -1
-				for j := i + 1; j < len(group); j++ {
-					if !used[j] && group[j].addr == starts[p] && uint64(len(group[j].data)) == pieceLen(p) {
-						found = j
-						break
-					}
-				}
-				if found < 0 {
-					idx = nil
-					break
-				}
-				idx = append(idx, found)
+	}
+	if first >= 0 && r.addr == d.starts[first] && uint64(len(r.data)) == d.pieceLen(first) {
+		idx := []int{i}
+		for p := first + 1; p < len(d.starts); p++ {
+			if !d.visible(p) {
+				continue
 			}
-			if idx != nil {
-				return idx, nil
-			}
-		}
-		run := []int{i}
-		total := uint64(len(r.data))
-		for {
 			found := -1
 			for j := i + 1; j < len(group); j++ {
-				if !used[j] && group[j].addr == r.addr+total {
+				if !used[j] && group[j].addr == d.starts[p] && uint64(len(group[j].data)) == d.pieceLen(p) {
 					found = j
 					break
 				}
 			}
 			if found < 0 {
+				idx = nil
 				break
 			}
-			run = append(run, found)
-			total += uint64(len(group[found].data))
+			idx = append(idx, found)
 		}
-		for ; len(run) > 1; run = run[:len(run)-1] {
-			want := chunkStarts(r.addr, total)
-			ok := len(want) == len(run)
-			for k := 0; ok && k < len(want); k++ {
-				ok = want[k] == group[run[k]].addr
-			}
-			if ok {
-				return run, nil
-			}
-			total -= uint64(len(group[run[len(run)-1]].data))
+		if idx != nil {
+			return idx, nil
 		}
-		if total >= chunkWhole {
-			return nil, fmt.Errorf("object handle %#x: a record of %d bytes at %#x, time %d, is not a run of chunks", o.Handle, total, r.addr, r.time)
-		}
-		if verilog && !timeParam && ((r.addr-start)%8 != 0 || total%8 != 0) {
-			return nil, fmt.Errorf("object handle %#x: record at %#x of %d bytes is neither a chunk nor whole word pairs", o.Handle, r.addr, total)
-		}
-		return run, nil
 	}
-	for lo := 0; lo < len(recs); {
-		hi := lo
-		for hi < len(recs) && recs[hi].time == recs[lo].time {
-			hi++
+	run := []int{i}
+	total := uint64(len(r.data))
+	for {
+		found := -1
+		for j := i + 1; j < len(group); j++ {
+			if !used[j] && group[j].addr == r.addr+total {
+				found = j
+				break
+			}
 		}
-		group := recs[lo:hi]
-		used := make([]bool, len(group))
-		for i := range group {
-			if used[i] {
-				continue
-			}
-			idx, err := write(group, used, i)
-			if err != nil {
-				return nil, err
-			}
-			// The first write is the initial value of the whole signal;
-			// a port bound to a slice at its start, t9_port_sliceto_,
-			// sees a first write longer than its own value.
-			if len(out) == 0 {
-				lo, hi := group[idx[0]].addr, group[idx[0]].addr
-				for _, j := range idx {
-					if group[j].addr < lo {
-						lo = group[j].addr
-					}
-					if e := group[j].addr + uint64(len(group[j].data)); e > hi {
-						hi = e
-					}
-				}
-				if lo > start || hi < end {
-					return nil, fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", o.Handle, size, hi-lo, lo)
-				}
-			}
+		if found < 0 {
+			break
+		}
+		run = append(run, found)
+		total += uint64(len(group[found].data))
+	}
+	for ; len(run) > 1; run = run[:len(run)-1] {
+		want := chunkStarts(r.addr, total)
+		ok := len(want) == len(run)
+		for k := 0; ok && k < len(want); k++ {
+			ok = want[k] == group[run[k]].addr
+		}
+		if ok {
+			return run, nil
+		}
+		total -= uint64(len(group[run[len(run)-1]].data))
+	}
+	if total >= chunkWhole {
+		return nil, fmt.Errorf("object handle %#x: a record of %d bytes at %#x, time %d, is not a run of chunks", d.o.Handle, total, r.addr, r.time)
+	}
+	if d.verilog && !d.timeParam && ((r.addr-d.start)%8 != 0 || total%8 != 0) {
+		return nil, fmt.Errorf("object handle %#x: record at %#x of %d bytes is neither a chunk nor whole word pairs", d.o.Handle, r.addr, total)
+	}
+	return run, nil
+}
+
+// group replays the records of one time, in file order, and calls emit
+// once per write with the value the object holds after it. The value
+// is the decoder's own buffer, so a caller that keeps it copies it.
+func (d *decoder) group(group []rec, emit func(uint64, []byte)) error {
+	used := make([]bool, len(group))
+	for i := range group {
+		if used[i] {
+			continue
+		}
+		idx, err := d.write(group, used, i)
+		if err != nil {
+			return err
+		}
+		// The first write is the initial value of the whole signal;
+		// a port bound to a slice at its start, t9_port_sliceto_,
+		// sees a first write longer than its own value.
+		if !d.started {
+			lo, hi := group[idx[0]].addr, group[idx[0]].addr
 			for _, j := range idx {
-				used[j] = true
-				apply(group[j])
+				if group[j].addr < lo {
+					lo = group[j].addr
+				}
+				if e := group[j].addr + uint64(len(group[j].data)); e > hi {
+					hi = e
+				}
 			}
-			data := append([]byte(nil), cur...)
-			if shift != 0 {
-				data = shiftPairs(data, shift, nbits)
+			if lo > d.start || hi < d.end {
+				return fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", d.o.Handle, d.size, hi-lo, lo)
 			}
-			out = append(out, Change{Time: group[i].time, Data: data})
+			d.started = true
 		}
-		lo = hi
+		for _, j := range idx {
+			used[j] = true
+			d.apply(group[j])
+		}
+		data := d.cur
+		if d.shift != 0 {
+			data = shiftPairs(data, d.shift, d.nbits)
+		}
+		emit(group[i].time, data)
 	}
-	return out, nil
+	return nil
 }
 
 // shiftPairs takes nbits bits of the Verilog word pairs in data, from

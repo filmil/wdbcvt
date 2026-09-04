@@ -10,6 +10,7 @@ go_library(
         "file.go",
         "pages.go",
         "probe.go",
+        "stream.go",
         "types.go",
         "value.go",
         "verilog.go",
@@ -26,6 +27,7 @@ go_test(
         "debug_test.go",
         "diff_test.go",
         "probe_test.go",
+        "stream_test.go",
         "vcd_test.go",
     ],
     data = [
