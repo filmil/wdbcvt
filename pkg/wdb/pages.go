@@ -199,12 +199,39 @@ func (f *File) Changes(o Object) ([]Change, error) {
 		return nil, fmt.Errorf("object handle %#x is logged but has no records", o.Handle)
 	}
 	sort.SliceStable(recs, func(i, j int) bool { return recs[i].time < recs[j].time })
-	starts := chunkStarts(start, size)
+	// The records belong to the signal at the handle, so its size sets
+	// the chunk boundaries, not the object's. They differ for a port
+	// bound to a slice of a chunked signal: `bus_req_i` of
+	// //hdl/neorv32:sim is 88 bytes at offset 1408 of a 1760 byte
+	// array, and the array's initial write puts a chunk boundary
+	// inside the port's 88 bytes.
+	whole, wholeSize := start, size
+	if o.Offset != 0 {
+		for _, p := range f.Objects {
+			if p.Handle != o.Handle || p.Offset != 0 {
+				continue
+			}
+			n, err := f.recordBytes(f.Decls[p.Decl])
+			if err != nil {
+				continue
+			}
+			if uint64(n) > wholeSize {
+				whole, wholeSize = p.Handle, uint64(n)
+			}
+		}
+	}
+	starts := chunkStarts(whole, wholeSize)
 	pieceLen := func(i int) uint64 {
 		if i+1 < len(starts) {
 			return starts[i+1] - starts[i]
 		}
-		return end - starts[i]
+		return whole + wholeSize - starts[i]
+	}
+	// A chunk of the signal that the object's own bytes do not reach
+	// has no record here: the records were filtered to the object's
+	// window.
+	visible := func(i int) bool {
+		return starts[i] < end && starts[i]+pieceLen(i) > start
 	}
 	cur := make([]byte, size)
 	var out []Change
@@ -222,9 +249,19 @@ func (f *File) Changes(o Object) ([]Change, error) {
 	// unused records of the time, and returns their indexes.
 	write := func(group []rec, used []bool, i int) ([]int, error) {
 		r := group[i]
-		if o.Offset == 0 && r.addr == starts[0] && uint64(len(r.data)) == pieceLen(0) {
+		first := -1
+		for p := range starts {
+			if visible(p) {
+				first = p
+				break
+			}
+		}
+		if first >= 0 && r.addr == starts[first] && uint64(len(r.data)) == pieceLen(first) {
 			idx := []int{i}
-			for p := 1; p < len(starts); p++ {
+			for p := first + 1; p < len(starts); p++ {
+				if !visible(p) {
+					continue
+				}
 				found := -1
 				for j := i + 1; j < len(group); j++ {
 					if !used[j] && group[j].addr == starts[p] && uint64(len(group[j].data)) == pieceLen(p) {
@@ -296,12 +333,17 @@ func (f *File) Changes(o Object) ([]Change, error) {
 			// a port bound to a slice at its start, t9_port_sliceto_,
 			// sees a first write longer than its own value.
 			if len(out) == 0 {
-				var total uint64
+				lo, hi := group[idx[0]].addr, group[idx[0]].addr
 				for _, j := range idx {
-					total += uint64(len(group[j].data))
+					if group[j].addr < lo {
+						lo = group[j].addr
+					}
+					if e := group[j].addr + uint64(len(group[j].data)); e > hi {
+						hi = e
+					}
 				}
-				if group[i].addr > start || group[i].addr+total < end {
-					return nil, fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", o.Handle, size, total, group[i].addr)
+				if lo > start || hi < end {
+					return nil, fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", o.Handle, size, hi-lo, lo)
 				}
 			}
 			for _, j := range idx {
