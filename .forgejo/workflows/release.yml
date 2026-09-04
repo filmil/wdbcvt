@@ -1,9 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Publishes a rolling `nightly` release holding the wdbcvt binary, a
-# reference waveform database, and an archive of the source tree that
-# built them. The .wdb is the sample every format decoding experiment
-# starts from, so it is worth having a stable download for it.
+# reference waveform database, the report on the format work, and an
+# archive of the source tree that built them. The .wdb is the sample
+# every format decoding experiment starts from, so it is worth having a
+# stable download for it.
+#
+# The report is built by pdflatex from the host through
+# rules_latex_host, so the `vivado` runner needs a TeX Live with the
+# IEEEtran class installed, next to the other host tools.
 #
 # The Publish step uses the vendored copy of forgejo-release in
 # //.forgejo/actions/forgejo-release, not the upstream action. Upstream
@@ -46,7 +51,9 @@ jobs:
           git --no-pager log --oneline -1
 
       - name: Build the release artifacts
-        run: bazelisk build -c opt //cmd/wdbcvt //hdl/counter:sim
+        run: |
+          bazelisk build -c opt \
+              //cmd/wdbcvt //hdl/counter:sim //docs/latex:report
 
       - name: Gather them
         run: |
@@ -57,6 +64,8 @@ jobs:
           cp "${bin}/cmd/wdbcvt/wdbcvt_/wdbcvt" dist/release/wdbcvt-linux-amd64
           cp "${bin}/hdl/counter/sim.wdb" dist/release/counter-sim.wdb
           cp "${bin}/hdl/counter/sim.vcd" dist/release/counter-sim.vcd
+          # The report on the whole effort, built from //docs/latex.
+          cp "${bin}/docs/latex/report.pdf" dist/release/wdbcvt-report.pdf
           chmod +w dist/release/*
           # The exact source that built the artifacts above. git archive
           # takes only tracked files, so dist/ itself stays out.
