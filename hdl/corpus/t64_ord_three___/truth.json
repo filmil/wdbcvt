@@ -1,0 +1,240 @@
+{
+  "case": "t64_ord_three___",
+  "axis": "several partial drivers. three instances of the child on three scalar nets beside a logic, under typical, to see the order and the place of the records the drivers write.",
+  "differs_from": "t64_ord_two_nets",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 1,
+      "type": "logic",
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "b",
+      "width": 1,
+      "type": "logic",
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb",
+      "name": "c",
+      "width": 1,
+      "type": "logic",
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u0",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u0",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u1",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u1",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u2",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u2",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "records": 4,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "a",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "b",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "c",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "c",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u0.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u0.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u0.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u0.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u0.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u0.o",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u1.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u1.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u1.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u1.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u1.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u1.o",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u2.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u2.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u2.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u2.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u2.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u2.o",
+      "value": "1"
+    }
+  ]
+}

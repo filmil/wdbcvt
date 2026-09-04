@@ -1,0 +1,156 @@
+{
+  "case": "t64_ord_gen_kids",
+  "axis": "several partial drivers. two child outputs on two bits from a generate loop beside a logic, under typical, to see the order and the place of the records the drivers write.",
+  "differs_from": "t64_ord_two_same",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "",
+      "records": 7,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.g[0].u",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.g[0].u",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "records": 7,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.g[1].u",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.g[1].u",
+      "name": "o",
+      "width": 1,
+      "type": "logic",
+      "port": "out",
+      "records": 7,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "XZZX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "XZZ0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0ZZ0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "1ZZ0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "1ZZ1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].u.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].u.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[0].u.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].u.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[0].u.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[0].u.o",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].u.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].u.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[1].u.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].u.o",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g[1].u.o",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g[1].u.o",
+      "value": "1"
+    }
+  ]
+}

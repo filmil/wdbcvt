@@ -1,0 +1,60 @@
+{
+  "case": "t64_ord_self____",
+  "axis": "several partial drivers. a driver of one bit from another bit of the same net beside a logic, under typical, to see the order and the place of the records the drivers write.",
+  "differs_from": "t63_pdr_two_bits",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "",
+      "records": 6,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "ZZXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "ZZX0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "ZZ00"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "ZZ01"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "ZZ11"
+    }
+  ]
+}

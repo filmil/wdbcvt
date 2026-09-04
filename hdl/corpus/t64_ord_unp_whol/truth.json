@@ -1,0 +1,53 @@
+{
+  "case": "t64_ord_unp_whol",
+  "axis": "several partial drivers. a driver of one whole element of an unpacked array of nets beside a logic, under typical, to see the order and the place of the records the drivers write.",
+  "differs_from": "t64_ord_unp_elem",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "",
+      "elements": 2,
+      "element_width": 4,
+      "element_type": "",
+      "records": 3,
+      "declared": "memory of wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "(ZZZZ, XXXX)"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "(ZZZZ, 0000)"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "(ZZZZ, 1111)"
+    }
+  ]
+}
