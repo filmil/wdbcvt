@@ -178,6 +178,11 @@ their scope paths and their widths.
 
 ## What the converter writes
 
+`bazel run //cmd/wdbcvt -- -in <file>.wdb -fst <file>.fst` converts a
+database. What follows is the mapping it applies; `pkg/fstout` is the
+code, and `pkg/fstout:fstout_test` checks it by reading the output back
+through libfst and comparing against every case's `truth.json`.
+
 **Scopes.** The instance tree of the database becomes the scope tree of
 the file, one `fstWriterSetScope` per scope in preorder.
 
@@ -201,10 +206,12 @@ then show, search and compare a field on its own, which is the reason
 a waveform viewer is opened at all, and because the aggregate can
 always be read back from the leaves while the reverse is not true.
 
-**Scalars.** `std_ulogic`, `bit` and their vectors are wires, and their
-values are the nine state characters FST already carries.
-An integer is `FST_VT_VCD_INTEGER`, a real is `FST_VT_VCD_REAL`, a
-`time` is `FST_VT_VCD_TIME`, and a `character` or a `string` is
+**Scalars.** `std_ulogic`, `bit`, Verilog `logic` and their vectors
+are wires, told apart by the class word of the enumeration entry, and
+their values are the nine state characters FST already carries, in
+lower case. An integer is `FST_VT_VCD_INTEGER` of 32 bits holding
+two's complement, a real is `FST_VT_VCD_REAL`, which libfst stores as
+the eight bytes of the double, and a `character` or a `string` is
 `FST_VT_GEN_STRING`.
 
 **Enumerations.** A user enumeration is written as
@@ -214,25 +221,62 @@ format's own way to say the same thing, and are the better answer once
 a reader that uses the table matters; the model keeps the literal
 either way, so the choice can change without touching the decoder.
 
+**Physical types.** A physical value is a count and the unit it
+counts, `3000 um`, and FST has no type for that pair, so it goes as a
+string. `FST_VT_VCD_TIME` would hold the count and lose the unit.
+
+**Names.** An extended identifier keeps its bars in the database,
+`\g(0)\` for a VHDL generate iteration and `\g[0].r ` for a Verilog
+variable declared in a generate block. The converter strips the
+decoration, so a viewer shows `g(0)` and `g[0].r`.
+
+**Times.** The file's time unit is a power of ten of a second, which
+is what FST calls a timescale, so the times go over unchanged. The
+last time written is the simulation end time, so a viewer shows the
+run's full length and not the last change.
+
+
+## What it costs
+
+Measured on the machine that built it, `bazel build -c fastbuild`:
+
+| Design | Objects | Changes | `.wdb` | `.vcd` | `.fst` | Time | Peak RSS |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `//hdl/counter:sim` | 14 | 2388 | 14423 | 5560 | 1566 | 0.02 s | 7 MB |
+| `//hdl/uart:sim` | 59 | 16718 | 44569 | 3259 | 2311 | 0.03 s | 10 MB |
+| `//hdl/picorv32:sim` | 280 | 40589 | 268032 | 286721 | 13737 | 0.25 s | 18 MB |
+| `//hdl/potato:sim` | 557 | 7441 | 197470 | 28448 | 38074 | 0.06 s | 18 MB |
+| `//hdl/serv:sim` | 968 | 9233899 | 15.9 MB | 29.6 MB | 653905 | 8.8 s | 591 MB |
+| `//hdl/neorv32:sim` | 5696 | 18875466 | 24.1 MB | 17.2 MB | 690347 | 71 s | 1.08 GB |
+
+On the two long traces the FST is 45 times smaller than the VCD of the
+same run, and 25 times, while holding signals the VCD leaves out
+entirely. On `//hdl/potato:sim` it is larger than the VCD, and that is
+the same fact from the other side: the VCD holds none of that design's
+integers, enumerations, records or its two 32768 byte memories, and
+the FST holds all of them.
+
+The memory is the whole database: `ReadFile` inflates every page and
+keeps it. The conversion itself streams, and opening a file now
+decodes every object once through Stream rather than once per object,
+which took the peak of `//hdl/neorv32:sim` from 1.5 GB to 1.08 GB.
+Reading the pages lazily is the next thing to do if a database is ever
+too large for memory.
+
+The time is dominated by decoding a value per change and spelling its
+leaves, about 3.8 us per change.
 
 ## What is left to build
 
-1.  **A change stream in time order.** `File.Changes` decodes one
-    object at a time, and FST needs the value changes of every object
-    grouped by ascending time. The inversion is cheap: the state of an
-    object is its value buffer, and all the buffers together are the
-    handle space, 2.8 MB even for `//hdl/neorv32:sim`. So the writer
-    can merge the arenas' pages by record time and apply each record to
-    the object it belongs to, which also makes the conversion stream
-    instead of holding the 18875466 changes of that design.
-2.  **The type mapping and the spelling above**, over `File.Leaves`.
-3.  **The `-fst` flag** of `cmd/wdbcvt`.
-4.  **The read back test.** Every corpus case written to FST, read back
-    through libfst's reader, and compared against its `truth.json`. For
-    the eight types VCD drops this is the only independent check there
-    is, and the binding already has the reader it needs.
-
-Step 1 is the only design work; the rest is a table and a walk.
+*   Spelling straight from the record bytes for a wire or a vector,
+    which is where the 3.8 us per change goes; the value tree is built
+    for every change and thrown away.
+*   `fstWriterCreateEnumTable` for user enumerations, once a reader
+    that uses the table matters.
+*   An unlogged object, a VHDL generic or constant, is left out. The
+    database holds no records for one, so there is nothing to write
+    over time; a viewer would still show it as a constant, and FST has
+    no place for that but a one change variable.
 
 ## Sources
 

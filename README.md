@@ -85,6 +85,9 @@ where the tool should not be used.
   FST has no specification, so the library is the definition of the
   format and this project does not keep a second writer.
   `third_party/libfst/` holds the build file for the pinned archive.
+* `pkg/fstout/` maps a decoded database onto FST variables: what a
+  record or an array flattens into, and how each value is spelled.
+  `wdbcvt -in <file>.wdb -fst <file>.fst` writes one.
 * `docs/` holds everything known about the format, written down as it is
   discovered. [docs/README.md](docs/README.md) is the index;
   [docs/format.md](docs/format.md) is the findings table.
