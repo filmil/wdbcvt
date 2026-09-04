@@ -1,0 +1,27 @@
+{
+  "case": "t66_prc_ass_imm_",
+  "axis": "process scopes. an immediate assertion in an always block beside a logic, under typical, to see what scope the construct leaves and what it declares.",
+  "differs_from": "t11_sv_logic____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}

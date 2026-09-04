@@ -1,0 +1,22 @@
+{
+  "case": "t66_prc_program_",
+  "axis": "process scopes. a program block instantiated beside the module beside a logic, under typical, to see what scope the construct leaves and what it declares.",
+  "differs_from": "t11_sv_logic____",
+  "end_time_ns": 10,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

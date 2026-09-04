@@ -1,0 +1,27 @@
+{
+  "case": "t65_tim_1s______",
+  "axis": "time past 32 bits. a write at 999 ms, an end at 1 s, to see whether the tier 44 reading of the 8 byte times holds across a page, in another unit and at a second past the largest time so far",
+  "differs_from": "t44_time_5s_____",
+  "end_time_ns": 1000000000,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 999000000,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}
