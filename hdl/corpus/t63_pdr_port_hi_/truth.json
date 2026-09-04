@@ -1,0 +1,98 @@
+{
+  "case": "t63_pdr_port_hi_",
+  "axis": "partial drivers. a child output bound to the high word of a 64 bit net beside a logic, under typical, to see whether a driver of a bit, a slice or a port bound to part of a net records the whole net or the part.",
+  "differs_from": "t63_pdr_port_slc",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 64,
+      "type": "",
+      "records": 4,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "i",
+      "width": 1,
+      "type": "logic",
+      "port": "in",
+      "records": 3,
+      "declared": "wire"
+    },
+    {
+      "scope": "tb.u",
+      "name": "o",
+      "width": 32,
+      "type": "",
+      "port": "out",
+      "records": 4,
+      "declared": "wire"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "00000000000000000000000000000000ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+    },
+    {
+      "time_ns": 50,
+      "signal": "v",
+      "value": "11111111111111111111111111111111ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "X"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.i",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u.i",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.o",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.u.o",
+      "value": "00000000000000000000000000000000"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.u.o",
+      "value": "11111111111111111111111111111111"
+    }
+  ]
+}
