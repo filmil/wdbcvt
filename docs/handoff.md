@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 1014 corpus cases of tiers
-1 to 63 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 1033 corpus cases of tiers
+1 to 64 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -46,6 +46,12 @@ its bits fall in, whole, that the first record holds `X` on the driven
 bits and `Z` on the rest, and that an output port bound to part of a
 net shares the net's handle with a bit offset; see
 `format/values.md` "Partial drivers on a net".
+Tier 64 established that several partial drivers write one record
+each in the scheduler's order, that the port position word is written
+on the first instance of a unit only, and that an `assign` in a
+generate block gets no block scope; see `format/values.md` "Several
+partial drivers on one net" and `format/hierarchy.md` on the word at
+`40` and on generates.
 
 
 ## What we do not have, and why
@@ -76,10 +82,10 @@ whole classes of objects came first.
 
 Work on branch `ai-dev-20260904-kpx-tier63`, PR #12, until it merges;
 then branch from `hd/main`.
-The generators of tiers 57 to 63 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t63.py`.
-The registration anchor for tier 64 in `hdl/corpus/BUILD.bazel` is the
-last tier 63 case in sorted order, `t63_pdr_w64_hi__`.
+The generators of tiers 57 to 64 are in `tools/corpus/`, see its
+README; a new tier starts by copying `gen_t64.py`.
+The registration anchor for tier 65 in `hdl/corpus/BUILD.bazel` is the
+last tier 64 case in sorted order, `t64_ord_w64_two_`.
 
 1. Pick the next lead from the open questions of `format.md` and
    design minimal pairs for it, one variable per case, the case names
@@ -89,12 +95,12 @@ last tier 63 case in sorted order, `t63_pdr_w64_hi__`.
    open part.
 2. Generate, register, build, dump, and write the truths from the
    dump only after reading the raw records; then run
-   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t64|TestVCD/t64'`.
+   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t65|TestVCD/t65'`.
 3. Document in the `format/` page for the area, then `format.md`:
    findings rows before "Whole file properties, also measured:",
-   comparison rows after the tier 63 rows, guesses in the open
+   comparison rows after the tier 64 rows, guesses in the open
    questions; a tier section in `corpus.md` before "Record which
-   comparison produced which finding"; and the count 1014 upward
+   comparison produced which finding"; and the count 1033 upward
    everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
    `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in

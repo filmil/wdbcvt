@@ -1818,6 +1818,57 @@ and a whole driver of `n` pairs takes 8 more than a partial driver of
 `t63_pdr_port_bit`, `t63_pdr_port_slc` and `t63_pdr_port_hi_`, each
 count pinned in its truth, and the VCD of each.
 
+**Several partial drivers on one net.**
+Each partial driver writes its own record of the pairs its bits fall
+in, at the pair's address, so two drivers in two pairs write at two
+addresses: `v[0] = s` and `v[63] = ~s` of `t64_ord_w64_two_` write 8
+bytes at the handle and 8 at the handle plus 8, and on the 2400 bit
+net of `t64_ord_2400_two` the second driver writes at `0x1b8` of
+arena 1, byte 92 of chunk 5, where pair 74 lives.
+The first record is the whole net, `X` on every driven bit.
+The order of the records within a time is the scheduler's, and the
+reader takes the last record of a time as the value.
+At time 0 it is the source order in every case: `assign v[3] = ~s;
+assign v[0] = s;` of `t64_ord_src_rev_` holds `XZZX`, `1ZZX`,
+`1ZZ0`, where `t63_pdr_two_bits` with the assigns the other way holds
+`XZZX`, `XZZ0`, `1ZZ0`; the four `assign v[i] = s` of a generate
+loop, `t64_ord_gen4____`, hold `XXXX`, `XXX0`, `XX00`, `X000`, `0000`
+and `t64_ord_gen_rev_`, counting down, `0XXX`, `00XX`, `000X`,
+`0000`; and each keeps that order at 50 ns.
+Two child instances on two bits keep the source order at time 0 and
+not always at 50 ns: `t64_ord_two_kids`, `u0` on `v[1]` from `s` and
+`u1` on `v[3]` from `~s`, holds `XZ0Z`, `1Z0Z` then `1Z1Z`, `0Z1Z`,
+`u0` first both times, where `t64_ord_two_same` with both inputs on
+`s` holds `XZ0Z`, `0Z0Z` then `1Z0Z`, `1Z1Z`, `u1` first at 50 ns,
+and the generate loop of `t64_ord_gen_kids` does the same.
+A driver fed from another bit of the same net, `assign v[1] = v[0]`
+beside `v[0] = s` in `t64_ord_self____`, writes the value it
+evaluated before the other driver's write landed and then the new
+one: `ZZXX`, `ZZX0`, `ZZX0`, `ZZ00` at time 0, six records for the
+five of `t63_pdr_two_bits`; the repeat is a write of the value held.
+Through a second net, `assign w[1] = v[0]` of `t64_ord_chain___`,
+each net holds its three records.
+A driver of a bit or an element of an unpacked array of nets writes
+the pair the element lives in: `wire [3:0] v [0:1]` with
+`assign v[1][2] = s`, `t64_ord_unp_elem`, holds `(ZZZZ, ZXZZ)`,
+`(ZZZZ, Z0ZZ)`, `(ZZZZ, Z1ZZ)` in one pair, and `assign v[1] =
+{4{s}}` of `t64_ord_unp_whol` `(ZZZZ, XXXX)` and on; the undriven
+element is `Z`.
+An `inout` port bound to a bit, `bidi u(.io(v[3]))` with
+`assign io = 1'b0` inside beside `assign v[1] = s`,
+`t64_ord_inout___`, shares the handle with offset 3 and mode 0, and
+the net holds `XZXZ` twice, `XZ0Z`, `0Z0Z` and `0Z1Z`: the child's
+driver writes the pair as any driver does.
+
+*Found by* `t64_ord_src_rev_` against `t63_pdr_two_bits`, the
+records in the other order; `t64_ord_two_same` against
+`t64_ord_two_kids`, the order at 50 ns turned.
+*Confirmed by* `t64_ord_gen4____`, `t64_ord_gen_rev_`,
+`t64_ord_w64_two_`, `t64_ord_2400_two`, `t64_ord_self____`,
+`t64_ord_chain___`, `t64_ord_unp_elem`, `t64_ord_unp_whol`,
+`t64_ord_gen_kids` and `t64_ord_inout___`, each count pinned in its
+truth, and the VCD of each.
+
 **Writes of the value held, from a clocked process or a shared net.**
 `//hdl/serv:sim`, a RISC-V core, holds 2965811 records that repeat
 the value before them, and the tier 17 rule above covers none of

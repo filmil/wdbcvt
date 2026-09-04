@@ -1,6 +1,6 @@
 # Corpus generators
 
-These scripts wrote the corpus cases of tiers 57 to 63.
+These scripts wrote the corpus cases of tiers 57 to 64.
 Each `gen_tNN.py` writes the sources, the `BUILD.bazel` and the
 `truth.json` of its tier into `hdl/corpus/`, through `gen_common.py`.
 They are kept so that a case can be regenerated, or a tier extended, by

@@ -1996,6 +1996,37 @@ Each net's raw record count is pinned as `records`.
 | `t63_pdr_port_slc` | `.o(v[7:4])` on 8 bits | `t63_pdr_port_bit`: offset 4 |
 | `t63_pdr_port_hi_` | `.o(v[63:32])` on 64 bits | `t63_pdr_port_slc`: offset 32; the writes at the handle plus 8 |
 
+**Tier 64: several partial drivers on one net.**
+A `logic s` written at 50 ns beside one net with two or more partial
+drivers, under typical, to see the order and the place of the records
+the drivers write, and what a second instance of a child leaves.
+Each driver writes its own pair record; the order within a time is the
+scheduler's; the port position word is written on the first instance
+of a unit only; an `assign` in a generate block gets no block scope.
+Each net's raw record count is pinned as `records`.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t64_ord_src_rev_` | `assign v[3] = ~s; assign v[0] = s;` | `t63_pdr_two_bits`: `1ZZX` then `1ZZ0`, the source order |
+| `t64_ord_gen4____` | `for (i = 0; i < 4; ...) assign v[i] = s;` | `t63_pdr_two_bits`: `tb.NetRegassign11_1` to `_4`; nine records |
+| `t64_ord_gen_rev_` | the loop counting down | `t64_ord_gen4____`: the same scopes; bit 3 first |
+| `t64_ord_w64_two_` | `v[0] = s; v[63] = ~s;` on 64 bits | `t63_pdr_two_bits`: records at the handle and at the handle plus 8 |
+| `t64_ord_2400_two` | `v[0] = s; v[2399] = ~s;` on 2400 bits | `t64_ord_w64_two_`: the second at byte 92 of chunk 5 |
+| `t64_ord_unp_elem` | `wire [3:0] v [0:1]; assign v[1][2] = s;` | `t63_pdr_bit0____`: `(ZZZZ, ZXZZ)`, `(ZZZZ, Z0ZZ)`, `(ZZZZ, Z1ZZ)` |
+| `t64_ord_unp_whol` | `assign v[1] = {4{s}};` | `t64_ord_unp_elem`: `(ZZZZ, XXXX)` and on |
+| `t64_ord_two_kids` | `child u0(.i(s), .o(v[1])); child u1(.i(~s), .o(v[3]));` | `t63_pdr_port_bit`: `tb.u1.o` position 0; seven records |
+| `t64_ord_two_same` | both inputs on `s` | `t64_ord_two_kids`: `u1` first at 50 ns |
+| `t64_ord_gen_kids` | the two children from a generate loop, on `v[i * 3]` | `t64_ord_two_same`: `tb.g[0].u`, `tb.g[1].u`; `g[1].u.o` position 0 |
+| `t64_ord_pos_expr` | one child on a scalar net from `~s` | `t64_ord_two_kids`: position 1 |
+| `t64_ord_pos_bit3` | one child on `v[3]` from `s` | `t64_ord_two_kids`: position 1 |
+| `t64_ord_two_nets` | two children on two scalar nets | `t64_ord_two_kids`: `tb.u1.o` position 0 |
+| `t64_ord_three___` | three children on three nets | `t64_ord_two_nets`: `u1` and `u2` at 0 |
+| `t64_ord_two_pos4` | two children of a four port module | `t64_ord_two_nets`: 0, 1, 2, 3 then four zeros |
+| `t64_ord_two_mods` | a child of a second module after the first | `t64_ord_two_nets`: position 1 on its `o` |
+| `t64_ord_inout___` | `assign v[1] = s; bidi u(.io(v[3]));` | `t63_pdr_port_bit`: offset 3, mode 0; five records |
+| `t64_ord_self____` | `assign v[0] = s; assign v[1] = v[0];` | `t63_pdr_two_bits`: `ZZX0` twice; six records |
+| `t64_ord_chain___` | `assign w[1] = v[0]` on a second net | `t64_ord_self____`: three records on each |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2033,7 +2064,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1014 cases through tier 63, and
+5. The reader now reproduces all 1033 cases through tier 64, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

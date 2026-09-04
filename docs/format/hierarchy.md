@@ -463,6 +463,17 @@ and the object order is the declaration order.
 `t48_v_port_open_` leaves `d` unconnected and `d` still holds 3.
 Every VHDL port holds 0: the 557 objects of `//hdl/potato:sim` and
 every port case of the VHDL tiers.
+The word is written on the first instance of a unit only.
+Every port of every later instance of the same unit holds 0:
+`t64_ord_three___` instantiates `child(input i, output o)` three
+times and holds 0, 1 on `u0` and 0, 0 on `u1` and `u2`;
+`t64_ord_two_pos4` holds 0, 1, 2, 3 on `u0` and four zeros on `u1`;
+and the two instances of a generate loop, `t64_ord_gen_kids`, hold
+0, 1 under `g[0]` and 0, 0 under `g[1]`.
+The first instance of a second unit holds its own: `child2 u1` after
+`child u0` in `t64_ord_two_mods` holds 0, 1.
+So the number can place a port only where the unit is instantiated
+once.
 The reader keeps it as `Position` and the dump prints it after a port.
 
 *Found by* the sweep over the corpus, then `t48_v_port_nansi` against
@@ -470,6 +481,11 @@ The reader keeps it as `Position` and the dump prints it after a port.
 *Confirmed by* `t48_v_port_rev__`, `t48_v_port_posit`,
 `t48_v_port_open_`, `t36_v_hier_and__`, `t13_v_hier3_net_`,
 `t11_v_port______` and `//hdl/serv:sim`.
+The first instance rule was *found by* `t64_ord_two_kids` against
+`t63_pdr_port_bit`, `tb.u1.o` at 0, and *confirmed by*
+`t64_ord_two_nets`, `t64_ord_two_same`, `t64_ord_three___`,
+`t64_ord_two_pos4`, `t64_ord_two_mods` and `t64_ord_gen_kids`, against
+`t64_ord_pos_expr` and `t64_ord_pos_bit3`, one instance each, at 1.
 
 The word at `44` is not written by the producer, on the evidence of
 the same sweep.
@@ -2045,6 +2061,14 @@ of `t12_v_gen_reg` is declared in `tb` as `\g[0].r ` and `\g[1].r `,
 with the backslash and the trailing space of a Verilog escaped
 identifier, and the objects are `tb.\g[0].r ` and `tb.\g[1].r `.
 There is no `g[0]` scope.
+An `assign` in a generate block is a `NetRegassign` scope of the
+module on the module's process counter, with nothing of the block in
+its name: the four `assign v[i] = s;` of `t64_ord_gen4____` are
+`tb.NetRegassign11_1` to `tb.NetRegassign11_4`, and the loop counting
+down in `t64_ord_gen_rev_` leaves the same four names.
+An instance in the block keeps the block's name, `tb.g[0].u` and
+`tb.g[1].u` of `t64_ord_gen_kids`, with its own `NetRegassign20_1`
+under each.
 An `if` generate does the same without the index: `reg r` in
 `if (1) begin : g` of `t13_v_gen_if_reg` is `tb.\g.r `, with one
 implicit `Initial9_1` for its initializer, and the handle space is
@@ -2072,7 +2096,9 @@ port mode `in` from the modport's declaration.
 The child's `always_comb` is `tb.dut.Always8_0` and the counter runs
 on as for any child.
 
-*Found by* `t11_v_gen_for` against `t7_gen_for`.
+*Found by* `t11_v_gen_for` against `t7_gen_for`; `t64_ord_gen4____`
+against `t63_pdr_two_bits`, four `NetRegassign` scopes under `tb` and
+no `g[i]`.
 *Confirmed by* `t12_v_gen_reg`, the loop with a variable and no
 instance, `t13_v_gen_if_reg`, the `if` generate, `t13_sv_iface`,
 the interface, and `t15_sv_iface_vec` and `t15_sv_iface_mp`, the
@@ -2366,10 +2392,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1014 of 1014 cases, and the
+*Confirmed by* the region length check in 1033 of 1033 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1014 of 1014 cases and
+and *confirmed by* the reader's range check in 1033 of 1033 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
