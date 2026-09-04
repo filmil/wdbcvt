@@ -84,6 +84,18 @@ http_archive(
     urls = ["https://github.com/olofk/serv/archive/refs/tags/1.4.0.tar.gz"],
 )
 
+# NEORV32, a RISC-V processor written in VHDL, as the large VHDL design
+# nobody wrote for this repository. Its testbench boots from the
+# instruction memory image the release ships, so the run needs no
+# toolchain.
+http_archive(
+    name = "neorv32",
+    build_file = "//third_party/neorv32:neorv32.BUILD",
+    sha256 = "1a620cc1ab2380934ed6cf3ce3f26a0bb703a07b6851959c47fc7a0815540f72",
+    strip_prefix = "neorv32-1.11.7",
+    urls = ["https://github.com/stnolting/neorv32/archive/refs/tags/v1.11.7.tar.gz"],
+)
+
 # PicoRV32, a size optimised RISC-V core in Verilog, as a second design
 # nobody wrote for this repository. Its `testbench_ez.v` carries a six
 # instruction program in an `initial` block, so the run needs no

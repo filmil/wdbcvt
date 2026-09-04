@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+# The NEORV32 sources and the project's own testbench come from the
+# release archive named in MODULE.bazel; only the wrapper that stops
+# the run is written here.
+vivado_library(
+    name = "lib",
+    srcs = [
+        # Compilation order matters to xvhdl; do not sort.
+        # do not sort
+        "@neorv32//:core",
+        "@neorv32//:sim",
+        "tb.ent.vhdl",
+    ],
+    library_name = "neorv32",
+)
+
+# bazel build //hdl/neorv32:sim
+#
+# Boots NEORV32 from the instruction memory image of the release under
+# xsim and writes the waveform database to
+# bazel-bin/hdl/neorv32/sim.wdb, next to sim.vcd.
+vivado_simulation(
+    name = "sim",
+    library = ":lib",
+    top = "tb",
+)
