@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 956 corpus cases of tiers
-1 to 60 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 977 corpus cases of tiers
+1 to 61 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -66,25 +66,25 @@ whole classes of objects came first.
 
 Work on branch `ai-dev-20260904-kpr-tier51`, PR #10, until it merges;
 then branch from `hd/main`.
-The generators of tiers 57 to 60 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t60.py`.
-The registration anchor for tier 61 in `hdl/corpus/BUILD.bazel` is the
-last tier 60 case in sorted order, `t60_dbg_vec_____`.
+The generators of tiers 57 to 61 are in `tools/corpus/`, see its
+README; a new tier starts by copying `gen_t61.py`.
+The registration anchor for tier 62 in `hdl/corpus/BUILD.bazel` is the
+last tier 61 case in sorted order, `t61_num_two_cls_`.
 
 1. Pick the next lead from the open questions of `format.md` and
    design minimal pairs for it, one variable per case, the case names
    exactly 16 characters.
-   The numbering of question 24 is the freshest: a class with three
-   field types of distinct kinds, and a queue of a class, would show
-   whether the numbers follow declaration order or use order.
+   Tier 61 settled the order of the numbering of question 24; what
+   reads it, and the hidden numbers of an associative array, are the
+   open part.
 2. Generate, register, build, dump, and write the truths from the
    dump only after reading the raw records; then run
-   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t61|TestVCD/t61'`.
+   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t62|TestVCD/t62'`.
 3. Document in the `format/` page for the area, then `format.md`:
    findings rows before "Whole file properties, also measured:",
-   comparison rows after the tier 60 rows, guesses in the open
+   comparison rows after the tier 61 rows, guesses in the open
    questions; a tier section in `corpus.md` before "Record which
-   comparison produced which finding"; and the count 956 upward
+   comparison produced which finding"; and the count 977 upward
    everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
    `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in

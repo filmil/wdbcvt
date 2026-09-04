@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 956 of 956 cases decoding with the entry lengths chaining
+*Confirmed by* 977 of 977 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -53,10 +53,10 @@ exactly to the word at `36`.
 | `0x0d` | physical | `[u32 origin][u32 n]` then `n` times `name NUL [u64 scale]` |
 | `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims]` then `dims` index type words, then `[u32 nranges]` and that many range triples, then `-99` |
 | `0x11` | record | `[u32 origin][u16 layout][u16 0xb][u32 n]` then `n` fields, then `-99` |
-| `0x13` | dynamic array | `[u32 origin][u32 element][u32 1]` |
-| `0x14` | queue | `[u32 origin][u32 element][u32 1]` |
-| `0x15` | associative array | `[u32 origin][u32 element][u32 word][u32 key]`, `word` `2` for a `string` key and `3` for an `int` key |
-| `0x17` | class | `[u32 origin][i32 parent][u32 id][u32 n]` then `n` fields, each `name NUL [u32 type][u32 nranges]` triples `[u32 0]` |
+| `0x13` | dynamic array | `[u32 origin][u32 element][u32 number]`, see "The numbering" |
+| `0x14` | queue | `[u32 origin][u32 element][u32 number]` |
+| `0x15` | associative array | `[u32 origin][u32 element][u32 number][u32 key]` |
+| `0x17` | class | `[u32 origin][i32 parent][u32 number][u32 n]` then `n` fields, each `name NUL [u32 type][u32 nranges]` triples `[u32 0]` |
 | `0x18` | string | `[u32 origin]` |
 
 Kinds `0x04` and `0x07` come from SystemVerilog only, and are described
@@ -69,7 +69,7 @@ A range triple is `[i32 left][i32 right][i32 dir]`, with `dir` `1` for
 The trailing `-99` is `0xffffff9d` and closes the triple list.
 An array entry of a SystemVerilog file elaborated with `-debug all`
 holds a small non-negative number there instead when a class or a
-dynamic container refers to the type; see "Under -debug all".
+dynamic container refers to the type; see "The numbering".
 The reader keeps the word as `Type.Tail` and does not require `-99`.
 
 **Enumeration.**
@@ -752,12 +752,12 @@ with `wdbcvt -dump`.
 | Source | Entries added | Case |
 | :--- | :--- | :--- |
 | `string str` | `0x18` `string`, origin `0x5`, no body | `t60_dbg_str_____` |
-| `int q[$]` | `bit`, `scalar_int`, `int`, then `0x14` unnamed, origin `0x1`, element `int`, word `1` | `t60_dbg_queue___` |
-| `int d[]` | the same three, then `0x13` unnamed, element `int`, word `1` | `t60_dbg_dynarr__` |
-| `int a[string]` | the same three, `string`, then `0x15` unnamed, element `int`, word `2`, key `string` | `t60_dbg_assoc___` |
-| `int a[int]` | the same three, then `0x15` unnamed, element `int`, word `3`, key `int` | `t60_dbg_assoc_i_` |
-| `class c_t; int f = 1; endclass` | `0x17` `c_t`, origin `0x1`, parent `-1`, id `0`, one field `f` of `int` with no triple | `t60_dbg_class___` |
-| `class c_t extends b_t` | `b_t` with parent `-1` and id `1`, then `c_t` with parent `b_t`'s index and id `0`, each with its own field only | `t60_dbg_class_d_` |
+| `int q[$]` | `bit`, `scalar_int`, `int`, then `0x14` unnamed, origin `0x1`, element `int`, number `1` | `t60_dbg_queue___` |
+| `int d[]` | the same three, then `0x13` unnamed, element `int`, number `1` | `t60_dbg_dynarr__` |
+| `int a[string]` | the same three, `string`, then `0x15` unnamed, element `int`, number `2`, key `string` | `t60_dbg_assoc___` |
+| `int a[int]` | the same three, then `0x15` unnamed, element `int`, number `3`, key `int` | `t60_dbg_assoc_i_` |
+| `class c_t; int f = 1; endclass` | `0x17` `c_t`, origin `0x1`, parent `-1`, number `0`, one field `f` of `int` with no triple | `t60_dbg_class___` |
+| `class c_t extends b_t` | `b_t` with parent `-1` and number `1`, then `c_t` with parent `b_t`'s index and number `0`, each with its own field only | `t60_dbg_class_d_` |
 
 The class entry comes before the predefined entries of its field
 types, the way an outer record comes before its fields; a derived
@@ -783,21 +783,68 @@ The ordinary entries are what they are under typical: `t60_dbg_vec_____`,
 `t60_dbg_mem_____` hold the same type tables as their tier 11
 counterparts, `-99` included.
 
-The word after an array entry's last triple changes when a class or a
-dynamic container refers to the type.
-`int` closes with `-99` in `t60_dbg_int_____`, with `0` under the
-queue, the dynamic array and both associative arrays, with `1` under
-`c_t` of `t60_dbg_class___` and `t60_dbg_class_2h`, and with `2` in
-`t60_dbg_class_2_` and `t60_dbg_class_d_`.
-In `t60_dbg_class_2_` the unnamed `logic [3:0]` entry of field `g`
-closes with `1`; in `t60_dbg_class_d_` `b_t` has id `1`.
-The numbers do not repeat within a file, and `c_t`, the class of the
-variable, has `0` in every case.
-The guess that they are one numbering over the types the class and
-container machinery registers, starting at the variable's type, is in
-[../format.md](../format.md).
-*Found by* `t60_dbg_queue___` against `t60_dbg_int_____`.
-*Confirmed by* the seven other cases with a non `-99` word.
+**The numbering.**
+The word after an array entry's last triple, the id word of a class
+and the word after a container's element type are one numbering,
+tier 61.
+It counts from `0` over the types the flag registers for the objects
+it keeps, in this order:
+
+* The variables of the module in declaration order:
+  `int a[string]` then `int q[$]` gives the associative array `2` and
+  the queue `3`, and the other way round the queue `1` and the
+  associative array `3`, `t61_num_a_then_q` and `t61_num_q_then_a`.
+* A container after its element: `int q[$]` gives `int` `0` and the
+  queue `1`, `t60_dbg_queue___`; `int q[$][$]` gives `int` `0`, the
+  inner queue `1` and the outer queue `2`, `t61_num_q_q_____`; a queue
+  of a class gives the class `0`, its `int` field `1` and the queue
+  `2`, `t61_num_q_cls___`.
+* A class before its fields, and the fields last declared first:
+  `int f; logic [3:0] g` gives the class `0`, the vector `1` and `int`
+  `2`, `t60_dbg_class_2_`, and `real r; logic [3:0] g; int f` gives
+  `int` `1` and the vector `2`, `t61_num_cls_rev_`.
+  A parent class, or a class a field names, comes right after the
+  class and before its own fields: `c_t extends b_t` gives `c_t` `0`,
+  `b_t` `1` and `b_t`'s `int` `2`, `t60_dbg_class_d_`, and a field
+  `b_t hb` the same, `t61_num_cls_cls_`.
+  Two classes with a handle each give `a_t` `0`, `int` `1` and `b_t`
+  `2`, `t61_num_two_cls_`.
+* A type already numbered keeps its number: the `int` of `b_t` in
+  `t61_num_two_cls_`, and two `int` fields, `t61_num_cls_2int`.
+* An array is numbered by its element, not by itself: `int`, `byte`
+  and `longint` in one class all hold `1`, `t61_num_cls_byte`,
+  `t61_num_cls_byti` and `t61_num_cls_long`, and `int; byte;
+  logic [3:0]` holds `2`, `2` and `1`, `t61_num_cls_ibv_`, where
+  `logic [3:0]` and `logic [7:0]` share one entry and one number,
+  `t61_num_cls_2vec`.
+  The number is not written into the `bit` or `logic` entry, whose
+  last word stays `0`.
+* A `string` or a `real` takes no number and has no slot for one:
+  `string q[$]` gives the queue `0`, `t61_num_q_str___`, and a
+  `string` or `real` field leaves the others as they were,
+  `t61_num_cls_str_`, `t61_num_cls_3f__`.
+* An associative array takes two numbers with a `string` key and
+  three with an `int` key, and holds the last: `int a[string]` gives
+  `int` `0` and the array `2`, `int a[int]` gives `int` `0` and the
+  array `3`, and a queue declared after either continues at `3` or
+  `4`, `t61_num_a_then_q` and `t61_num_ai_thn_q`.
+  What the hidden numbers belong to is open.
+
+The variable's own class or container therefore holds `0` when the
+element takes no number, and the class of a handle variable always
+does.
+What the numbering is for is open; question 24 of
+[../format.md](../format.md) keeps the guesses.
+A container's declaration takes the value class of its element,
+`3` for `int`, `0` for a class or a string, and one `(0 to 0)` range
+per dimension, `t61_num_q_cls___`, `t61_num_q_str___` and
+`t61_num_q_q_____`.
+
+*Found by* `t61_num_a_then_q` against `t61_num_q_then_a`, which move
+the same two containers past each other, and `t60_dbg_class_2_`
+against `t61_num_cls_rev_`, which reverse the fields.
+*Confirmed by* the other cases named above, 31 files with a number in
+them and no exception to the rules.
 
 ## What the earlier size measurements meant
 

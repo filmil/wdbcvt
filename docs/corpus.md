@@ -1899,6 +1899,41 @@ dropped: the command ends the batch script without a message, and the
 database closes at 25 ns.
 The generators of tiers 57 to 60 are in `tools/corpus/`.
 
+**Tier 61: the numbering under -debug all.**
+The tier 60 shape again, elaborated with `-debug all`, with the type
+declarations arranged to show how the numbers that replace the `-99`
+trailer of an array, sit in the id word of a class and follow the
+element of a container are assigned; see "The numbering" in
+[format/types.md](format/types.md).
+Each case moves one thing: the order of two declarations, the kind of
+one field, the element of one queue.
+The truth holds a class or string handle as in tier 60 and marks a
+container `"logged": false`.
+
+| Case | The variable | Differs from |
+|---|---|---|
+| `t61_num_cls_3f__` | `c_t` with `int`, `logic [3:0]` and `real` fields | `t60_dbg_class_2_`: `real` takes no number |
+| `t61_num_cls_rev_` | the three fields in reverse order | `t61_num_cls_3f__`: the numbers swap with the order |
+| `t61_num_cls_byte` | `int` and `byte` fields | `t60_dbg_class___`: both hold `1` |
+| `t61_num_cls_byti` | `byte` then `int` | `t61_num_cls_byte`: the same |
+| `t61_num_cls_long` | `int` and `longint` | `t61_num_cls_byte`: `longint` shares too |
+| `t61_num_cls_2int` | two `int` fields | `t60_dbg_class___`: one entry, one number |
+| `t61_num_cls_2vec` | `logic [3:0]` and `logic [7:0]` fields | `t60_dbg_class_2_`: one entry `logic` with number `1` for both |
+| `t61_num_cls_ibv_` | `int`, `byte`, `logic [3:0]` | `t61_num_cls_byte`: the vector, declared last, holds `1`; `int` and `byte` hold `2` |
+| `t61_num_cls_str_` | `int` and `string` fields | `t60_dbg_class___`: `string` takes no number |
+| `t61_num_cls_q___` | `int` and `int q[$]` fields | `t60_dbg_class___`: `int` `1`, the queue `2` |
+| `t61_num_cls_cls_` | `b_t { int g }`, `c_t { b_t hb }` | `t60_dbg_class_d_`: a handle field's class follows like a parent, `c_t` `0`, `b_t` `1`, `int` `2` |
+| `t61_num_two_cls_` | `a_t ha` and `b_t hb`, both held | `t60_dbg_class_2h`: `a_t` `0`, its `int` `1`, `b_t` `2` |
+| `t61_num_cls_int_` | `c_t h` beside `int i` written `7` then `9` | `t60_dbg_class___`: `i` declared, logged and recorded as under typical |
+| `t61_num_q_cls___` | `c_t q[$]` | `t60_dbg_queue___`: `c_t` `0`, `int` `1`, the queue `2`; the declaration takes class `0` |
+| `t61_num_q_q_____` | `int q[$][$]` | `t60_dbg_queue___`: `int` `0`, inner `1`, outer `2`; two `(0 to 0)` ranges |
+| `t61_num_q_str___` | `string q[$]` | `t60_dbg_queue___`: the queue holds `0` |
+| `t61_num_q_vec___` | `logic [3:0] q[$]` | `t60_dbg_queue___`: the vector `0`, the queue `1` |
+| `t61_num_q_byte__` | `byte q[$]` | `t60_dbg_queue___`: `byte` `0`, the queue `1` |
+| `t61_num_a_then_q` | `int a[string]` then `int q[$]` | `t60_dbg_assoc___`: `int` `0`, the assoc `2`, the queue `3` |
+| `t61_num_q_then_a` | `int q[$]` then `int a[string]` | `t61_num_a_then_q`: the queue `1`, the assoc `3` |
+| `t61_num_ai_thn_q` | `int a[int]` then `int q[$]` | `t61_num_a_then_q`: the assoc `3`, the queue `4` |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1936,7 +1971,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 956 cases through tier 60, and
+5. The reader now reproduces all 977 cases through tier 61, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
