@@ -1,0 +1,75 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Method}
+\label{sec:method}
+
+\subsection{Minimal pairs}
+
+The corpus is a set of small designs, each simulated once, each
+differing from another case in exactly one property. A finding is the
+difference between the two databases that results.
+
+Two examples. \texttt{t10\_vec274} declares a value of 274 bytes and
+\texttt{t10\_vec275} declares 275; the first is written as one record
+and the second as two, which locates the threshold at which a large
+value is split into chunks. \texttt{t2\_bit} and
+\texttt{t1\_bit\_one\_edge} differ in the type of a single signal, and
+the difference between the two type tables is the entry that
+distinguishes \texttt{BIT} from \texttt{STD\_ULOGIC}.
+
+Cases are grouped into tiers, each tier asking one question. The
+corpus reached 1049 cases in 66 tiers. Each case directory holds the
+source, a \texttt{BUILD.bazel} that simulates it, and a
+\texttt{truth.json}.
+
+\subsection{Ground truth declared before the file is opened}
+
+\texttt{truth.json} states what the simulation must produce: the
+signals with their scopes, widths and type names, the value of each at
+each time, and, where a tier needs it, the number of raw records a
+signal holds. It is derived from the design source. It is not derived
+from the database, and it is written before the database is decoded.
+
+This is what makes a decoding claim falsifiable. The reader must
+reproduce the truth file; a decoding that merely reproduces itself
+fails.
+
+\subsection{The noise mask}
+
+Not every byte of a database is a function of the design. Timestamps,
+absolute paths, and several words that differ between two runs of the
+same design would otherwise appear as differences between cases. A
+mask records the fields known to vary, and the differential tooling
+excludes them. Where a masked field was later explained, it left the
+mask; where it was not, the report states it as unexplained rather
+than as a constant.
+
+\subsection{Recording rules}
+
+Three rules govern what enters the format documentation.
+
+\begin{enumerate}
+  \item A fact enters the findings table only with the command that
+        reproduces it, and the table names the case that found it and
+        the cases that confirm it. Everything else stays in an open
+        questions section and is labelled a guess.
+  \item A test asserts against \texttt{truth.json}, or against
+        Vivado's VCD as read by an existing parser. A test that
+        asserts against bytes the decoder itself produced proves
+        nothing and is not written.
+  \item Every claim is scoped to the Vivado version that produced the
+        file.
+\end{enumerate}
+
+A second table records which comparison produced which discovery, with
+roughly 650 rows at the time of writing. That table is what makes the
+result reviewable by a reader who was not present: a claim can be
+traced to the pair of cases that produced it and re-run.
+
+\subsection{Build environment}
+
+Everything is built by Bazel: the Vivado installation is provisioned
+by \texttt{rules\_vivado} into a shared cache, each corpus case is a
+simulation target, and the test suite consumes the resulting databases
+as data. A case is therefore reproducible from a clean checkout on any
+machine with the same Vivado installer archive, and the whole corpus
+is re-simulated by one command.

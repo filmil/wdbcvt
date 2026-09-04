@@ -118,6 +118,19 @@ Redirecting a step's stdin from `/dev/null` is the blunt version of the
 same rule.
 
 
+# The report
+
+`//docs/latex` holds the report on the whole effort, in the IEEEtran
+class, built by `rules_latex_host` from the host `pdflatex`.
+Run `bazel build //docs/latex:report`; the PDF lands in
+`bazel-bin/docs/latex/report.pdf`, and the release workflow attaches it
+as `wdbcvt-report.pdf`.
+The runner therefore needs a TeX Live with `IEEEtran.cls`.
+Keep the report in step with `docs/format.md`: it states the numbers,
+so a tier that changes the case count or a measurement changes the
+report too.
+
+
 # Provenance rules
 
 This is an AI-first exploration of an undocumented format.

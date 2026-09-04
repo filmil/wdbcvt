@@ -1,0 +1,29 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Conclusion}
+
+An undocumented binary format was worked out from experiments alone,
+to the point where a reader reproduces a declared ground truth for
+1049 minimal cases and for six designs, the largest of which records
+18\,875\,466 value changes over 5696 objects, and where a converter
+produces FST files that a standard viewer opens.
+
+Three parts of the method carried the result. Minimal pairs, so that a
+difference between two databases has one cause. A ground truth written
+from the design before the database is opened, so that a decoding
+claim can fail. And guards outside the project, so that the checker
+and the decoder cannot share a mistake.
+
+Two directions remain open. A second Vivado version would separate
+properties of the format from properties of one release, which is the
+largest single gap in what can be claimed. A large SystemVerilog
+design would do for that language what NEORV32 did for VHDL: the
+corpus covers SystemVerilog only in miniature, and the two defects
+found by large designs were both found in the parts of the format that
+only a large design exercises.
+
+\section*{Availability}
+
+The repository, the corpus, the format documents and the tool are at
+\url{https://git.hdlfactory.com/HDL/wdbcvt}. This report is built from
+\texttt{//docs/latex} in that repository and is attached to each
+release.

@@ -1,0 +1,100 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{What the format turned out to be}
+\label{sec:format}
+
+This section states the structure the corpus established. It is a
+summary; the repository's \texttt{docs/format.md} holds the findings
+table, roughly 290 rows, each with the command that reproduces it, and
+four documents that give the offsets.
+
+\subsection{Container}
+
+A database begins with a fixed header whose first bytes read
+\texttt{Xilinx WAVE DATABASE 01} and \texttt{Xilinx Simulator}. Three
+pointers at offset \texttt{0x48} locate directory entries, and each
+entry is followed by the section it describes: the event section, the
+type table, and the debug section. A trailer of \texttt{0x48} bytes
+sits before the first directory pointer and holds the simulation end
+time, the offset of a marker, the page size and the size of the handle
+space.
+
+Values live in \emph{arenas}. An arena spans \texttt{0x800} bytes of
+handle space, and the arena table has
+$\lceil \mathit{handlespace} / \texttt{0x800} \rceil$ slots. That rule
+replaced an earlier reading of the same field, $\lceil n/4 \rceil + 1$
+over the object count, which fitted every case until a case with seven
+signals broke it. The page directory holds one record of \texttt{0x4c0}
+bytes per arena, listing the file offset and compressed length of each
+of its pages.
+
+A page is a zlib stream that inflates to exactly 10240 bytes. Inside
+it are the time of the first record, the span to the last, a record
+count, and then the records, each of which is a time, a key, a length
+and the value bytes. There is no alignment between records.
+
+\subsection{Type table}
+
+The type table starts with \texttt{Xilinx ISim TYPE FILE 001} and a
+count. Each entry is a length-prefixed name followed by a body whose
+shape depends on a kind byte. The kinds observed are enumerations,
+SystemVerilog named values, integers with bounds, reals with bounds,
+aliases, VHDL access and file types, physical types with their unit
+table, arrays with their index constraints, and records with their
+fields. Under \texttt{xelab -debug all}, five more appear for the
+SystemVerilog string, queue, dynamic array, associative array and
+class.
+
+An enumeration entry carries its literals, which is what allows a
+decoded value to be rendered as \texttt{'1'}, \texttt{IDLE} or
+\texttt{TRUE} rather than as an index, and it is why FST output can
+keep the literal.
+
+\subsection{Hierarchy}
+
+The debug section starts with \texttt{Xilinx ISim DBG 006} and
+18~region offsets. The regions hold scope records (name, parent,
+children, first object, unit, file, line), unit records, declaration
+records (name, file, line, size, type, index constraints, kind, port
+mode), the source file table, and instance records that bind a
+declaration in a scope to a handle.
+
+Two properties of that binding matter to a reader:
+
+\begin{itemize}
+  \item Objects connected by a port share one handle. A signal, the
+        ports it drives and the ports of the instances below all
+        resolve to the same storage, and each contributes one record
+        at time~0.
+  \item A port bound to a slice of a signal shares the signal's handle
+        and carries an offset: in bytes for VHDL, in bits from the low
+        end for Verilog. Its value is that window of the signal's
+        value.
+\end{itemize}
+
+\subsection{Values}
+
+A VHDL value is laid out by type with alignment; a Verilog value is
+word pairs, \texttt{[a][b]} per 32 bits, where bit $i$ is
+$a_i + 2b_i$ over the four literals \texttt{0}, \texttt{1}, \texttt{Z},
+\texttt{X}.
+
+Two rules govern how a value reaches the file.
+
+\emph{Partial writes.} An assignment to a field, an element or a slice
+writes only the bytes it touched, keyed at the handle plus the byte
+offset of the part. A reader overlays each record on the value the
+earlier records built. For Verilog the unit is the word pair.
+
+\emph{Chunking.} A value of 275 bytes or more is split into records.
+With $s = \mathit{size} + 24$, the count is
+$2 \lceil s/299 \rceil$ and each chunk is
+$\lfloor \mathit{size} / \mathit{count} \rfloor$ bytes, the last
+taking the remainder, and a remainder of 276 bytes or more is chunked
+again by the same rule. The rule was fitted to 55 values from 200 to
+30\,000 bytes and holds for every one; the constants 24 and 299 have
+no explanation and are recorded as unexplained.
+
+The chunk map belongs to the signal at the handle rather than to the
+object being decoded. The distinction is invisible until a port is
+bound to a slice of a signal large enough to be chunked, which is what
+one of the designs in Section~\ref{sec:validation} produced.

@@ -1,0 +1,43 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Limits}
+\label{sec:limitations}
+
+\subsection{One version}
+
+Every claim here was measured on files written by Vivado 2025.2.
+Nothing distinguishes a property of the format from a property of that
+release, because no second release has been examined. Any use of this
+work on another version should begin by re-running the corpus.
+
+\subsection{What is still unexplained}
+
+The repository keeps an open questions section, separate from the
+findings table, and it is not short. Among its entries: what the
+chunking constants 24 and 299 mean; what several handle space costs
+pay for, including the \texttt{0x1088} bytes before the first signal;
+which value class codes the corpus has never produced; and what a
+numbering added under \texttt{-debug all} is read by. Each is labelled
+a guess or a gap. None of them is required by the reader, which is why
+they can stay open.
+
+\subsection{The derivation}
+
+An AI agent produced this analysis, under human supervision, by
+running experiments and reading bytes. No AMD documentation, source or
+binary was used, and the result is not a port, a decompilation or a
+specification.
+
+The failure mode of such a derivation is a story that reproduces on
+the cases that produced it. The corpus, the truth files, the external
+guards and the requirement that every finding name a reproducing
+command are all directed at that failure mode. They reduce it; they do
+not remove it. Where a wrong answer would be silent and expensive,
+the recommendation in the tool's own help text is to open the database
+in Vivado instead.
+
+\subsection{Scope of the reader}
+
+The reader decodes the objects a simulation records. It does not
+decode the contents of SystemVerilog dynamic objects, which the
+database appears to declare and not to record, and it does not write
+databases.

@@ -1,0 +1,109 @@
+% SPDX-License-Identifier: Apache-2.0
+%
+% The report on the wdbcvt effort. Built by //docs/latex:report through
+% rules_latex_host, which calls the host pdflatex three times.
+\documentclass[conference]{IEEEtran}
+
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{balance}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  columns=fullflexible,
+  breaklines=true,
+  frame=single,
+  framesep=3pt,
+  captionpos=b,
+  keepspaces=true,
+}
+
+\begin{document}
+
+\title{Reading an Undocumented Waveform Database:\\
+A Differential Corpus Method, Applied to Vivado \texttt{xsim}}
+
+\author{\IEEEauthorblockN{An automated coding assistant}
+\IEEEauthorblockA{HDL Factory\\
+Report generated from the \texttt{wdbcvt} repository\\
+\url{https://git.hdlfactory.com/HDL/wdbcvt}}}
+
+\maketitle
+
+\begin{abstract}
+AMD Vivado's \texttt{xsim} simulator records a run into a
+\texttt{.wdb} waveform database that no other tool reads, and the VCD
+file it writes from the same run holds only part of the design: for
+eight of the fifteen VHDL types in our test corpus the VCD contains no
+variable declaration at all. This report describes how the container,
+the type table, the hierarchy and the value records of that database
+were worked out without documentation, source or a decompiler, using a
+corpus of 1049 minimal test cases in which each case differs from
+another in one way, and a ground truth file per case written from the
+design rather than from the database. It states the resulting reader,
+its output path to FST through the reference library \texttt{libfst},
+and the measurements over six designs, the largest of which is a dual
+core RISC-V system on chip with 5696 recorded objects and 18\,875\,466
+value changes. It also states the limits: every claim is scoped to
+Vivado 2025.2, the derivation was performed by an AI agent under human
+supervision, and the result is not a specification.
+\end{abstract}
+
+\begin{IEEEkeywords}
+waveform database, VCD, FST, file format analysis, hardware
+simulation, differential testing, Bazel
+\end{IEEEkeywords}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/format}
+\input{sections/validation}
+\input{sections/output}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\balance
+
+\begin{thebibliography}{9}
+
+\bibitem{ieee1800}
+IEEE Standard for SystemVerilog, IEEE Std 1800-2023. The VCD format is
+defined in its clause on value change dump files.
+
+\bibitem{fst}
+T.~Bybell, ``FST file format,'' GTKWave documentation.
+\url{https://gtkwave.github.io/gtkwave/internals/fst-file-format.html}
+
+\bibitem{libfst}
+GTKWave project, \texttt{libfst}, MIT licensed.
+\url{https://github.com/gtkwave/libfst}
+
+\bibitem{hutt}
+T.~Hutt, ``An unofficial specification of the FST waveform format.''
+\url{https://blog.timhutt.co.uk/fst_spec/}
+
+\bibitem{serv}
+O.~Kindgren, ``SERV, the award-winning bit-serial RISC-V core.''
+\url{https://github.com/olofk/serv}
+
+\bibitem{potato}
+K.~K.~Skordal, ``Potato, a simple RISC-V processor in VHDL.''
+\url{https://github.com/skordal/potato}
+
+\bibitem{picorv32}
+C.~Wolf \emph{et al.}, ``PicoRV32, a size-optimized RISC-V CPU.''
+\url{https://github.com/YosysHQ/picorv32}
+
+\bibitem{neorv32}
+S.~Nolting, ``NEORV32, a customizable RISC-V microcontroller.''
+\url{https://github.com/stnolting/neorv32}
+
+\bibitem{govcd}
+F.~Filmar, ``go-vcd-parser, a VCD parser and toolkit in Go.''
+\url{https://github.com/filmil/go-vcd-parser}
+
+\end{thebibliography}
+
+\end{document}

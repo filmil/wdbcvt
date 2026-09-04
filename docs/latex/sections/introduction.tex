@@ -1,0 +1,47 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Introduction}
+
+A simulation run under AMD Vivado's \texttt{xsim} writes two files. The
+waveform database, \texttt{sim.wdb}, holds every signal the simulator
+was told to record. The value change dump, \texttt{sim.vcd}, holds a
+subset in the text format defined by IEEE~1800~\cite{ieee1800}.
+
+The subset is smaller than it appears. Measured across the corpus
+described in this report, Vivado's own VCD omits, for eight of the
+fifteen VHDL types present, both the variable declaration and every
+value change. Absent are \texttt{boolean}, \texttt{integer},
+\texttt{real}, \texttt{time}, \texttt{character}, user enumerations,
+records and arrays. Present are \texttt{std\_ulogic}, \texttt{bit} and
+their vector types. A tool that reads the VCD therefore sees a design
+with most of its state removed, and nothing in the file says so.
+
+The database that does hold the state is undocumented, and until now
+no tool outside Vivado read it. This report describes:
+
+\begin{itemize}
+  \item a method for working out such a format from experiments, based
+        on a corpus of minimal pairs and a declared ground truth per
+        case (Section~\ref{sec:method});
+  \item what that method established about the \texttt{.wdb}
+        container, its type table, its hierarchy and its value records
+        (Section~\ref{sec:format});
+  \item how the result is guarded against the failure mode particular
+        to a derivation of this kind, namely a plausible story that
+        happens to reproduce (Section~\ref{sec:validation});
+  \item a converter to FST~\cite{fst}, a format that can hold what the
+        database holds, written through the reference implementation
+        rather than reimplemented (Section~\ref{sec:output});
+  \item the limits of all of it (Section~\ref{sec:limitations}).
+\end{itemize}
+
+The work was performed by an AI agent under human supervision. That
+fact is stated in the repository's README, in its provenance document
+and in the tool's \texttt{-{}-help} output, and it is repeated here
+because it changes how the result should be read: an agent that infers
+a format from examples produces measurements that reproduce and
+plausible stories about bytes, and the two are indistinguishable on
+the page. The method in Section~\ref{sec:method} exists to separate
+them.
+
+The subject is Vivado 2025.2. No other version has been observed, and
+no claim here should be assumed to hold for one.

@@ -1,0 +1,87 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Output: FST through libfst}
+\label{sec:output}
+
+\subsection{Why not VCD}
+
+The converter's output format has to hold what the database holds. VCD
+does not: the measurement in the introduction, that eight of the
+fifteen types in the corpus are absent from Vivado's own VCD, applies
+to any VCD. FST~\cite{fst} has variable types for integers, reals,
+times and strings, and it compresses far better.
+
+\subsection{Why not a second FST writer}
+
+FST has no standard. The nearest thing to a specification is the
+source of \texttt{libfst}~\cite{libfst}, the library GTKWave, GHDL and
+nvc all use, plus an unofficial write-up~\cite{hutt}. A second writer
+would therefore be a second thing to maintain against a definition
+that can move, with nothing to signal that it had drifted.
+
+The converter calls \texttt{libfst} through cgo. The library is three
+C source files and zlib, built by Bazel, so the bytes of the output
+file come from the reference implementation. The same library reads
+the output back in the test.
+
+\subsection{The mapping}
+
+FST has no record type and no array type, so the converter flattens:
+
+\begin{itemize}
+  \item a record becomes a scope with one variable per field,
+        recursively;
+  \item an array of anything but logic becomes a scope with one
+        variable per element;
+  \item a vector of logic stays one variable of that many bits;
+  \item an integer is 32 bits of two's complement, a real is the
+        double, and an enumeration, a character, a string or a
+        physical value keeps its text.
+\end{itemize}
+
+Flattening was chosen so that a viewer can show, search and compare a
+single field on its own. The aggregate can be read back from the
+leaves; the reverse does not hold.
+
+Two objects that share a handle are declared as one FST variable and
+an alias of it, so a signal seen from several scopes is written once.
+
+\subsection{Streaming}
+
+The database stores each object's records where that object's storage
+lies, and a waveform file wants every object's changes in ascending
+time. The converter therefore replays the file once, keeping the
+current value of every object and merging the arenas by record time.
+The state is the handle space, 2.8~MB for the largest design here,
+rather than the change history, which for that design is
+18\,875\,466 entries.
+
+\subsection{Measurements}
+
+\begin{table}[t]
+\caption{Conversion, measured on one machine}
+\label{tab:cost}
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Design & \texttt{.wdb} & \texttt{.vcd} & \texttt{.fst} & Time \\
+\midrule
+\texttt{counter} & 14\,kB & 5.6\,kB & 1.6\,kB & 0.02\,s \\
+\texttt{uart} & 45\,kB & 3.3\,kB & 2.3\,kB & 0.03\,s \\
+PicoRV32 & 268\,kB & 287\,kB & 14\,kB & 0.25\,s \\
+Potato & 197\,kB & 28\,kB & 38\,kB & 0.06\,s \\
+SERV & 15.9\,MB & 29.6\,MB & 654\,kB & 8.8\,s \\
+NEORV32 & 24.1\,MB & 17.2\,MB & 690\,kB & 71\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:cost} gives the cost. On the two long traces the FST is
+45 and 25 times smaller than the VCD of the same run while holding
+more. Potato is the instructive row: its FST is larger than its VCD,
+because the VCD holds none of that design's integers, enumerations,
+records or its two 32\,768 byte memories, and the FST holds all of
+them.
+
+Time is dominated by decoding a value and rendering its leaves for
+every change, about 3.8~\textmu s per change. Memory is dominated by
+holding the inflated pages of the whole database.

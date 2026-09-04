@@ -88,6 +88,9 @@ where the tool should not be used.
 * `pkg/fstout/` maps a decoded database onto FST variables: what a
   record or an array flattens into, and how each value is spelled.
   `wdbcvt -in <file>.wdb -fst <file>.fst` writes one.
+* `docs/latex/` holds the report on the whole effort, in the IEEEtran
+  class, built by `bazel build //docs/latex:report` and attached to
+  every release as `wdbcvt-report.pdf`.
 * `docs/` holds everything known about the format, written down as it is
   discovered. [docs/README.md](docs/README.md) is the index;
   [docs/format.md](docs/format.md) is the findings table.

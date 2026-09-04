@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_latex_host//latex:defs.bzl", "latex_document")
+
+package(default_visibility = ["//visibility:public"])
+
+# bazel build //docs/latex:report
+#
+# The report on the whole effort, in the IEEEtran class, built by the
+# host pdflatex through rules_latex_host. The output is
+# bazel-bin/docs/latex/report.pdf, and the release workflow attaches it
+# to every release.
+latex_document(
+    name = "report",
+    main = "report.tex",
+    deps = glob(["sections/*.tex"]),
+)
