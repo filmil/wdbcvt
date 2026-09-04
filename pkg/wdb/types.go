@@ -25,6 +25,11 @@ const (
 	KindPhysical Kind = 0x0d // physical type with units: TIME
 	KindArray    Kind = 0x10 // array, constrained or not
 	KindRecord   Kind = 0x11 // record with named fields
+	KindDynArray Kind = 0x13 // SystemVerilog dynamic array, seen under -debug all
+	KindQueue    Kind = 0x14 // SystemVerilog queue, seen under -debug all
+	KindAssoc    Kind = 0x15 // SystemVerilog associative array, seen under -debug all
+	KindClass    Kind = 0x17 // SystemVerilog class, seen under -debug all
+	KindString   Kind = 0x18 // SystemVerilog string, seen under -debug all
 )
 
 // The first word of most entries says which language the type came
@@ -75,6 +80,16 @@ func (k Kind) String() string {
 		return "array"
 	case KindRecord:
 		return "record"
+	case KindDynArray:
+		return "dynarray"
+	case KindQueue:
+		return "queue"
+	case KindAssoc:
+		return "assoc"
+	case KindClass:
+		return "class"
+	case KindString:
+		return "string"
 	}
 	return fmt.Sprintf("kind(%#x)", uint8(k))
 }
@@ -125,6 +140,9 @@ type Field struct {
 	// Ranges are the constraint triples that follow the type index.
 	// Their meaning is still open; see docs/format.md.
 	Ranges []Range
+	// Tail is the word after a class field's ranges, tier 60. It is 0
+	// in every file seen.
+	Tail int32
 }
 
 // Type is one entry of the type table.
@@ -156,6 +174,11 @@ type Type struct {
 	// literals and 4 beyond, t20_enum_300. It is 1 for VHDL REAL and 0
 	// for the Verilog entries. See docs/format/types.md.
 	Trailer uint32
+	// Tail is the word after the last range triple of an array entry.
+	// It is -99 in every file seen except under -debug all, where a
+	// type that a class or dynamic object refers to holds a small
+	// non-negative id, tier 60. See docs/format/types.md.
+	Tail int32
 	// Literals are the enumeration literals in declaration order.
 	// Character literals keep their quotes, as in `'U'`. Verilog logic
 	// lists 0 1 Z X and bit lists 0 1 0 0.
@@ -469,9 +492,48 @@ func readType(kind Kind, body []byte) (Type, error) {
 			t.Index = t.Indexes[0]
 		}
 		nr := int(c.u32())
-		t.Ranges = c.ranges()
-		if c.err == nil && nr != len(t.Ranges) {
-			c.err = fmt.Errorf("array range count word %d, %d triples follow", nr, len(t.Ranges))
+		for i := 0; i < nr && c.err == nil; i++ {
+			t.Ranges = append(t.Ranges, Range{Left: c.i32(), Right: c.i32(), Dir: c.i32()})
+		}
+		// The word after the last triple is -99, except in a
+		// SystemVerilog file elaborated with -debug all, where a
+		// type the class or dynamic-object machinery refers to
+		// holds a small non-negative id instead. Found by
+		// t60_dbg_queue___ against t60_dbg_int_____; see
+		// docs/format/types.md.
+		t.Tail = c.i32()
+	case KindDynArray, KindQueue, KindAssoc:
+		// The element type, then a word that is 1 in every file
+		// seen; an associative array adds its key type after it.
+		// Found by t60_dbg_queue___, t60_dbg_dynarr__ and
+		// t60_dbg_assoc___ against t60_dbg_int_____.
+		t.Origin = c.origin()
+		t.Elem = int(c.u32())
+		t.Words = append(t.Words, c.u32())
+		if kind == KindAssoc {
+			t.Index = int(c.u32())
+		}
+	case KindString:
+		// Only the origin. Found by t60_dbg_str_____.
+		t.Origin = c.origin()
+	case KindClass:
+		// The parent class as a type index, -1 for none, then the
+		// class's own id, then the fields as in a record, each
+		// followed by one more word. Found by t60_dbg_class___,
+		// t60_dbg_class_2_ and t60_dbg_class_d_.
+		t.Origin = c.origin()
+		t.Target = int(c.i32())
+		t.Words = append(t.Words, c.u32())
+		n := int(c.u32())
+		for i := 0; i < n && c.err == nil; i++ {
+			f := Field{Name: c.str()}
+			f.Type = int(c.u32())
+			nr := int(c.u32())
+			for j := 0; j < nr && c.err == nil; j++ {
+				f.Ranges = append(f.Ranges, Range{Left: c.i32(), Right: c.i32(), Dir: c.i32()})
+			}
+			f.Tail = c.i32()
+			t.Fields = append(t.Fields, f)
 		}
 	case KindRecord:
 		t.Origin = c.origin()

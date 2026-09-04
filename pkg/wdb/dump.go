@@ -64,6 +64,25 @@ func (f *File) Dump(w io.Writer) error {
 			for _, r := range t.Ranges {
 				p(" (%s)", r)
 			}
+			if t.Tail != rangeEnd {
+				p(" tail %d", t.Tail)
+			}
+		case KindDynArray, KindQueue, KindAssoc:
+			p(" of [%d] words %v", t.Elem, t.Words)
+			if t.Kind == KindAssoc {
+				p(" keyed by [%d]", t.Index)
+			}
+		case KindClass:
+			p(" extends [%d] id %d", t.Target, t.Words[0])
+			for _, fd := range t.Fields {
+				p(" %s:[%d]", fd.Name, fd.Type)
+				for _, r := range fd.Ranges {
+					p("(%s)", r)
+				}
+				if fd.Tail != 0 {
+					p(" tail %d", fd.Tail)
+				}
+			}
 		case KindRecord:
 			p(" layout %d", t.Layout)
 			for _, fd := range t.Fields {
