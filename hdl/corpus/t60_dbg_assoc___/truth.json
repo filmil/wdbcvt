@@ -10,6 +10,13 @@
       "width": 1,
       "type": "logic",
       "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 32,
+      "type": "",
+      "logged": false
     }
   ],
   "transitions": [

@@ -1,7 +1,7 @@
 {
-  "case": "t60_dbg_str_____",
-  "axis": "debugging. a string variable beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
-  "differs_from": "t60_dbg_none____",
+  "case": "t60_dbg_class_n_",
+  "axis": "debugging. a class handle constructed at time 0 beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
+  "differs_from": "t60_dbg_class___",
   "end_time_ns": 100,
   "signals": [
     {
@@ -13,9 +13,9 @@
     },
     {
       "scope": "tb",
-      "name": "str",
+      "name": "h",
       "width": 32,
-      "type": "string"
+      "type": "c_t"
     }
   ],
   "transitions": [
@@ -31,7 +31,7 @@
     },
     {
       "time_ns": 0,
-      "signal": "str",
+      "signal": "h",
       "value": "00000000000000000000000000000000"
     }
   ]

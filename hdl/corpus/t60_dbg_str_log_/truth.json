@@ -1,7 +1,7 @@
 {
-  "case": "t60_dbg_str_____",
-  "axis": "debugging. a string variable beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
-  "differs_from": "t60_dbg_none____",
+  "case": "t60_dbg_str_log_",
+  "axis": "debugging. a string named in log_wave beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
+  "differs_from": "t60_dbg_str_____",
   "end_time_ns": 100,
   "signals": [
     {
@@ -15,7 +15,8 @@
       "scope": "tb",
       "name": "str",
       "width": 32,
-      "type": "string"
+      "type": "string",
+      "records": 2
     }
   ],
   "transitions": [

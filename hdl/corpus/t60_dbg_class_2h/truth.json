@@ -1,6 +1,6 @@
 {
-  "case": "t60_dbg_class_2_",
-  "axis": "debugging. a class with two fields beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
+  "case": "t60_dbg_class_2h",
+  "axis": "debugging. two handles of one class beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
   "differs_from": "t60_dbg_class___",
   "end_time_ns": 100,
   "signals": [
@@ -14,6 +14,12 @@
     {
       "scope": "tb",
       "name": "h",
+      "width": 32,
+      "type": "c_t"
+    },
+    {
+      "scope": "tb",
+      "name": "h2",
       "width": 32,
       "type": "c_t"
     }
@@ -32,6 +38,11 @@
     {
       "time_ns": 0,
       "signal": "h",
+      "value": "00000000000000000000000000000000"
+    },
+    {
+      "time_ns": 0,
+      "signal": "h2",
       "value": "00000000000000000000000000000000"
     }
   ]

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("//build:wdb_case.bzl", "wdb_case")
+
+package(default_visibility = ["//visibility:public"])
+
+wdb_case(
+    name = "t60_dbg_q_log___",
+    srcs = [
+        "tb.sv",
+    ],
+    tcl = "xsim.tcl",
+    xelab_args = [
+        "-debug",
+        "all",
+    ],
+)
