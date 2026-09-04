@@ -56,12 +56,14 @@ The repository, the corpus, the format documents and the tool are at
 \texttt{//docs/latex} in that repository and is attached to each
 release.
 
-The forge is private, and the reason is the runner. A build here needs
-a machine with the Vivado installation and the shared caches on it,
-because every corpus case is a simulation; a hosted runner cannot do
-that. The repository is therefore where the runner is.
+The forge is private because of the runner. Every corpus case is a
+simulation, so a build needs a machine with a Vivado installation and
+the shared caches on it. Such a machine exists, in the author's
+homelab, but it answers to the private forge and is not integrated
+with GitHub, so a public repository there would have nothing to build
+or test this work with.
 
 If you would like the source in a public place and are willing to
-sponsor a runner that can hold a Vivado installation, please get in
-touch through \url{https://hdlfactory.com}. That is the one thing
-standing between this work and a public mirror.
+sponsor a GitHub runner that can hold a Vivado installation, please
+get in touch through \url{https://hdlfactory.com}. That is the one
+thing standing between this work and a public mirror.
