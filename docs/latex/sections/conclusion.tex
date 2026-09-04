@@ -34,36 +34,35 @@ cached outputs and nothing rebuilt without a reason, which is what
 makes a difference between two databases a difference in the design
 rather than in the machine that produced it.
 
-The installation is provisioned into a shared cache by
-\texttt{rules\_vivado}, so the simulator itself is a build input
-rather than something a person installed. The corpus is 1049
-simulation targets, and one command re-runs them all. The C library
-of Section~\ref{sec:output} is built with a Bazel-fetched toolchain,
-so the release binary does not depend on the compiler of the machine
-that built it.
+\texttt{rules\_vivado} provisions the installation into a shared
+cache, so the simulator is a build input rather than something a
+person installed, and the corpus is 1049 simulation targets that one
+command re-runs. The C library of Section~\ref{sec:output} is built
+with a Bazel-fetched toolchain, so the release binary does not depend
+on the compiler of the machine that made it.
 
-The reasoning behind that setup, and the pinning it requires, is
-written up on the author's site: hermetic, ephemeral and reproducible
-builds~\cite{her}, the whole hardware stack under one build
-system~\cite{btd}, an ephemeral machine to run them
-on~\cite{homelab}, and the Vivado rules
-themselves~\cite{rulesvivado}.
+The reasoning behind that setup is written up on the author's site:
+hermetic, ephemeral and reproducible builds~\cite{her}, the hardware
+stack under one build system~\cite{btd}, an ephemeral machine to run
+them on~\cite{homelab}, and the Vivado rules~\cite{rulesvivado}.
 
 \section*{Availability}
 
 The repository, the corpus, the format documents and the tool are at
 \url{https://git.hdlfactory.com/HDL/wdbcvt}. This report is built from
 \texttt{//docs/latex} in that repository and is attached to each
-release.
+release. The branch \texttt{main} is mirrored, read only, to
+\url{https://github.com/filmil/wdbcvt}, so the source can be read and
+linked from a place people already look.
 
-The forge is private because of the runner. Every corpus case is a
+Development and CI stay on the forge. Every corpus case is a
 simulation, so a build needs a machine with a Vivado installation and
 the shared caches on it. Such a machine exists, in the author's
-homelab, but it answers to the private forge and is not integrated
-with GitHub, so a public repository there would have nothing to build
-or test this work with.
+homelab, but it answers to that forge and is not integrated with
+GitHub, so the mirror has the source and none of the checks that give
+it its weight.
 
-If you would like the source in a public place and are willing to
-sponsor a GitHub runner that can hold a Vivado installation, please
-get in touch through \url{https://hdlfactory.com}. That is the one
-thing standing between this work and a public mirror.
+If you are willing to sponsor a GitHub runner that can hold a Vivado
+installation, please get in touch through
+\url{https://hdlfactory.com}. That is what stands between the mirror
+and a public copy that tests itself.

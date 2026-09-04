@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Mirrors `main` to the read-only GitHub copy at
+# https://github.com/filmil/wdbcvt, so the work can be read and linked
+# from a place people already look. Development stays here: the Vivado
+# runner this repository builds on answers to this forge and is not
+# integrated with GitHub, so the mirror carries the source and none of
+# the CI.
+#
+# The job needs one secret, `GH_MIRROR_TOKEN`: a GitHub fine grained
+# personal access token whose only repository is `filmil/wdbcvt` and
+# whose only permission is Contents: read and write. Without it the job
+# says so and stops, rather than failing the push.
+#
+# The `vivado` label is the only runner here, and that host has no
+# node, so this is plain git and bash like the other workflows.
+name: Mirror
+
+on:
+  push:
+    branches:
+      - main
+  # A safety net if a push ever happens while the runner is down, and a
+  # button to force the mirror back into step.
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: vivado
+    steps:
+      - name: Fetch main, whole history
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_PAGER: cat
+        run: |
+          set -euo pipefail
+          auth="$(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
+          git init -q .
+          git remote add origin "${SERVER_URL}/${REPOSITORY}.git"
+          # A mirror carries the history, so this fetch has no --depth.
+          # Tags come along because the releases point at them.
+          git -c "http.extraheader=Authorization: Basic ${auth}" \
+              fetch -q --tags origin "+refs/heads/main:refs/heads/main"
+          git --no-pager log --oneline -1 refs/heads/main
+
+      - name: Push to the GitHub mirror
+        env:
+          MIRROR: ${{ vars.GH_MIRROR_REPO }}
+          TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          GIT_PAGER: cat
+        run: |
+          set -euo pipefail
+          mirror="${MIRROR:-filmil/wdbcvt}"
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::warning::GH_MIRROR_TOKEN is not set; nothing was mirrored"
+            exit 0
+          fi
+          # The token goes in a header rather than in the URL, so it
+          # cannot end up in a log line or in the remote list.
+          auth="$(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
+          git -c "http.extraheader=Authorization: Basic ${auth}" \
+              push --force --tags "https://github.com/${mirror}.git" \
+              refs/heads/main:refs/heads/main
+          echo "mirrored $(git rev-parse --short refs/heads/main) to ${mirror}"

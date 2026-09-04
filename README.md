@@ -15,6 +15,22 @@ See [docs/format.md](docs/format.md) for what has been measured so
 far and how the work proceeds.
 
 
+## Where this lives
+
+Development is on [git.hdlfactory.com/HDL/wdbcvt][forge], and so is the
+CI: every corpus case is a Vivado simulation, and the runner that can
+do that answers to that forge.
+
+`main` is mirrored, read only, to
+[github.com/filmil/wdbcvt][mirror], so the work can be read and linked
+from a place people already look.
+Issues and pull requests belong on the forge; the mirror has its issue
+tracker turned off so that a report there cannot go unread.
+
+[forge]: https://git.hdlfactory.com/HDL/wdbcvt
+[mirror]: https://github.com/filmil/wdbcvt
+
+
 ## How this format knowledge was obtained
 
 **This is an AI-first exploration.**
