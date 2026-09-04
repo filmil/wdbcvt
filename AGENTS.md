@@ -101,6 +101,17 @@ The release workflow therefore uses the vendored, bash only copy in
 `//.forgejo/actions/forgejo-release`.
 Vendor and trim any other action before using it here.
 
+A credential reaches a job through a repository secret and no other
+way.
+Do not generate, store, copy or name key material, and do not put the
+location of a key in a commit message, a pull request or a comment.
+When a job needs one, write the step to read
+`${{ secrets.<NAME> }}`, make the job exit zero with a warning when
+that is empty, and ask the repository owner to create the secret.
+`//.forgejo/workflows/mirror.yml` is the pattern: it writes the secret
+into a `mktemp -d` under `umask 077`, removes it on exit, and never
+puts it on a command line or in a URL.
+
 Host mode also gives the job a **pseudo-terminal**: a step's stdin is a
 `/dev/pts` device, not `/dev/null`.
 So any tool that decides to be interactive because it sees a terminal
