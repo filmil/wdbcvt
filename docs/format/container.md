@@ -45,13 +45,13 @@ See [values.md](values.md).
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 938 cases |
-| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 938 cases |
-| `0x30` | 8 | `uint64` `0x40` | same | constant in all 938 cases |
+| `0x00` | 24 | `Xilinx WAVE DATABASE 01`, NUL terminated | hex dump of any database | all 956 cases |
+| `0x18` | 24 | `Xilinx Simulator`, NUL terminated | same | all 956 cases |
+| `0x30` | 8 | `uint64` `0x40` | same | constant in all 956 cases |
 | `0x38` | 4 | `uint32` Unix time the database was written | the noise mask, two runs of `t3_tr1` | decodes to the file's own mtime |
-| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 938 cases |
-| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 938 cases |
-| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 938 cases |
+| `0x48` | 24 | three `uint64` file offsets of directory entries | following the values: each lands on a NUL terminated section name | all 956 cases |
+| `0x98` | 12 | three `uint32` `0x30` | hex dump | constant in all 956 cases |
+| `0xc0` | 4 | `uint32` `3` | hex dump | constant in all 956 cases |
 | `0xc4` | 4 | `uint32` per run duration, noise | the noise mask | differs between two runs of one case |
 
 The three `uint32` at `0x98` and the `3` at `0xc0` have not moved in any
@@ -119,7 +119,7 @@ of a vector, a record field or a generate statement, none of which
 The slot count is `ceil(handle space / 0x800)`, where the handle space
 is the trailer word at `0x18`, described below.
 The reader checks that rule on every file it opens, and it holds in all
-938 corpus cases.
+956 corpus cases.
 
 *Found by* `t5_sig10` against `t2_flat3`: the trailer and every
 directory entry sat 8 bytes later, and the `0x48` pointer said so.
@@ -128,7 +128,7 @@ through tier 6 and failed on `t7_sig07`, which has four slots for seven
 objects.
 `t7_sig14`, `t7_sig16` and `t7_sig24` then pinned the boundaries at
 `0x1800`, `0x2000` and `0x2800` of handle space.
-*Confirmed by* the reader's check across all 938 cases, including
+*Confirmed by* the reader's check across all 956 cases, including
 `t9_vec12000`, whose one object spans 20 slots.
 
 The slot count is not the arena count: `t6_sig05` has two arenas and
@@ -166,18 +166,18 @@ three slot header.
 
 | Offset | Len | Content | Found by | Confirmed by |
 | :--- | ---: | :--- | :--- | :--- |
-| `0x00` | 8 | `uint64` simulation end time, in the time unit the DBG section names, picoseconds in every case before tier 21 | the correlation sweep across all cases | 938 of 938 against `end_time_ns` in `truth.json`; `t21_v_ts_1ns_1ns` holds 100 for 100 ns |
-| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 938 cases |
-| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 938 of 938 cases |
-| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 938 cases; the arena span, by its value |
-| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 938 of 938 cases |
-| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 938 cases; the arena table's offset, by its value |
-| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 938 cases |
-| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 938 cases |
-| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 938 of 938 cases, checked against the marker |
+| `0x00` | 8 | `uint64` simulation end time, in the time unit the DBG section names, picoseconds in every case before tier 21 | the correlation sweep across all cases | 956 of 956 against `end_time_ns` in `truth.json`; `t21_v_ts_1ns_1ns` holds 100 for 100 ns |
+| `0x08` | 4 | `uint32` `0x3e9` | hex dump | constant in all 956 cases |
+| `0x0c` | 4 | `uint32` number of arena table slots | recorded as the constant `3` until the tier 7 sweep over every fixed word; it is 4, 5 and 6 in the signal count cases | the reader checks it against the table length in 956 of 956 cases |
+| `0x10` | 8 | `uint64` `0x800` | hex dump | constant in all 956 cases; the arena span, by its value |
+| `0x18` | 8 | `uint64` handle space, the bytes of handle space the objects occupy | comparing cases | the arena table rule above, 956 of 956 cases |
+| `0x20` | 4 | `uint32` `0xc8` | hex dump | constant in all 956 cases; the arena table's offset, by its value |
+| `0x24` | 4 | `uint32` `0` | hex dump | constant in all 956 cases |
+| `0x28` | 8 | `uint64` `0` | hex dump | constant in all 956 cases |
+| `0x30` | 8 | `uint64` number of logged ranges at the marker, `0` in `t0_nosig` | read as a flag until `t9_port_rec` held `2` | 956 of 956 cases, checked against the marker |
 | `0x38` | 8 | `uint64` file offset of the marker, `0` in `t0_nosig` | `t5_tr1000`: the only word holding `0x1bac`, the end of the flushed page | 140 of 140 cases with a marker |
 | `0x40` | 4 | `uint32` `0x2800`, the size a value page inflates to | inflating a page | every page in every case inflates to 10240 bytes |
-| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 938 cases |
+| `0x44` | 4 | `uint32` `0x64` | hex dump | constant in all 956 cases |
 
 The word at `0x18` is `0x11d0` for one bit with one edge, `0x1318` for
 two bits, and `0x2a38` for twenty.

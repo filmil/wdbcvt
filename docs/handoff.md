@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 938 corpus cases of tiers
-1 to 59 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 956 corpus cases of tiers
+1 to 60 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -22,83 +22,44 @@ Decoded and confirmed, with the case that found each in `format.md`:
   trailer and the noise mask that separates content from timestamps.
 * The type table: enumerations, integers, reals, physical types,
   arrays, records, aliases, access and file types, for VHDL, Verilog
-  and SystemVerilog.
+  and SystemVerilog; and the string, queue, dynamic array, associative
+  array and class entries that `xelab -debug all` adds.
 * The debug section: scopes, units, declarations, files, instance
   records, handles, generics, generates, packages, ports bound to
-  slices.
+  slices, and the declarations `-debug all` brings back.
 * Values over time: arenas, pages, chunked writes, the encoding of
-  every type above, forced and deposited values, 64 bit times, and what
-  the VCD keeps of the same run.
+  every type above, forced and deposited values, 64 bit times, the
+  placeholder record of a string or class handle, and what the VCD
+  keeps of the same run.
 
-Tier 59, the last complete tier, established how Tcl forces, `set_value`
-deposits and SystemVerilog `force` statements appear in the records; see
-`format/values.md`, "Values the script or the source imposes".
+Tier 60, the last complete tier, established what `-debug all` adds to
+a SystemVerilog file; see `format/types.md` "Under -debug all",
+`format/hierarchy.md` "What -debug all brings back" and
+`format/values.md` "Placeholder records under -debug all".
 
 
 ## What we do not have, and why
 
-**SystemVerilog under `-debug all` (tier 60, in progress).**
-Every SystemVerilog case before tier 60 ran under xsim's typical
-debugging level.
-`xelab -debug all` makes xsim keep objects that typical drops: strings,
-queues, dynamic arrays, associative arrays and class handles.
-The 14 cases of tier 60 are in the corpus and build, and the reader
-parses their type tables, but the tests of nine of them fail because
-their truths are the guesses written before the files were inspected,
-and because the value decoder rejects the new kinds.
-This is the state of the branch, on purpose: the observations below are
-reproducible today, the decoding of the new objects is not written yet.
-
-Observed so far, each reproducible with
-`wdbcvt -dump -in bazel-bin/hdl/corpus/<case>/sim.wdb`:
-
-* Five new type kinds appear: `0x13` dynamic array, `0x14` queue,
-  `0x15` associative array, `0x17` class and `0x18` string.
-  The reader names and parses them (`pkg/wdb/types.go`).
-  A string entry holds only the origin word.
-  A queue or dynamic array holds the element type and the word 1.
-  An associative array holds the element type, a word, and the key
-  type: the word is 2 for a string key, `t60_dbg_assoc___`, and 3 for
-  an int key, `t60_dbg_assoc_i_`.
-  A class holds the parent class as a type index, -1 for none, then a
-  word, then its fields as a record does, each followed by a word 0.
-* The word after an array entry's last range triple is -99 in every
-  file before tier 60 and stays -99 for an ordinary variable under
-  `-debug all`, `t60_dbg_int_____`.
-  It becomes a small non-negative number for a type that a class or
-  dynamic object refers to: `int` holds 0 under a queue, dynamic array
-  or associative array, and 1 or 2 under a class.
-  The class's own word is 0 for the variable's class and 1 for its
-  parent, `t60_dbg_class_d_`; in `t60_dbg_class_2_` the `logic [3:0]`
-  field type holds 1 and `int` 2.
-  The reader stores the word as `Type.Tail`.
-  Guess: one numbering over the types the class machinery registers,
-  starting at the variable's class.
-  The order that assigns it is not established.
-* A string or class handle variable gets a declaration of 32 bits and
-  value class 0, an object at the usual second handle `0x828`, and it
-  is logged: one 8 byte record of zeros at time 0 and nothing at the
-  write at 50 ns, `t60_dbg_str_____`, `t60_dbg_class___`.
-* A queue, dynamic array or associative array gets a declaration of 32
-  bits and value class 3 with a range (0 to 0), an object at `0x828`,
-  and is not logged; its arena is never written, `t60_dbg_queue___`.
-* None of the new objects appears in the VCD of the default script.
-* The handle space cost of a string is `0x98` with or without the flag,
-  `t60_dbg_str_____` against `t60_dbg_vec_____`, `t11_sv_str______`
-  against `t11_sv_logic____`.
-* The file size jump of about 1500 bytes for a second variable is the
-  second arena, not the flag; `t25_sv_two_same_` shows the same.
-
-Why it is unfinished: the session was interrupted at the point of
-teaching the value decoder the new kinds.
-The decoder (`pkg/wdb/value.go`, `pkg/wdb/verilog.go`) sizes a Verilog
-object from its type, and a string or class type has no bits of its own.
+**The content of dynamic objects.**
+`-debug all` declares a string, a queue, a dynamic array, an
+associative array and a class handle, but records none of their
+values: a string or class handle holds one 32 bit record of zeros at
+time 0, and a container is never logged.
+Nothing tried, a write from the source, `new` at time 0, `log_wave` by
+name, changes that, and `set_value` on a string ends the batch script.
+So the values of these objects are not in the database as far as any
+case shows, and the reader cannot recover what the file does not hold.
+Open question 24 of `format.md` keeps the two words it leaves
+unexplained: the numbers that replace `-99` after an array's triples,
+and a class's id word.
 
 **Older open leads**, all in the open questions of `format.md`: the
 `0x738` before the first signal, the per-package tail, the 8 of an
 object-less scope, the generate versus instance difference of `0x18` to
 `0x20`, word 10 of the header, interface port storage, the 12 then 16
 of protected locals and the record `+4`.
+Each is a single word with no visible effect on decoding, which is why
+whole classes of objects came first.
 
 
 ## Plan for the next agent
@@ -106,48 +67,30 @@ of protected locals and the record `+4`.
 Work on branch `ai-dev-20260904-kpr-tier51`, PR #10, until it merges;
 then branch from `hd/main`.
 The generators of tiers 57 to 60 are in `tools/corpus/`, see its
-README.
+README; a new tier starts by copying `gen_t60.py`.
+The registration anchor for tier 61 in `hdl/corpus/BUILD.bazel` is the
+last tier 60 case in sorted order, `t60_dbg_vec_____`.
 
-1. Teach the decoder the new kinds.
-   In `bitsOf` (`verilog.go`) return 32 for `KindString` and
-   `KindClass`, and 32 for `KindQueue`, `KindDynArray` and `KindAssoc`,
-   which matches the declared size of every tier 60 case.
-   In `decodeBits` decode those 32 bits as an unnamed vector, so a
-   string or class handle reads as 32 zero bits at time 0.
-   `Open` then passes, because the logged flag and the records agree.
-2. Fix the truths.
-   `t60_dbg_int_____` lists `i` as a 32 bit vector but the reader
-   prints an int as decimal: write `7` and `9`.
-   `t60_dbg_str_____`, `t60_dbg_class___`, `t60_dbg_class_2_` and
-   `t60_dbg_class_d_` need a second signal, width 32, with one
-   transition at 0 to 32 zero bits.
-   `t60_dbg_queue___`, `t60_dbg_dynarr__`, `t60_dbg_assoc___` and
-   `t60_dbg_assoc_i_` need the second signal with `"logged": false`.
-   Test with
-   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t60|TestVCD/t60'`.
-3. Perturb once more before documenting: a class with two handles, a
-   string written from Tcl with `set_value` under `-debug all`, and a
-   queue logged with `log_wave` under `-debug all`, to learn whether
-   any of them ever records a value.
-   Also a VHDL case under `-debug all` beside `t22_dbg_all` to confirm
-   VHDL is unchanged.
-4. Document.
-   `format/types.md`: rows for the five kinds in the kinds table, the
-   entry layouts, and the trailer word with its observed values.
-   `format/hierarchy.md`: the declarations and objects of the new
-   kinds.
-   `format/values.md`: the placeholder record.
-   `format.md`: findings rows before "Whole file properties, also
-   measured:", comparison rows after the tier 59 rows, and the tail
-   numbering as a guess in the open questions.
-   `corpus.md`: a "Tier 60" section before "Record which comparison
-   produced which finding", and the count 938 to 952 everywhere
-   (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
-   `docs/format.md`).
+1. Pick the next lead from the open questions of `format.md` and
+   design minimal pairs for it, one variable per case, the case names
+   exactly 16 characters.
+   The numbering of question 24 is the freshest: a class with three
+   field types of distinct kinds, and a queue of a class, would show
+   whether the numbers follow declaration order or use order.
+2. Generate, register, build, dump, and write the truths from the
+   dump only after reading the raw records; then run
+   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t61|TestVCD/t61'`.
+3. Document in the `format/` page for the area, then `format.md`:
+   findings rows before "Whole file properties, also measured:",
+   comparison rows after the tier 60 rows, guesses in the open
+   questions; a tier section in `corpus.md` before "Record which
+   comparison produced which finding"; and the count 956 upward
+   everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
+   `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in
    `docs/corpus.md`.
-5. Commit in topical order: `feat(wdb): ...` for the decoder,
-   `test(corpus): tier 60, ...` for the truths, `docs: tier 60, ...`
+4. Commit in topical order: `feat(wdb): ...` for the reader,
+   `test(corpus): tier NN, ...` for the cases, `docs: tier NN, ...`
    for the pages, each with the assistant note and the prompt.
-   Run `bazelisk run //:buildifier` and the full test suite first.
-6. Then continue the exploration with the older open leads above.
+   Run `bazelisk run //:buildifier` and the full test suite first,
+   check the PR is open, push, and comment on it.

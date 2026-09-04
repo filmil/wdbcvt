@@ -1862,6 +1862,43 @@ The value after `remove_forces` in `t59_frc_rel_same` is `0`, though
 the driver assigned `'1'` at 10 ns; the VCD xsim writes agrees, and
 the truth records what the file holds.
 
+**Tier 60: SystemVerilog under -debug all.**
+A `logic s` written at 50 ns beside one more variable, elaborated with
+`xelab_args = ["-debug", "all"]` where every SystemVerilog case before
+ran under xsim's typical level, to see what the flag adds to the type
+table, the debug section and the records.
+The variable is written once from the `initial` block after the write
+to `s`.
+The truth lists the placeholder record of a string or class handle as
+a 32 bit signal with one transition of zeros, pins a double record
+through `records`, and marks a container `"logged": false`.
+
+| Case | The variable | Differs from |
+| :--- | :--- | :--- |
+| `t60_dbg_none____` | none | `t11_sv_bit______` |
+| `t60_dbg_vec_____` | `logic [3:0] v` | `t60_dbg_none____` |
+| `t60_dbg_int_____` | `int i` | `t60_dbg_none____` |
+| `t60_dbg_real____` | `real r` | `t60_dbg_none____` |
+| `t60_dbg_str_____` | `string str` | `t60_dbg_none____` |
+| `t60_dbg_str_log_` | the string, with `log_wave /tb/str` after `log_wave -recursive *` | `t60_dbg_str_____` |
+| `t60_dbg_queue___` | `int q[$]` | `t60_dbg_int_____` |
+| `t60_dbg_q_log___` | the queue, with `log_wave /tb/q` | `t60_dbg_queue___` |
+| `t60_dbg_dynarr__` | `int d[]` | `t60_dbg_int_____` |
+| `t60_dbg_assoc___` | `int a[string]` | `t60_dbg_int_____` |
+| `t60_dbg_assoc_i_` | `int a[int]` | `t60_dbg_assoc___` |
+| `t60_dbg_class___` | `c_t h` of `class c_t; int f = 1; endclass` | `t60_dbg_int_____` |
+| `t60_dbg_class_2_` | the class with a second field `logic [3:0] g` | `t60_dbg_class___` |
+| `t60_dbg_class_d_` | `c_t extends b_t`, one `int` field each | `t60_dbg_class___` |
+| `t60_dbg_class_2h` | two handles `h` and `h2` of the class | `t60_dbg_class___` |
+| `t60_dbg_class_n_` | `c_t h = new` at declaration | `t60_dbg_class___` |
+| `t60_dbg_struct__` | `struct packed { logic a; logic [2:0] b; }` | `t60_dbg_vec_____` |
+| `t60_dbg_mem_____` | `logic [3:0] m [0:1]` | `t60_dbg_vec_____` |
+
+A case with `set_value /tb/str cd` after `run 25 ns` was tried and
+dropped: the command ends the batch script without a message, and the
+database closes at 25 ns.
+The generators of tiers 57 to 60 are in `tools/corpus/`.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1899,7 +1936,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 938 cases through tier 59, and
+5. The reader now reproduces all 956 cases through tier 60, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

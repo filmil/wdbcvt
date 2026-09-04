@@ -1644,6 +1644,37 @@ where the edge case holds three.
 `t17_v_mem_same` against `t11_v_mem4`; `t17_v_reg_nb` and
 `t17_v_nb_swap` for the nonblocking form.
 
+**Placeholder records under -debug all.**
+A `string` or a class handle that `xelab -debug all` keeps, tier 60,
+is logged and holds one 8 byte record at time 0 of eight zero bytes,
+the word pair of a 32 bit value, and nothing after it: the write of
+`"xyz"` at 50 ns in `t60_dbg_str_____`, `h = new` and `h.f = 5` in
+`t60_dbg_class___`, leave no record.
+The record is not the value: `string str = "ab"` and `c_t h = new`
+constructed at time 0, `t60_dbg_class_n_`, hold the same zeros as a
+handle never constructed.
+Two handles of one class, `t60_dbg_class_2h`, hold one such record
+each, at `0x28` and `0xe8` of the second arena.
+The record is written when the object is logged: `log_wave /tb/str`
+after `log_wave -recursive *`, `t60_dbg_str_log_`, holds the zero
+record twice at time 0, and the file differs from `t60_dbg_str_____`
+in nothing else.
+A queue, a dynamic array or an associative array is never logged, and
+`log_wave /tb/q` on the queue, `t60_dbg_q_log___`, warns
+`No matching HDL object or HDL scope found` as it does under typical,
+and leaves the file as `t60_dbg_queue___`.
+`set_value /tb/str cd` ends the batch script without a message, and
+the database closes at the time reached; the corpus keeps no such
+case.
+The reader decodes the record as 32 bits, and the VCD of these cases
+does not name the objects.
+
+*Found by* `t60_dbg_str_____` against `t60_dbg_none____`, and
+`t60_dbg_class___` against `t60_dbg_int_____`.
+*Confirmed by* `t60_dbg_class_n_`, `t60_dbg_class_2h`,
+`t60_dbg_class_2_`, `t60_dbg_class_d_`, `t60_dbg_str_log_` and
+`t60_dbg_q_log___`.
+
 **Writes of the value held, from a clocked process or a shared net.**
 `//hdl/serv:sim`, a RISC-V core, holds 2965811 records that repeat
 the value before them, and the tier 17 rule above covers none of

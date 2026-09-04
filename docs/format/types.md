@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 938 of 938 cases decoding with the entry lengths chaining
+*Confirmed by* 956 of 956 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -53,13 +53,24 @@ exactly to the word at `36`.
 | `0x0d` | physical | `[u32 origin][u32 n]` then `n` times `name NUL [u64 scale]` |
 | `0x10` | array | `[u32 origin][u16 layout][u16 0xa0][u32 element][u32 dims]` then `dims` index type words, then `[u32 nranges]` and that many range triples, then `-99` |
 | `0x11` | record | `[u32 origin][u16 layout][u16 0xb][u32 n]` then `n` fields, then `-99` |
+| `0x13` | dynamic array | `[u32 origin][u32 element][u32 1]` |
+| `0x14` | queue | `[u32 origin][u32 element][u32 1]` |
+| `0x15` | associative array | `[u32 origin][u32 element][u32 word][u32 key]`, `word` `2` for a `string` key and `3` for an `int` key |
+| `0x17` | class | `[u32 origin][i32 parent][u32 id][u32 n]` then `n` fields, each `name NUL [u32 type][u32 nranges]` triples `[u32 0]` |
+| `0x18` | string | `[u32 origin]` |
 
 Kinds `0x04` and `0x07` come from SystemVerilog only, and are described
 with the other Verilog entries below.
+Kinds `0x13` to `0x18` come from SystemVerilog elaborated with
+`xelab -debug all` only, and are described under "Under -debug all".
 
 A range triple is `[i32 left][i32 right][i32 dir]`, with `dir` `1` for
 `to` and `-1` for `downto`.
 The trailing `-99` is `0xffffff9d` and closes the triple list.
+An array entry of a SystemVerilog file elaborated with `-debug all`
+holds a small non-negative number there instead when a class or a
+dynamic container refers to the type; see "Under -debug all".
+The reader keeps the word as `Type.Tail` and does not require `-99`.
 
 **Enumeration.**
 The variant word is `2` for every VHDL enumeration.
@@ -728,6 +739,65 @@ A queue, a dynamic array, an associative array and a class,
 `t24_sv_queue`, `t24_sv_dynarr`, `t24_sv_assoc` and `t24_sv_class`,
 produce none either, and the `logic` entry is the only one in each.
 See [hierarchy.md](hierarchy.md).
+
+**Under -debug all.**
+Every SystemVerilog case before tier 60 ran under xsim's typical
+debugging level.
+`xelab -debug all` keeps the objects that typical drops, and each
+brings a kind of its own to the table.
+Every case below is `t60_dbg_*` in the corpus, has
+`xelab_args = ["-debug", "all"]` in its `BUILD.bazel`, and reproduces
+with `wdbcvt -dump`.
+
+| Source | Entries added | Case |
+| :--- | :--- | :--- |
+| `string str` | `0x18` `string`, origin `0x5`, no body | `t60_dbg_str_____` |
+| `int q[$]` | `bit`, `scalar_int`, `int`, then `0x14` unnamed, origin `0x1`, element `int`, word `1` | `t60_dbg_queue___` |
+| `int d[]` | the same three, then `0x13` unnamed, element `int`, word `1` | `t60_dbg_dynarr__` |
+| `int a[string]` | the same three, `string`, then `0x15` unnamed, element `int`, word `2`, key `string` | `t60_dbg_assoc___` |
+| `int a[int]` | the same three, then `0x15` unnamed, element `int`, word `3`, key `int` | `t60_dbg_assoc_i_` |
+| `class c_t; int f = 1; endclass` | `0x17` `c_t`, origin `0x1`, parent `-1`, id `0`, one field `f` of `int` with no triple | `t60_dbg_class___` |
+| `class c_t extends b_t` | `b_t` with parent `-1` and id `1`, then `c_t` with parent `b_t`'s index and id `0`, each with its own field only | `t60_dbg_class_d_` |
+
+The class entry comes before the predefined entries of its field
+types, the way an outer record comes before its fields; a derived
+class's parent comes first.
+A field of a class is written the way a record field is: name, type
+index, range count and triples, `g` of `logic [3:0]` carrying
+`(3, 0, -1)` in `t60_dbg_class_2_`; and one more word, `0` in every
+field seen, follows the triples.
+The inherited field `f` is listed under `b_t` only, not repeated under
+`c_t`.
+
+*Found by* `t60_dbg_str_____`, `t60_dbg_queue___`, `t60_dbg_dynarr__`,
+`t60_dbg_assoc___` and `t60_dbg_class___` against `t60_dbg_none____`
+and `t60_dbg_int_____`, which hold the ordinary entries only.
+*Confirmed by* `t60_dbg_assoc_i_` against `t60_dbg_assoc___`, which
+changes the key type and the word before it, by `t60_dbg_class_2_` and
+`t60_dbg_class_d_` against `t60_dbg_class___`, and by
+`t60_dbg_class_2h` and `t60_dbg_class_n_`, where a second handle and a
+construction at time 0 leave the entries unchanged.
+
+The ordinary entries are what they are under typical: `t60_dbg_vec_____`,
+`t60_dbg_int_____`, `t60_dbg_real____`, `t60_dbg_struct__` and
+`t60_dbg_mem_____` hold the same type tables as their tier 11
+counterparts, `-99` included.
+
+The word after an array entry's last triple changes when a class or a
+dynamic container refers to the type.
+`int` closes with `-99` in `t60_dbg_int_____`, with `0` under the
+queue, the dynamic array and both associative arrays, with `1` under
+`c_t` of `t60_dbg_class___` and `t60_dbg_class_2h`, and with `2` in
+`t60_dbg_class_2_` and `t60_dbg_class_d_`.
+In `t60_dbg_class_2_` the unnamed `logic [3:0]` entry of field `g`
+closes with `1`; in `t60_dbg_class_d_` `b_t` has id `1`.
+The numbers do not repeat within a file, and `c_t`, the class of the
+variable, has `0` in every case.
+The guess that they are one numbering over the types the class and
+container machinery registers, starting at the variable's type, is in
+[../format.md](../format.md).
+*Found by* `t60_dbg_queue___` against `t60_dbg_int_____`.
+*Confirmed by* the seven other cases with a non `-99` word.
 
 ## What the earlier size measurements meant
 

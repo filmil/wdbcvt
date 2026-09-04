@@ -2183,6 +2183,34 @@ against `t11_sv_logic`.
 The clock toggle due at the `$finish` time in `t11_v_always` is not
 recorded, so the last record of `clk` is at 75 ns in a 100 ns run.
 
+**What -debug all brings back.**
+Elaborated with `xelab -debug all`, tier 60, the same objects are
+declared.
+A `string`, `t60_dbg_str_____`, and a class handle, `t60_dbg_class___`,
+get a declaration of 32 bits and value class 0, and an object at the
+usual second handle `0x828`, which is logged.
+A queue, a dynamic array and an associative array,
+`t60_dbg_queue___`, `t60_dbg_dynarr__`, `t60_dbg_assoc___` and
+`t60_dbg_assoc_i_`, get a declaration of 32 bits and value class 3
+with one range `(0 to 0)`, the range of a one element array, and an
+object at `0x828` that is not logged: the logged ranges name `s` only
+and the second arena is never written.
+The declaration names the file and line of the variable, as any
+declaration does.
+The handle space is what typical gives: `0xa14` for the containers and
+`0xaac` for the string, `0x98` over `t60_dbg_vec_____` as
+`t11_sv_str` is `0x98` over `t11_sv_logic`.
+A second handle of the class, `h2` of `t60_dbg_class_2h`, takes the
+next slot `0x8e8`, and the file holds one class entry.
+The ordinary objects of `t60_dbg_vec_____`, `t60_dbg_int_____`,
+`t60_dbg_real____`, `t60_dbg_struct__` and `t60_dbg_mem_____` are
+declared as under typical.
+The records of the logged objects are in [values.md](values.md).
+
+*Found by* `t60_dbg_str_____` and `t60_dbg_queue___` against
+`t60_dbg_none____`, whose only object is `s`.
+*Confirmed by* the other cases named above.
+
 ## Value classes
 
 Region 17 holds one entry of three words per distinct value class
@@ -2293,10 +2321,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 938 of 938 cases, and the
+*Confirmed by* the region length check in 956 of 956 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 938 of 938 cases and
+and *confirmed by* the reader's range check in 956 of 956 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
