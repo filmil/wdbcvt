@@ -2,7 +2,9 @@
 #
 # Publishes a rolling `nightly` release holding the wdbcvt binary, a
 # reference waveform database, the report on the format work, and an
-# archive of the source tree that built them. The .wdb is the sample
+# archive of the source tree that built them. A manual run may instead
+# request a release tagged with the UTC build date, which then stays as
+# a fixed snapshot while `nightly` keeps rolling. The .wdb is the sample
 # every format decoding experiment starts from, so it is worth having a
 # stable download for it.
 #
@@ -20,6 +22,13 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      dated:
+        description: >-
+          Tag the release with the UTC build date, like 2026-09-04,
+          instead of the rolling nightly tag.
+        type: boolean
+        default: false
   schedule:
     # Monthly, on the first.
     - cron: '0 3 1 * *'
@@ -73,13 +82,29 @@ jobs:
               -o dist/release/wdbcvt-source.tar.gz refs/ci/head
           ls -l dist/release
 
+      - name: Pick the tag
+        id: tag
+        env:
+          DATED: ${{ inputs.dated }}
+        run: |
+          set -euo pipefail
+          # Scheduled runs have no inputs, so DATED is empty there and
+          # the tag stays nightly.
+          if [ "${DATED}" = "true" ]; then
+            tag="$(date -u +%Y-%m-%d)"
+          else
+            tag="nightly"
+          fi
+          echo "picked tag ${tag}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
       - name: Publish
         uses: ./.forgejo/actions/forgejo-release
         with:
           direction: upload
           url: ${{ github.server_url }}
           repo: ${{ github.repository }}
-          tag: nightly
+          tag: ${{ steps.tag.outputs.tag }}
           release-dir: dist/release
           override: true
           token: ${{ secrets.FORGEJO_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
