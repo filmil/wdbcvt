@@ -1971,8 +1971,62 @@ A clocking block leaves nothing.
 line 10, and the file has `tb.Always9_0` and `tb.Initial14_1` and no
 scope, unit, declaration or object for `cb` or its input.
 
+A `final` block is an `Always` scope: `final begin ... end` at line 11
+of `t66_prc_final___` is `tb.Always11_0`, the scope an `always` block
+at that line would leave, and `always_latch`, `t66_prc_latch___`, is
+one too, as `always_ff` and `always_comb` are.
+An assertion leaves nothing of its own.
+An immediate assertion inside an `always`, `t66_prc_ass_imm_`, has
+that block's `tb.Always11_0` and no more; a concurrent
+`assert property (@(posedge c) 1'b1);`, `t66_prc_ass_conc`, adds no
+scope, unit or declaration to the clock's `Always` and the `Initial`,
+and a named `sequence` and `property`, `t66_prc_prop____`, add none
+either.
+They cost handle space: `0x9b4` for a `final` block and `0x9bc` for
+the immediate assertion against the `0x91c` of `t11_sv_logic____`,
+and `0xf04` for the named property against the `0xd04` of the bare
+concurrent one.
+A `covergroup` is the exception.
+`covergroup cg @(posedge s); coverpoint s; endgroup` with `cg c1 =
+new;`, `t66_prc_covgrp__`, leaves nine scopes under `tb`:
+`tb.xlnx_isim_covergroup_cg::new`, `::update` and
+`::xlnx_isim_covergroup_sample`, three `function` units at the
+`covergroup` line, two `Block11_1` and `Block11_3` scopes under
+`::new`, and `tb.Forked11_0` and `tb.Forked11_2` beside them, all on
+the module's process counter, which the `initial` blocks then
+continue at 4 and 5.
+So the writer elaborates a covergroup into generated subprograms and
+processes, and their names are the only ones in the corpus with a
+`::` in them.
+
+A `program` is a module unit and its instance an ordinary scope:
+`prog p();` of `t66_prc_program_` is `tb.p` with `tb.p.Initial20_0`
+under it, numbered before the testbench's own `Initial13_1` by the
+post order rule above.
+The simulation ends when the program's `initial` block ends, at 10 ns
+here, so the testbench's write at 50 ns never happens.
+A `bind` puts the bound instance under the target scope at the line
+of the `bind` statement: `bind tb watcher b(.i(s));` at line 22 of
+`t66_prc_bind____` is `tb.b` at line 22 with the port object
+`tb.b.i`, on its own handle because the actual is a variable, by the
+tier 37 rule.
+A `specify` block leaves no scope, no unit and no declaration, and a
+path delay in it delays the records: `(i => o) = 1` in the child of
+`t66_prc_specify_` moves `o` and the net it drives to 1 ns and 51 ns
+where `t66_prc_kid_____`, the same child without the block, writes at
+0 and 50 ns, and it costs `0x120` of handle space, `0xe8c` for
+`0xd6c`.
+A path delay of 0, `t66_prc_spec_0__`, records at 0 and 50 ns and
+costs nothing, so the cost is the delay and not the block.
+
 *Found by* `t24_sv_fork` against `t11_v_always`, and
-`t24_sv_clocking` against `t11_sv_logic`.
+`t24_sv_clocking` against `t11_sv_logic`; `t66_prc_final___` and
+`t66_prc_covgrp__` against `t11_sv_logic____`, one `Always` scope and
+nine scopes with generated names.
+*Confirmed by* `t66_prc_latch___`, `t66_prc_ass_imm_`,
+`t66_prc_ass_conc`, `t66_prc_prop____`, `t66_prc_program_`,
+`t66_prc_bind____`, `t66_prc_specify_`, `t66_prc_kid_____` and
+`t66_prc_spec_0__`.
 
 A gate primitive, a switch primitive or a pull source is a `Forked`
 scope too, one per instance, at the line of the instantiation and on
@@ -2392,10 +2446,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1033 of 1033 cases, and the
+*Confirmed by* the region length check in 1049 of 1049 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1033 of 1033 cases and
+and *confirmed by* the reader's range check in 1049 of 1049 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

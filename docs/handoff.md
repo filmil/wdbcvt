@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 1033 corpus cases of tiers
-1 to 64 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 1049 corpus cases of tiers
+1 to 66 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -52,6 +52,14 @@ on the first instance of a unit only, and that an `assign` in a
 generate block gets no block scope; see `format/values.md` "Several
 partial drivers on one net" and `format/hierarchy.md` on the word at
 `40` and on generates.
+Tier 65 put the tier 44 reading of the 8 byte times across a page
+boundary, into another unit and up to 1 s.
+Tier 66 established what the SystemVerilog constructs the corpus had
+not seen leave: a `final` block and an `always_latch` are `Always`
+scopes, assertions and `specify` blocks leave nothing, a `covergroup`
+leaves nine generated scopes, a `program` ends the run, a `bind`
+places the instance at the `bind` line, and a `specify` path delay
+delays the records; see `format/hierarchy.md` on process scopes.
 
 
 ## What we do not have, and why
@@ -82,10 +90,10 @@ whole classes of objects came first.
 
 Work on branch `ai-dev-20260904-kpx-tier63`, PR #12, until it merges;
 then branch from `hd/main`.
-The generators of tiers 57 to 64 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t64.py`.
-The registration anchor for tier 65 in `hdl/corpus/BUILD.bazel` is the
-last tier 64 case in sorted order, `t64_ord_w64_two_`.
+The generators of tiers 57 to 66 are in `tools/corpus/`, see its
+README; a new tier starts by copying `gen_t66.py`.
+The registration anchor for tier 67 in `hdl/corpus/BUILD.bazel` is the
+last tier 66 case in sorted order, `t66_prc_task____`.
 
 1. Pick the next lead from the open questions of `format.md` and
    design minimal pairs for it, one variable per case, the case names
@@ -95,12 +103,12 @@ last tier 64 case in sorted order, `t64_ord_w64_two_`.
    open part.
 2. Generate, register, build, dump, and write the truths from the
    dump only after reading the raw records; then run
-   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t65|TestVCD/t65'`.
+   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t67|TestVCD/t67'`.
 3. Document in the `format/` page for the area, then `format.md`:
    findings rows before "Whole file properties, also measured:",
-   comparison rows after the tier 64 rows, guesses in the open
+   comparison rows after the tier 66 rows, guesses in the open
    questions; a tier section in `corpus.md` before "Record which
-   comparison produced which finding"; and the count 1033 upward
+   comparison produced which finding"; and the count 1049 upward
    everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
    `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in

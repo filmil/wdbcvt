@@ -213,9 +213,20 @@ time and nowhere else; the compressed page grows by 5 and 10 bytes.
 `t1` 5000001000, and a Verilog `#5000000` under `1ns / 1ps`,
 `t44_v_time_5ms`, records 5000000000 the same way.
 So the 8 byte fields are 64 bit times, not 32 bit times with padding.
+A page keeps the reading when the times inside it cross 2^32 of the
+unit: `t65_tim_cross___` toggles every 1 ns from 4.293 ms, so its
+eight pages hold `t0` 0 to 4295975000 and the crossing falls inside
+page 3, whose `t0` is 4294275000 and whose `t1` is 424000, and every
+one of its 3001 records reads back.
+The unit does not matter: `t65_tim_ns_5s___` writes at 4.5 s under
+`1ns / 1ns`, 4500000000 of a unit of nanoseconds, and
+`t65_tim_1s______` ends at 1 s, 1000000000000 ps, the largest time in
+the corpus.
+
 *Found by* `t44_time_5ms` against `t1_bit_one_edge`.
 *Confirmed by* `t44_time_5s`, `t44_time_late` and `t44_v_time_5ms`,
-each against `truth.json`.
+each against `truth.json`, and by `t65_tim_1s______`,
+`t65_tim_cross___` and `t65_tim_ns_5s___`.
 
 A net shared by a signal and the ports connected to it is one handle,
 see [hierarchy.md](hierarchy.md), and its records show the connection

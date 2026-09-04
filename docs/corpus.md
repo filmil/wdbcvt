@@ -2027,6 +2027,42 @@ Each net's raw record count is pinned as `records`.
 | `t64_ord_self____` | `assign v[0] = s; assign v[1] = v[0];` | `t63_pdr_two_bits`: `ZZX0` twice; six records |
 | `t64_ord_chain___` | `assign w[1] = v[0]` on a second net | `t64_ord_self____`: three records on each |
 
+**Tier 65: times past 32 bits, across a page and in another unit.**
+Three cases that put the tier 44 reading of the 8 byte times where it
+had not been: a page whose records cross 2^32 of the unit, a write
+past 2^32 nanoseconds, and an end time of 1 s.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t65_tim_1s______` | a write at 999 ms, an end at 1 s | `t44_time_5s_____`: 1000000000000 ps read back |
+| `t65_tim_cross___` | 3000 writes every 1 ns from 4.293 ms | `t44_v_time_5ms__`: eight pages, the crossing inside page 3 |
+| `t65_tim_ns_5s___` | a write at 4.5 s under `1ns / 1ns` | `t44_v_time_5ms__`: 4500000000 units of nanoseconds |
+
+**Tier 66: the SystemVerilog constructs the corpus had not seen.**
+A `logic s` written at 50 ns beside the construct, under typical, to
+see what scope it leaves and what it declares.
+A `final` block and an `always_latch` are `Always` scopes; assertions
+and `specify` blocks leave nothing; a `covergroup` leaves nine
+generated scopes; a `program` ends the run; a `bind` places the
+instance at the `bind` line.
+`checker` was tried and does not elaborate in this version.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t66_prc_final___` | `final begin ... end` | `t11_sv_logic____`: `tb.Always11_0` |
+| `t66_prc_latch___` | `always_latch if (s) q <= 1'b1;` | `t11_sv_logic____`: `tb.Always12_0`, `q` recording `X` then `1` |
+| `t66_prc_ass_imm_` | an immediate assertion in an `always` | `t11_sv_logic____`: the `Always` scope alone |
+| `t66_prc_ass_conc` | `assert property (@(posedge c) 1'b1);` | `t66_prc_ass_imm_`: no scope for the assertion |
+| `t66_prc_prop____` | a named `sequence` and `property` | `t66_prc_ass_conc`: no scope; `0x200` more of handle space |
+| `t66_prc_task____` | a task called from an `initial` | `t11_sv_logic____`: the `task` unit and `tb.t` |
+| `t66_prc_func____` | a function called from an `assign` | `t66_prc_task____`: the `function` unit and `tb.f` |
+| `t66_prc_program_` | `prog p();` beside the module | `t11_sv_logic____`: `tb.p`, `tb.p.Initial20_0`; the run ends at 10 ns |
+| `t66_prc_bind____` | `bind tb watcher b(.i(s));` | `t66_prc_func____`: `tb.b` at line 22, its port on its own handle |
+| `t66_prc_specify_` | a child with `(i => o) = 1` | `t66_prc_func____`: records at 1 ns and 51 ns |
+| `t66_prc_kid_____` | the same child without the block | `t66_prc_specify_`: records at 0 and 50 ns; `0x120` less |
+| `t66_prc_spec_0__` | the path delay set to 0 | `t66_prc_specify_`: 0 and 50 ns, and the handle space of the plain child |
+| `t66_prc_covgrp__` | `covergroup cg @(posedge s)` with one coverpoint | `t66_prc_ass_imm_`: nine scopes, three `xlnx_isim_covergroup_cg::` functions |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2064,7 +2100,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1033 cases through tier 64, and
+5. The reader now reproduces all 1049 cases through tier 66, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
