@@ -1,7 +1,6 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-[![Build](https://git.hdlfactory.com/HDL/wdbcvt/actions/workflows/build.yml/badge.svg)](https://git.hdlfactory.com/HDL/wdbcvt/actions?workflow=build.yml)
-[![Test](https://git.hdlfactory.com/HDL/wdbcvt/actions/workflows/test.yml/badge.svg)](https://git.hdlfactory.com/HDL/wdbcvt/actions?workflow=test.yml)
+[![Build and test](https://git.hdlfactory.com/HDL/wdbcvt/actions/workflows/test.yml/badge.svg)](https://git.hdlfactory.com/HDL/wdbcvt/actions?workflow=test.yml)
 [![Release](https://git.hdlfactory.com/HDL/wdbcvt/actions/workflows/release.yml/badge.svg)](https://git.hdlfactory.com/HDL/wdbcvt/actions?workflow=release.yml)
 
 # wdbcvt

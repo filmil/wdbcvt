@@ -82,7 +82,7 @@ from a `file://` URL.
 
 # CI rules
 
-All three workflows use `runs-on: vivado`.
+Every workflow uses `runs-on: vivado`.
 That label runs the job directly on the runner host, which is the only way
 to reach the Vivado installation and the shared caches.
 

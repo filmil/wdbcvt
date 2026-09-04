@@ -1,8 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Runs the test suite. Same runner requirements as build.yml, and the same
-# plain git checkout, because the `vivado` host has no node.
-name: Test
+# Builds everything and runs the test suite. `bazelisk test //...` builds
+# every target in the pattern, not only the tests and their
+# dependencies, because `--build_tests_only` is false by default, so a
+# separate build job would repeat this one.
+#
+# It needs the `vivado` runner: that host holds the AMD installer
+# archive and the shared Vivado install cache that MODULE.bazel points
+# at. The `vivado` label runs jobs directly on the host, and that host
+# has no node, so no JavaScript action can run here. That is why the
+# checkout is done with plain git rather than with actions/checkout.
+name: Build and test
 
 on:
   pull_request:
@@ -10,6 +18,8 @@ on:
     branches:
       - main
   schedule:
+    # Once a week, so a build that only rots on the shelf still gets
+    # caught.
     - cron: '47 4 * * 1'
 
 jobs:
@@ -35,7 +45,13 @@ jobs:
           # which then waits on input forever and hangs the whole job.
           git --no-pager log --oneline -1
 
-      - name: Run the tests
+      - name: Show the toolchain
+        run: |
+          set -euo pipefail
+          bazelisk --version
+          cat .bazelversion
+
+      - name: Build everything and run the tests
         run: bazelisk test --test_output=errors //...
 
       - name: Check that the simulation produced a waveform database
