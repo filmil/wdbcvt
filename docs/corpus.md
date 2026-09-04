@@ -1823,6 +1823,45 @@ The generate block's wire has no path `log_wave` accepts, so
 | `t58_sv_log_gen__` | `{/tb/gb[1]}`, the generate block by path | `t58_sv_log_all__` |
 | `t58_sv_log_top__` | `/tb`, the module without `-recursive` | `t58_sv_log_all__` |
 
+**Tier 59: forced and deposited values.**
+VHDL under a custom script, and SystemVerilog.
+A `std_ulogic` driven `'1'` at 10 ns and `'0'` at 20 ns beside a
+4 bit vector driven `"0101"` and `"1010"` at the same times, and the
+script forces or deposits a value on one of them with `add_force`,
+`remove_forces` and `set_value`.
+The SystemVerilog cases put a `force` and a `release` in a second
+`initial` block of a module with the same driver.
+The truth lists the changes and pins the count of records, repeats
+of the value held included, through `records`.
+
+| Case | The force | Differs from |
+| :--- | :--- | :--- |
+| `t59_frc_none____` | none | `t3_late_________` |
+| `t59_frc_s_const_` | `add_force /tb/s 1` before the run | `t59_frc_none____` |
+| `t59_frc_s_cancel` | the same with `-cancel_after 5ns` | `t59_frc_none____` |
+| `t59_frc_s_pat___` | `add_force /tb/s {0 0ns} {1 2ns} -repeat_every 4ns` | `t59_frc_none____` |
+| `t59_frc_v_const_` | `add_force /tb/v 1111` | `t59_frc_none____` |
+| `t59_frc_v_bit___` | `add_force {/tb/v[3]} 1` | `t59_frc_none____` |
+| `t59_frc_mid_____` | `run 15 ns`, then `add_force /tb/s 0` | `t59_frc_none____` |
+| `t59_frc_mid_same` | `run 15 ns`, then `add_force /tb/s 1`, the value held | `t59_frc_none____` |
+| `t59_frc_release_` | `add_force /tb/s 0`, `run 15 ns`, `remove_forces /tb/s` | `t59_frc_none____` |
+| `t59_frc_rel_same` | `add_force /tb/s 1`, `run 15 ns`, `remove_forces /tb/s` | `t59_frc_none____` |
+| `t59_frc_twice___` | `add_force /tb/s 1`, `run 15 ns`, `add_force /tb/s 0` | `t59_frc_none____` |
+| `t59_frc_deposit_` | `set_value /tb/s 1` before the run | `t59_frc_none____` |
+| `t59_frc_dep_mid_` | `run 15 ns`, then `set_value /tb/s 0` | `t59_frc_none____` |
+| `t59_frc_dep_same` | `set_value /tb/s 0`, the value held, before the run | `t59_frc_none____` |
+| `t59_frc_sv_none_` | none, SystemVerilog | `t59_frc_none____` |
+| `t59_frc_sv_force` | `force s = 1'b1` at 5 ns, `release s` at 15 ns | `t59_frc_sv_none_` |
+| `t59_frc_sv_frc_0` | `force s = 1'b0` at 5 ns, `release s` at 15 ns | `t59_frc_sv_force` |
+| `t59_frc_sv_long_` | `force s = 1'b1` at 5 ns, `release s` at 25 ns | `t59_frc_sv_force` |
+| `t59_frc_sv_norel` | `force s = 1'b1` at 5 ns, no release | `t59_frc_sv_long_` |
+| `t59_frc_sv_relon` | `release s` at 15 ns, no force | `t59_frc_sv_none_` |
+| `t59_frc_sv_tcl__` | `add_force /tb/s 0` before the run, SystemVerilog | `t59_frc_sv_none_` |
+
+The value after `remove_forces` in `t59_frc_rel_same` is `0`, though
+the driver assigned `'1'` at 10 ns; the VCD xsim writes agrees, and
+the truth records what the file holds.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -1860,7 +1899,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 917 cases through tier 58, and
+5. The reader now reproduces all 938 cases through tier 59, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

@@ -1544,6 +1544,83 @@ same two drivers, `t19_v_wire_3drv`, `t19_v_wand_rd`,
 with its count pinned in `truth.json`, and by every earlier count
 under the new rule.
 
+**Values the script or the source imposes.**
+A forced or deposited value is an ordinary record.
+Tier 59 forces a `std_ulogic` driven `'1'` at 10 ns and `'0'` at
+20 ns, and a 4 bit vector driven `"0101"` and `"1010"` at the same
+times, and nothing in the file marks the records the force wrote:
+the dump of `t59_frc_s_const_` differs from `t59_frc_none____` in
+the records of `s` and the noise words and nowhere else.
+`add_force /tb/s 1` before the run holds `0` and `1` at time 0, then
+`1` at 20 ns, where the driver assigns `'0'`, and nothing at 10 ns,
+where the driver assigns the forced value.
+So a force records the value it imposes when it is applied, and then
+the value held at every transaction of the driver that would have
+changed it.
+Both hold for the vector, `t59_frc_v_const_`: `0000` and `1111` at
+time 0, `1111` at 10 and at 20 ns.
+A force of the value held records it too: `add_force /tb/s 0` before
+the run, `t59_frc_release_`, holds `0` twice at time 0, and
+`add_force /tb/s 1` after `run 15 ns`, `t59_frc_mid_same`, holds `1`
+at 15 ns and `1` again at 20 ns.
+A force of another value after `run 15 ns`, `t59_frc_mid_____`,
+holds `0` at 15 ns and nothing at 20 ns.
+`remove_forces` records the value the signal takes twice, `1` twice
+at 15 ns in `t59_frc_release_`, and so does a second `add_force` on
+a forced signal, `0` twice at 15 ns in `t59_frc_twice___`; a force
+cancelled by `-cancel_after 5ns`, `t59_frc_s_cancel`, records the
+return once, `0` at 5 ns.
+The value after `remove_forces` is the value the signal had before
+the force when the driver's transactions during the force were of
+the forced value: `t59_frc_rel_same` forces `1`, and the driver
+assigns `'1'` at 10 ns and the release at 15 ns leaves `0` twice,
+where `t59_frc_release_` forces `0`, and the driver's `'1'` at 10 ns
+is the value after the release.
+The VCD written by the same script agrees on every value.
+A force on one bit, `add_force {/tb/v[3]} 1`, `t59_frc_v_bit___`,
+records the vector with the bit imposed: `1000` at time 0, `1101`
+at 10 and `1010` at 20 ns, one record each.
+A pattern, `add_force /tb/s {0 0ns} {1 2ns} -repeat_every 4ns`,
+`t59_frc_s_pat___`, records every step of the pattern, and at 10
+and at 20 ns, where the pattern and the driver write in the same
+delta, two records of one value.
+A deposit, `set_value /tb/s 1` before the run, `t59_frc_deposit_`,
+records `1` at time 0 after the initial `0`, nothing at 10 ns and
+the driver's `0` at 20 ns: it does not hold.
+`set_value` after `run 15 ns`, `t59_frc_dep_mid_`, records `0` at
+15 ns and nothing at 20 ns, and a deposit of the value held,
+`t59_frc_dep_same`, records it, `0` twice at time 0.
+A SystemVerilog `force s = 1'b1` in the source at 5 ns,
+`t59_frc_sv_force`, records `1` at 5 ns and nothing at 10 ns, and a
+`force s = 1'b0`, `t59_frc_sv_frc_0`, records the value held at 5
+ns and nothing at 10 ns, where the driver writes `1'b1`: a write to
+a forced variable records nothing, and neither does `release`.
+The variable keeps the forced value after the release until the
+next write, so `t59_frc_sv_force` ends with the driver's `0` at
+20 ns and `t59_frc_sv_frc_0` ends at its 5 ns record, and a force
+released at 25 ns, `t59_frc_sv_long_`, holds the driver's `0` at
+20 ns as nothing.
+`add_force /tb/s 0` before the run on the same design,
+`t59_frc_sv_tcl__`, records time 0 once and the value held at
+10 ns, where the driver writes `1'b1`, and nothing at 20 ns.
+The VCD of that case holds only the time 0 value, where the VCD of
+every VHDL force above holds the held value writes.
+A `force` statement costs `0x48` of handle space, `0x9fc` in
+`t59_frc_sv_force`, `t59_frc_sv_frc_0`, `t59_frc_sv_long_` and
+`t59_frc_sv_norel` against `0x9b4` in `t59_frc_sv_none_`,
+`t59_frc_sv_relon`, which has a `release` and no `force`, and
+`t59_frc_sv_tcl__`, and adds no object.
+
+*Found by* `t59_frc_s_const_` against `t59_frc_none____`.
+*Confirmed by* `t59_frc_s_cancel`, `t59_frc_s_pat___`,
+`t59_frc_v_const_`, `t59_frc_v_bit___`, `t59_frc_mid_____`,
+`t59_frc_mid_same`, `t59_frc_release_`, `t59_frc_rel_same`,
+`t59_frc_twice___`, `t59_frc_deposit_`, `t59_frc_dep_mid_`,
+`t59_frc_dep_same`, `t59_frc_sv_force`, `t59_frc_sv_frc_0`,
+`t59_frc_sv_long_`, `t59_frc_sv_norel`, `t59_frc_sv_relon` and
+`t59_frc_sv_tcl__`, each against `truth.json`, which pins the record
+counts through `records`.
+
 **Writes of the value held.**
 A Verilog write of the value already held produces no record, as a
 VHDL one does not, see `t8_same` above.
