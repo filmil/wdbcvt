@@ -37,7 +37,8 @@ references whose content is known before a `.wdb` is opened:
 * a `truth.json` per corpus case, derived from the design rather than
   from the database,
 * GHDL and nvc, simulators that share no code with Vivado,
-* `libfst`, the reference implementation, for checking FST output.
+* `libfst`, the reference implementation, which writes the FST output
+  and reads it back for the check.
 
 Read [docs/provenance.md](docs/provenance.md) before relying on
 `dewdb` for anything. It states what the guards do and do not cover, and
@@ -79,6 +80,11 @@ where the tool should not be used.
   [docs/fst-output.md](docs/fst-output.md) records the measurement and
   the plan.
 * `pkg/wdb/` holds the library the tool is built on.
+* `pkg/fst/` writes FST through libfst, the reader and writer GTKWave
+  uses, over cgo.
+  FST has no specification, so the library is the definition of the
+  format and this project does not keep a second writer.
+  `third_party/libfst/` holds the build file for the pinned archive.
 * `docs/` holds everything known about the format, written down as it is
   discovered. [docs/README.md](docs/README.md) is the index;
   [docs/format.md](docs/format.md) is the findings table.

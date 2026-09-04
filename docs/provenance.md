@@ -106,9 +106,13 @@ which for Verilog also carries `integer`, `real`, `time`, structs and
 enums, but not memories or strings.
 
 **5. `libfst` for the output side.**
-The FST writer is checked by reading its output back with `libfst`, the
-reference implementation, vendored test only. See
-[fst-output.md](fst-output.md).
+FST has no specification, so this project does not write one. The
+output is written by `gtkwave/libfst`, MIT, the library GTKWave, GHDL
+and nvc use, through the binding in `pkg/fst`, and the bytes of the
+file are the library's. What is claimed here is the mapping from the
+database to FST variables, which [fst-output.md](fst-output.md)
+states, and it is checked by reading the output back with the same
+library and comparing against `truth.json`.
 
 
 ## Which guard covers which type

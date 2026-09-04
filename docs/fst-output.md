@@ -89,7 +89,7 @@ The whole library is five source files: `fstapi.c`, `fstapi.h`,
 `lz4.c`, `lz4.h`, `fastlz.c`, `fastlz.h`.
 
 
-## Measured, not assumed
+## Measured, not assumed, before the route was chosen
 
 GHDL writes FST through libfst.
 Running the `//hdl/counter` sources under GHDL produces both formats
@@ -127,61 +127,112 @@ entire file, and a reader has to unwrap before it sees any block.
 
 | Route | What it costs | What it gives |
 | :--- | :--- | :--- |
-| Vendor libfst and bind it with cgo | cgo in the shipped binary, so cross compilation needs a C toolchain per target | The reference writer. Output is correct by construction. |
-| Write the FST writer in Go | The block format has to be implemented | Stays pure Go. Cross compiles for free. No C toolchain. |
+| Vendor libfst and bind it with cgo | cgo in the shipped binary, so the build needs a C toolchain | The reference writer. Output is correct by construction. |
+| Write the FST writer in Go | The block format has to be implemented, and kept working | Stays pure Go. Cross compiles for free. No C toolchain. |
 | Shell out to GTKWave's `vcd2fst` | GTKWave becomes a runtime dependency, and the data is walked twice | No new code at all |
 | Use the Rust `fstapi` crate | Wrong language for this repository | Nothing this project needs |
 
-## The route to take
 
-**Write the writer in Go, and use libfst only to check it.**
+## The route taken: libfst through cgo
 
-Three things make the Go writer smaller than it sounds:
+The first two rows were weighed again, and the first won.
+The argument for the Go writer was that cgo drags a C toolchain into
+every target platform and that the release cross compiles.
+The release does not cross compile: `.forgejo/workflows/release.yml`
+builds one artifact, `wdbcvt-linux-amd64`.
+And the C toolchain is a `bazel_dep` away, so it is not the host's.
 
-*   Only a writer is needed. Reading FST is somebody else's problem;
-    this project reads `.wdb`.
-*   A writer picks its own compression. Block payloads may be zlib, and
-    `compress/zlib` is in the Go standard library. LZ4 and FastLZ are
-    reader-side requirements, not writer-side ones, so neither has to be
-    ported.
-*   The whole-file gzip wrapper seen above is `compress/gzip`.
+The argument against the Go writer is stronger, and it is the reason
+this document exists at all: FST has no specification, so a second
+writer is a second thing to maintain against a moving definition, and
+nothing here would ever tell us that it had drifted.
+libfst is the definition.
 
-Keeping it pure Go matters because the release workflow cross compiles,
-and because `rules_go` with cgo drags a C toolchain into every target
-platform.
+**Measured, by building it.** The library is three source files,
+`fstapi.c` at 7051 lines, `lz4.c` at 2829 and `fastlz.c` at 549, plus
+zlib. The upstream build generates a `config.h` from two function
+probes and a thread switch; leaving `FST_INCLUDE_CONFIG` undefined
+skips the include, and `-D_GNU_SOURCE -DHAVE_FSEEKO -DHAVE_REALPATH`
+is the whole configuration. `third_party/libfst/libfst.BUILD` is a
+`cc_library` of those files, and the archive is pinned by hash in
+`MODULE.bazel`.
 
-Checking it is the part that must not be skipped, and it needs no C in
-the shipped binary:
+Two things had to be settled to get there, and both are recorded
+because they cost time:
 
-*   GHDL and nvc both write FST through libfst, and both are already
-    Bazel modules in the registry, as `rules_ghdl` and `rules_nvc`.
-    Simulating the same `//hdl/counter` sources under one of them
-    produces a golden FST for a design whose behaviour is known exactly.
-*   Vendor libfst as a **test-only** dependency, build a small reader
-    with `cc_binary`, and read back what the Go writer produced. The
-    shipped `wdbcvt` stays pure Go; only the test needs a C toolchain.
+*   Bazel 9 removed the built in `cc_library`, so the build file loads
+    it from `rules_cc`.
+*   The host has `gcc` but no libstdc++ development files, and the cgo
+    link step asks for `-lstdc++`:
+    `/usr/bin/ld: cannot find -lstdc++`. A `cc_library` also builds a
+    shared object by default, whose link fails the same way.
+    `hermetic_cc_toolchain`, the zig toolchain, answers both, and it is
+    pinned to a glibc old enough for the release. `linkstatic` keeps
+    the shared object from being built at all.
 
-Do not compare our output byte for byte against GHDL's.
-Two correct writers make different legal choices about block boundaries
-and compression. Compare decoded content.
+`pkg/fst` is the binding: ten writer calls behind a Go API, and a
+reader used only by tests. `pkg/fst:fst_test` writes a small file,
+reads it back through libfst and checks the times, the variables,
+their scope paths and their widths.
 
 
-## Order of work
+## What the converter writes
 
-1. Decode enough of `.wdb` to produce VCD for bit and vector signals.
-   Check against `sim.vcd`, which covers exactly those.
-2. Split the decoder's output model away from the VCD writer. The model
-   has to represent integers, reals, times, strings, enumerations with
-   their literal names, records and arrays, because the database does
-   and VCD does not. A model shaped around what VCD can express would
-   have to be rebuilt.
-3. Add the FST writer against that model.
-4. Add the libfst read-back test. For the eight types VCD drops, this
-   is the **only** independent check there is, so it is not optional.
+**Scopes.** The instance tree of the database becomes the scope tree of
+the file, one `fstWriterSetScope` per scope in preorder.
 
-Step 2 is the one that is cheap now and expensive later, and the reason
-is step 4.
+**Objects that share a handle.** Two objects on one handle are one
+signal seen from two scopes, which FST calls an alias: the second
+`fstWriterCreateVar` passes the first one's handle and no value change
+is written twice. That is the same relationship the VCD expresses by
+giving two variables one identifier code, and the reader already knows
+which objects share a handle.
 
+**Records and arrays are flattened.** FST has no record type and no
+array type. A record becomes one variable per leaf field, in a scope
+named after the record, recursively, which is what `File.Leaves`
+already produces for the truth files: `s.delta_f.bravo` is
+`s` a scope, `delta_f` a scope and `bravo` a variable. An array
+becomes one variable per element, in a scope named after the array,
+with the element's index as the variable name.
+The alternative was one `FST_VT_GEN_STRING` per record holding the
+whole aggregate as text. Flattening was chosen because a viewer can
+then show, search and compare a field on its own, which is the reason
+a waveform viewer is opened at all, and because the aggregate can
+always be read back from the leaves while the reverse is not true.
+
+**Scalars.** `std_ulogic`, `bit` and their vectors are wires, and their
+values are the nine state characters FST already carries.
+An integer is `FST_VT_VCD_INTEGER`, a real is `FST_VT_VCD_REAL`, a
+`time` is `FST_VT_VCD_TIME`, and a `character` or a `string` is
+`FST_VT_GEN_STRING`.
+
+**Enumerations.** A user enumeration is written as
+`FST_VT_GEN_STRING` holding the literal name, which every reader
+displays. `fstWriterCreateEnumTable` and `FST_VT_SV_ENUM` are the
+format's own way to say the same thing, and are the better answer once
+a reader that uses the table matters; the model keeps the literal
+either way, so the choice can change without touching the decoder.
+
+
+## What is left to build
+
+1.  **A change stream in time order.** `File.Changes` decodes one
+    object at a time, and FST needs the value changes of every object
+    grouped by ascending time. The inversion is cheap: the state of an
+    object is its value buffer, and all the buffers together are the
+    handle space, 2.8 MB even for `//hdl/neorv32:sim`. So the writer
+    can merge the arenas' pages by record time and apply each record to
+    the object it belongs to, which also makes the conversion stream
+    instead of holding the 18875466 changes of that design.
+2.  **The type mapping and the spelling above**, over `File.Leaves`.
+3.  **The `-fst` flag** of `cmd/wdbcvt`.
+4.  **The read back test.** Every corpus case written to FST, read back
+    through libfst's reader, and compared against its `truth.json`. For
+    the eight types VCD drops this is the only independent check there
+    is, and the binding already has the reader it needs.
+
+Step 1 is the only design work; the rest is a table and a walk.
 
 ## Sources
 

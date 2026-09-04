@@ -69,6 +69,13 @@ read and matched its VCD unchanged, and `//hdl/neorv32:sim`, NEORV32
 chunk map of an object's records belongs to the signal at its handle
 and not to the object; see `docs/corpus.md`.
 
+FST output has its binding: `pkg/fst` writes through `gtkwave/libfst`
+over cgo, with the C toolchain from `hermetic_cc_toolchain`, and
+`pkg/fst:fst_test` writes a file and reads it back through the same
+library. The converter itself is not written yet;
+`docs/fst-output.md` says what it writes, that records and arrays are
+flattened into one variable per leaf, and what is left to build.
+
 ## What we do not have, and why
 
 **The content of dynamic objects.**
