@@ -64,7 +64,7 @@ whole classes of objects came first.
 
 ## Plan for the next agent
 
-Work on branch `ai-dev-20260904-kpr-tier51`, PR #10, until it merges;
+Work on branch `ai-dev-20260904-mzq-tier61`, PR #11, until it merges;
 then branch from `hd/main`.
 The generators of tiers 57 to 61 are in `tools/corpus/`, see its
 README; a new tier starts by copying `gen_t61.py`.
