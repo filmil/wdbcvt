@@ -1,0 +1,23 @@
+{
+  "case": "t59_frc_sv_tcl__",
+  "axis": "forcing. A second initial block does nothing, and the script forces the logic to 0 before the run on a logic driven 1 at 10 ns and 0 at 20 ns by the first, to see what the database records of a value the source imposes.",
+  "differs_from": "t59_frc_sv_none_",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "records": 2,
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "case": "t59_frc_s_cancel",
+  "axis": "forcing. The script forces the scalar to 1 and cancels the force after 5 ns, on a scalar driven 1 at 10 ns and 0 at 20 ns and a vector driven 0101 and 1010 at the same times, to see what the database records of a value the script imposes.",
+  "differs_from": "t59_frc_none____",
+  "end_time_ns": 30,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 4,
+      "type": "std_ulogic_vector"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "0000"
+    },
+    {
+      "time_ns": 5,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 10,
+      "signal": "v",
+      "value": "0101"
+    },
+    {
+      "time_ns": 20,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 20,
+      "signal": "v",
+      "value": "1010"
+    }
+  ]
+}
