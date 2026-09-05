@@ -1,0 +1,72 @@
+{
+  "case": "t80_stv_two_arr_",
+  "axis": "static values in the handle space. two array locals of four integers, to see whether the bytes of a static composite value push the objects that come after the signals.",
+  "differs_from": "t80_stv_arr4____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in"
+    },
+    {
+      "scope": "tb.f",
+      "name": "ar",
+      "type": "arr_t",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.f",
+      "name": "br",
+      "type": "arr_t",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.f",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "k",
+      "type": "integer",
+      "value": "7"
+    }
+  ]
+}
