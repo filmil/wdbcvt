@@ -1157,7 +1157,7 @@ writes at one time and at forty times.
 
 **Z and X.**
 `t12_v_vec8_z` writes `8'bz0z1xx01` and records `1d 00 00 00 ac 00 00
-00`: `a` is `0001 1107` and `b` is `1010 1100`, so a `Z` bit is `b`
+00`: `a` is `0001 1112` and `b` is `1010 1100`, so a `Z` bit is `b`
 alone, an `X` bit is both, and each bit is independent of its
 neighbours.
 
@@ -1612,7 +1612,7 @@ where `t59_frc_release_` forces `0`, and the driver's `'1'` at 10 ns
 is the value after the release.
 The VCD written by the same script agrees on every value.
 A force on one bit, `add_force {/tb/v[3]} 1`, `t59_frc_v_bit___`,
-records the vector with the bit imposed: `1000` at time 0, `1107`
+records the vector with the bit imposed: `1000` at time 0, `1112`
 at 10 and `1010` at 20 ns, one record each.
 A pattern, `add_force /tb/s {0 0ns} {1 2ns} -repeat_every 4ns`,
 `t59_frc_s_pat___`, records every step of the pattern, and at 10
@@ -1808,11 +1808,11 @@ bit from bit 0 up, the third for bit 2 that stays `X` where `1` meets
 `0`, and `0X01`, `0X01`, `0101`, `Z101` at 50 ns, again one per bit
 with the second repeating the value.
 `t62_str_vec_1drv`, the first driver alone, holds `XXXX`, `0000`,
-`1107`: one record per write.
+`1112`: one record per write.
 `t62_str_vec_pu__`, the first driver under `pullup p [3:0] (v);`,
 holds nine records at time 0, the `X`, four for the bits of the
 driver, and four more `0000` for the four pull instances, and four at
-50 ns, `0001`, `0001`, `0101`, `1107`, the pulled bits resolving to
+50 ns, `0001`, `0001`, `0101`, `1112`, the pulled bits resolving to
 `1` one at a time.
 The value between the records is a value the net never held as a
 whole, so a reader that wants the resolved vector at a time must take
@@ -1835,7 +1835,7 @@ bits it does not drive, and the first record of the net marks the
 driven bits `X` and the rest `Z`.
 `assign v[0] = s;` on a `wire [3:0] v`, `t63_pdr_bit0____`, holds
 `ZZZX`, `ZZZ0`, `ZZZ1`, one pair each, where the whole driver of
-`t62_str_vec_1drv` holds `XXXX`, `0000`, `1107`.
+`t62_str_vec_1drv` holds `XXXX`, `0000`, `1112`.
 `t63_pdr_bit3____` holds `XZZZ`, `0ZZZ`, `1ZZZ`, and
 `t63_pdr_slice___`, `v[3:0]` of 8 bits, `ZZZZXXXX`, `ZZZZ0000`,
 `ZZZZ1111`.
@@ -1891,7 +1891,7 @@ and a whole driver of `n` pairs takes 8 more than a partial driver of
 `n` pairs; none of it is read.
 
 *Found by* `t63_pdr_bit0____` against `t62_str_vec_1drv`, `ZZZX` for
-`XXXX` at time 0 and `ZZZ1` for `1107` at 50 ns.
+`XXXX` at time 0 and `ZZZ1` for `1112` at 50 ns.
 *Confirmed by* `t63_pdr_bit3____`, `t63_pdr_slice___`,
 `t63_pdr_w64_bit0`, `t63_pdr_w64_bit6`, `t63_pdr_w64_hi__`,
 `t63_pdr_w64_all_`, `t63_pdr_2400_bit`, `t63_pdr_2400_hi_`,

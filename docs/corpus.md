@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1107 cases pass unchanged.
+Every design and all 1112 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1107` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1112` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2328,6 +2328,26 @@ So a recursive wildcard matches the package scope and none of its
 objects, and it is the object query that skips a package rather than
 `log_wave`.
 
+**Tier 75: the two words of an access or file entry.**
+An access type entry ends with `8 48` and a file type entry with
+`8 40`, whatever they are over, and the reading was that the second
+word is the runtime size of the object.
+Each case here puts a different shape of type behind the pointer or
+inside the file.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t75_acc_rec_____` | `access rec_t`, a record | `t23_access______`: the same `8 48` |
+| `t75_acc_arr40___` | `access arr_t`, forty integers | `t75_acc_rec_____`: the same |
+| `t75_acc_acc_____` | `access int_ptr`, another access | `t23_access______`: the same |
+| `t75_fil_rec_____` | `file of rec_t` | `t23_file_int____`: the same `8 40` |
+| `t75_fil_arr_____` | `file of arr_t` | `t75_fil_rec_____`: the same |
+
+The variables say the same: 48 bytes for every access variable and 0
+for every file one, whatever it points at or holds.
+So the words are constants of the kind, and the runtime size reading
+fits the access side alone.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2365,7 +2385,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1107 cases through tier 74, and
+5. The reader now reproduces all 1112 cases through tier 75, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

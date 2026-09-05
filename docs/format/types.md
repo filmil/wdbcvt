@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 1107 of 1107 cases decoding with the entry lengths chaining
+*Confirmed by* 1112 of 1112 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -152,9 +152,35 @@ has no record, while a file variable declares 0 with its second word
 at 40, so the second word is not simply the declared size.
 The reader crashed on the kind before this case, and reads it with
 the same shape as a file type.
+
+Tier 75 puts both kinds over every shape of type the language allows,
+and neither pair of words moves:
+
+| Type | Words | Case |
+| :--- | :--- | :--- |
+| `access integer` | `8 48` | `t23_access` |
+| `access std_ulogic_vector`, unconstrained | `8 48` | `t23_access_vec` |
+| `access rec_t`, a record | `8 48` | `t75_acc_rec_____` |
+| `access arr_t`, forty integers | `8 48` | `t75_acc_arr40___` |
+| `access int_ptr`, another access | `8 48` | `t75_acc_acc_____` |
+| `file of integer` | `8 40` | `t23_file_int` |
+| `file of std_ulogic` | `8 40` | `t23_file_sul` |
+| `TEXT` | `8 40` | `t23_file_text` |
+| `file of rec_t` | `8 40` | `t75_fil_rec_____` |
+| `file of arr_t` | `8 40` | `t75_fil_arr_____` |
+
+The variable of each declares what its kind declares, whatever it
+points at or holds: 48 bytes for every access variable, including the
+one over a record and the one over another access, and 0 for every
+file variable.
+So the two words are constants of the kind and not a measurement of
+the designated or element type, and the reading that the second is the
+runtime size of the object survives only as a coincidence of the
+access side: a file object would then be 40 bytes and declare 0.
+
 *Found by* `t23_access` against `t6_var_int`, whose process variable is
 an integer.
-*Confirmed by* `t23_access_vec`.
+*Confirmed by* `t23_access_vec`, and by the five tier 75 cases above.
 
 **Integer.**
 `INTEGER` is `-2147483648 to 2147483647` and `NATURAL` is
@@ -300,7 +326,7 @@ declares as a constrained subtype of `float` and whose entry is
 `ufixed` over `STD_ULOGIC`, indexed by `INTEGER`, with the bounds in
 the declaration record, and their values are one byte per element
 with the leftmost first: `to_sfixed(1.5, 3, -4)` is `00011000` and
-`to_sfixed(-2.25, 3, -4)` is `11071100`.
+`to_sfixed(-2.25, 3, -4)` is `11121100`.
 `float32` of `t41_float32` is the constrained entry above, 32 bytes,
 `to_float(1.5)` recorded as the IEEE 754 bits `0x3fc00000` one byte
 per bit.
