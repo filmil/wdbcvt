@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1061 cases pass unchanged.
+Every design and all 1074 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2189,6 +2189,36 @@ not about the search.
 | `t68_str_dbg_arr_` | the array under `-debug all` | `t68_str_dbg_____`: one 64 bit object with one 16 byte record of zeros |
 | `t68_str_byte____` | four `byte` holding the same characters | `t68_str_lit4____`: the characters, in one record, in reverse element order |
 
+**Tier 69: the value class of the forms nothing had declared.**
+Region 17 classes an object by its type and the form of its
+initializer, and two of the codes, 2 and 5, have never appeared.
+This tier declares thirteen forms the earlier sweeps did not have, one
+per case, and reads the class of each.
+None of them is a 2 or a 5, which is what the tier was looking for;
+what it found instead is a handful of declarations nothing had
+recorded.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t69_vcl_specprm_` | a `specparam` in a `specify` block | `t11_sv_logic____`: a parameter declaration, class 3, with an object and a record |
+| `t69_vcl_supply0_` | a `supply0` net | `t11_sv_logic____`: the keyword is the declaration kind, class 0, X then `0` at time 0 |
+| `t69_vcl_supply1_` | a `supply1` net | `t69_vcl_supply0_`: the same with `1` |
+| `t69_vcl_const_v_` | `const logic [7:0] k = 8'd5` | `t11_sv_logic____`: class 1, the initializer's, as without `const` |
+| `t69_vcl_const_i_` | `const int k = 5` | `t69_vcl_const_v_`: class 3, the `int`'s |
+| `t69_vcl_defparam` | a child parameter set by `defparam` | `t11_sv_logic____`: an ordinary class 3 parameter |
+| `t69_vcl_gtop_prm` | a parameter overridden with `-generic_top` | `t11_sv_logic____`: the same, and the top scope is renamed `tb(P=5)` |
+| `t69_vcl_typeprm_` | a variable of a `parameter type` | `t11_sv_logic____`: the parameter's name `T` is the variable's type name |
+| `t69_vcl_bits_prm` | a parameter from `$bits` | `t11_sv_logic____`: class 3, like any integer expression |
+| `t69_vcl_bit_real` | `bit b = 1.5` | `t11_sv_logic____`: class 0, the real initializer's |
+| `t69_vcl_enum_xcs` | an enumeration from `e_t'('x)` | `t11_sv_logic____`: class 0, and the cast's hidden variable is class 1 |
+| `t69_vcl_wire_ini` | `wire w = 1'b1` | `t11_sv_logic____`: class 0, where the same literal on a variable is class 1 |
+| `t69_vcl_chandle_` | a `chandle` | `t11_sv_logic____`: nothing at all, as a `string` leaves nothing |
+
+Two forms have no case because xsim rejects them:
+`trireg (large) t;` is `ERROR: [XSIM 43-4096] Trireg is not supported`
+and `let five = 5;` is `ERROR: [XSIM 43-3980] The SystemVerilog
+feature "Let" is not supported yet for simulation`.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2226,7 +2256,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1061 cases through tier 68, and
+5. The reader now reproduces all 1074 cases through tier 69, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

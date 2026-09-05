@@ -2379,7 +2379,37 @@ The classes 2 and 5 have not been seen; the tier 30 sweep over
 thirteen more initializer forms and nine more parameter forms, with a
 based literal, a comparison, a string concatenation, a real
 expression and a shift past 32 bits among them, produced only 0, 1,
-3, 4 and 6.
+3, 4 and 6, and the tier 69 sweep over thirteen forms the earlier
+tiers had not declared produced only 0, 1, 3 and 4:
+
+| Form | Class | Case |
+| :--- | ---: | :--- |
+| a `specparam` in a `specify` block | 3 | `t69_vcl_specprm_` |
+| a `supply0` or `supply1` net | 0 | `t69_vcl_supply0_`, `t69_vcl_supply1_` |
+| `const logic [7:0] k = 8'd5` | 1 | `t69_vcl_const_v_` |
+| `const int k = 5` | 3 | `t69_vcl_const_i_` |
+| a parameter set by `defparam` | 3 | `t69_vcl_defparam` |
+| a parameter overridden with `-generic_top` | 3 | `t69_vcl_gtop_prm` |
+| a variable of a `parameter type` | 4 | `t69_vcl_typeprm_` |
+| a parameter from `$bits` | 3 | `t69_vcl_bits_prm` |
+| `bit b = 1.5` | 0 | `t69_vcl_bit_real` |
+| an enumeration from `e_t'('x)` | 0 | `t69_vcl_enum_xcs` |
+| a net with an initializer, `wire w = 1'b1` | 0 | `t69_vcl_wire_ini` |
+
+So a `const` variable takes the class of its initializer and nothing
+else, an override from a `defparam` or from the command line leaves a
+parameter looking like any other, and a `specparam` is a parameter
+declaration with an object and a record.
+The net is the one that separates two forms which look alike in the
+source: `wire w = 1'b1` is class 0 where `logic w = 1'b1` is class 1,
+because a net's initializer is a continuous assignment and not an
+initial value.
+A `chandle` leaves no declaration at all under typical,
+`t69_vcl_chandle_`, as a `string` and a queue do.
+Two forms have no case: xsim rejects `trireg (large) t;` with
+`ERROR: [XSIM 43-4096] Trireg is not supported` and `let five = 5;`
+with `ERROR: [XSIM 43-3980] The SystemVerilog feature "Let" is not
+supported yet for simulation`.
 
 Word 1 of a declaration record is the index of the entry that holds
 the class of the declaration's objects.
@@ -2452,10 +2482,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1061 of 1061 cases, and the
+*Confirmed by* the region length check in 1074 of 1074 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1061 of 1061 cases and
+and *confirmed by* the reader's range check in 1074 of 1074 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
