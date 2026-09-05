@@ -1,0 +1,52 @@
+{
+  "case": "t82_pkb_arr16___",
+  "axis": "a package body in the handle space. a package whose body declares a constant array of sixteen integers, to see whether what a package body declares lands in the package's block or past the second region.",
+  "differs_from": "t82_pkb_1con____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "pk",
+      "name": "t",
+      "type": "arr_t",
+      "kind": "constant",
+      "value": "(7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7)",
+      "logged": false
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "k",
+      "type": "integer",
+      "value": "7"
+    }
+  ]
+}

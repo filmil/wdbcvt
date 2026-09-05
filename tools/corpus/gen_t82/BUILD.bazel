@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "gen_t82_lib",
+    srcs = ["main.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/corpus/gen_t82",
+    visibility = ["//visibility:private"],
+    deps = ["//tools/corpus/gencommon"],
+)
+
+go_binary(
+    name = "gen_t82",
+    embed = [":gen_t82_lib"],
+    visibility = ["//visibility:public"],
+)
