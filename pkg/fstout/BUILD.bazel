@@ -16,12 +16,13 @@ go_library(
 
 go_test(
     name = "fstout_test",
-    size = "small",
+    size = "medium",
     srcs = ["fstout_test.go"],
     data = [
         "//hdl/corpus:all_truth",
         "//hdl/corpus:all_wdb",
         "//hdl/counter:sim",
+        "//hdl/ibex:sim",
         "//hdl/picorv32:sim",
         "//hdl/potato:sim",
         "//hdl/uart:sim",

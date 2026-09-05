@@ -328,7 +328,7 @@ func isBits(s string) bool {
 // truth.json. The check here is weaker and still worth having: every
 // logged object of a real hierarchy must reach the FST, as itself or
 // as its leaves.
-var designs = []string{"hdl/counter", "hdl/uart", "hdl/potato", "hdl/picorv32"}
+var designs = []string{"hdl/counter", "hdl/uart", "hdl/potato", "hdl/picorv32", "hdl/ibex"}
 
 func TestDesigns(t *testing.T) {
 	root := filepath.Join(os.Getenv("TEST_SRCDIR"), os.Getenv("TEST_WORKSPACE"))
