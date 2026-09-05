@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 1157 corpus cases of tiers
-1 to 81 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 1163 corpus cases of tiers
+1 to 82 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -121,10 +121,10 @@ whole classes of objects came first.
 
 Work on branch `ai-dev-20260904-rtd-designs`, PR #13, until it merges;
 then branch from `hd/main`.
-The generators of tiers 57 to 81 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t81/main.go`.
-The registration anchor for tier 82 in `hdl/corpus/BUILD.bazel` is the
-last tier 81 case in sorted order, `t81_pkt_two_pk__`.
+The generators of tiers 57 to 82 are in `tools/corpus/`, see its
+README; a new tier starts by copying `gen_t82/main.go`.
+The registration anchor for tier 83 in `hdl/corpus/BUILD.bazel` is the
+last tier 82 case in sorted order, `t82_pkb_none____`.
 `//tools/pagegrep` answers "is this value anywhere in the file": it
 searches the bytes as they lie and every record of every inflated
 page, and tier 68 is what it was written for.
@@ -140,9 +140,9 @@ page, and tier 68 is what it was written for.
    `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t68|TestVCD/t68'`.
 3. Document in the `format/` page for the area, then `format.md`:
    findings rows before "Whole file properties, also measured:",
-   comparison rows after the tier 81 rows, guesses in the open
+   comparison rows after the tier 82 rows, guesses in the open
    questions; a tier section in `corpus.md` before "Record which
-   comparison produced which finding"; and the count 1157 upward
+   comparison produced which finding"; and the count 1163 upward
    everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
    `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in

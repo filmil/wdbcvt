@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1157 cases pass unchanged.
+Every design and all 1163 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1157` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1163` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2484,6 +2484,28 @@ The growth beyond that shift is `0x50` in every case, and `0xa0` for
 two packages, so a package of the design leaves a flat `0x50` past the
 second region whatever it declares.
 
+**Tier 82: what a package body adds.**
+The library packages leave more than that flat `0x50`, and the tier 81
+packages had nothing a library package has.
+This tier puts those things in: constants in the body, a deferred
+constant, and a static value inside the package's own function.
+
+| Case | The package has | Handle space | `k` |
+| :--- | :--- | ---: | ---: |
+| `t82_pkb_none____` | a function and an empty body | `0x1250` | `0xe08` |
+| `t82_pkb_1con____` | one integer constant in the body | `0x1258` | `0xe10` |
+| `t82_pkb_4con____` | four of them | `0x1260` | `0xe18` |
+| `t82_pkb_arr16___` | a constant array of sixteen in the body | `0x12a0` | `0xe58` |
+| `t82_pkb_deferred` | a deferred constant, valued in the body | `0x1258` | `0xe10` |
+| `t82_pkb_fn_stat_` | a function with an array local of a literal value | `0x1260` | `0xe08` |
+
+A constant of the body moves `k`, so it lies in the block like a
+constant of the header, and a deferred constant does the same.
+The function's static value does not move `k` and adds `0x10`, its own
+bytes, past the second region.
+So a library package leaves `0x50` and the static values of its
+subprograms.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2521,7 +2543,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1157 cases through tier 81, and
+5. The reader now reproduces all 1163 cases through tier 82, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

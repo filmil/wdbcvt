@@ -895,7 +895,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1157` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1163` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -938,8 +938,33 @@ Past the second region every one of them leaves `0x50`, whatever it
 declares, and two packages leave `0xa0`.
 So a package of the design leaves a flat `0x50` there, and the
 `0x78`, `0x70`, `0x15c`, `0x100` and `0xf8` of the library packages
-are that `0x50` and something else each, which question 6 of
-[../format.md](../format.md) keeps.
+are that `0x50` and something else each.
+
+Tier 82 asks what that something else is, by putting into a package
+the things a library package has and the tier 81 packages did not:
+
+| The package has | Handle space | `k` |
+| :--- | ---: | ---: |
+| a function, an empty body | `0x1250` | `0xe08` |
+| one integer constant in the body | `0x1258` | `0xe10` |
+| four integer constants in the body | `0x1260` | `0xe18` |
+| a constant array of sixteen in the body | `0x12a0` | `0xe58` |
+| a deferred constant, valued in the body | `0x1258` | `0xe10` |
+| a function with an array local of a literal value | `0x1260` | `0xe08` |
+
+A constant of the body is an object like a constant of the package
+header: it moves `k`, so it lies in the block, and a deferred constant
+does the same.
+The last row is the one that does not: the array local of the
+package's own function leaves `k` where it was and adds `0x10`, the
+bytes of that static value, past the second region.
+That is the static value rule of tier 56 and 80 again, on a
+subprogram of a package.
+So a library package leaves `0x50` and the static values of its own
+subprograms, which is where the `0x28` more of `textio`, the `0x10c`
+more of `std_logic_1164` and the rest come from; counting the
+literals of those bodies is what question 6 of
+[../format.md](../format.md) still asks for.
 A package of the design has the block a scope has, `0x28` plus its
 constants rounded up to 8: `pk` with one integer constant moves the
 variable by `0x30`, its constant sits at `0xd40`, `0x98` before the
@@ -2636,10 +2661,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1157 of 1157 cases, and the
+*Confirmed by* the region length check in 1163 of 1163 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1157 of 1157 cases and
+and *confirmed by* the reader's range check in 1163 of 1163 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
