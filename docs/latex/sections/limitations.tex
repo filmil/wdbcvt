@@ -38,6 +38,11 @@ in Vivado instead.
 \subsection{Scope of the reader}
 
 The reader decodes the objects a simulation records. It does not
-decode the contents of SystemVerilog dynamic objects, which the
-database appears to declare and not to record, and it does not write
-databases.
+decode the contents of SystemVerilog dynamic objects, because they are
+not there: tier 68 gives each case a string of characters that occur
+nowhere else and searches the whole file and every record of every
+inflated page for them, finds nothing at any length, under either
+elaboration mode, logged or not, and finds the same characters at once
+in the control case that holds them in an array of \texttt{byte}.
+Under \texttt{-debug all} such an object is declared and logged with a
+placeholder of zeros. The reader also does not write databases.

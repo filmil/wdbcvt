@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1052 cases pass unchanged.
+Every design and all 1061 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2162,6 +2162,33 @@ says nothing.
 | `t67_esz_pk_4bit_` | the same over four bits | `t67_esz_pk_2bit_`: 6 bits, `100011` |
 | `t67_esz_pk_int__` | the same over `int` | `t67_esz_pk_2bit_`: 34 bits, the width on the base type instead |
 
+**Tier 68: where the value of a SystemVerilog string goes.**
+Every case carries characters that occur nowhere else in a database,
+`ZQXJ` and `WPMK`, so that the whole file can be searched for them:
+
+```
+bazel run //tools/pagegrep -- -pat ZQXJ \
+    "$PWD/bazel-bin/hdl/corpus/t68_str_lit4____/sim.wdb"
+```
+
+The search reads the bytes as they lie and every record of every
+inflated page, and finds nothing in any of the string cases.
+`t68_str_byte____` is the control: the same characters in an unpacked
+array of `byte` are found at once, so the answer is about strings and
+not about the search.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t68_str_lit4____` | `string str = "ZQXJ";` under typical | `t11_sv_logic____`: no declaration, no object, no record, and the implicit initializer process |
+| `t68_str_lit40___` | forty characters instead of four | `t68_str_lit4____`: nothing moves, the same 2619 bytes |
+| `t68_str_noinit__` | the string without an initializer | `t68_str_lit4____`: `0xa14`, the `0x98` of the process |
+| `t68_str_arr_____` | `string a [0:1]` under typical | `t68_str_lit4____`: absent as the scalar is, 8 bytes more of handle space |
+| `t68_str_log_____` | `log_wave /tb/str` under typical | `t68_str_lit4____`: nothing, and the warning `No matching HDL object or HDL scope found` |
+| `t68_str_dbg_____` | the four character string under `-debug all` | `t68_str_lit4____`: the declaration, the object and the eight zero bytes of tier 60 |
+| `t68_str_dbg40___` | forty characters under `-debug all` | `t68_str_dbg_____`: the same file and the same record |
+| `t68_str_dbg_arr_` | the array under `-debug all` | `t68_str_dbg_____`: one 64 bit object with one 16 byte record of zeros |
+| `t68_str_byte____` | four `byte` holding the same characters | `t68_str_lit4____`: the characters, in one record, in reverse element order |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2199,7 +2226,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1052 cases through tier 67, and
+5. The reader now reproduces all 1061 cases through tier 68, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

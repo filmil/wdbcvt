@@ -2088,6 +2088,12 @@ Without an initializer the scope is absent: `t12_v_noinit`, a `reg`
 first written at 50 ns, has `0x91c` of handle space, as
 `t11_sv_logic` does, and `t12_sv_enum_noin`, an enum without an
 initializer, has `0x934` where `t11_sv_enum` has `0x9cc`.
+The same holds for a `string`, whose variable is otherwise absent from
+the file: `t68_str_noinit__` has `0xa14` of handle space where
+`t68_str_lit4____`, the same design with `string str = "ZQXJ";`, has
+`0xaac`, the `0x98` of the scope.
+An unpacked array of strings takes the scope too, and 8 bytes more,
+`0xab4` in `t68_str_arr_____`.
 A `reg` declared inside a generate loop gets one implicit scope per
 iteration: `t12_v_gen_reg` has `tb.Initial11_0` and `tb.Initial11_1`
 for two iterations, beside `tb.Initial10_3` for the module's own
@@ -2446,10 +2452,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1052 of 1052 cases, and the
+*Confirmed by* the region length check in 1061 of 1061 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1052 of 1052 cases and
+and *confirmed by* the reader's range check in 1061 of 1061 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

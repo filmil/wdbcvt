@@ -1686,6 +1686,53 @@ does not name the objects.
 `t60_dbg_class_2_`, `t60_dbg_class_d_`, `t60_dbg_str_log_` and
 `t60_dbg_q_log___`.
 
+**The characters of a string are not in the file.**
+Tier 68 gives each case a string of characters that occur nowhere
+else, `ZQXJ` and `WPMK`, and searches the whole file for them, in the
+bytes as they lie and in every record of every inflated page:
+
+```
+bazel build //hdl/corpus:all_wdb
+bazel run //tools/pagegrep -- -pat ZQXJ \
+    "$PWD/bazel-bin/hdl/corpus/t68_str_lit4____/sim.wdb"
+```
+
+Nothing is found, in either byte order, in any of the cases: four
+characters and forty, `t68_str_lit4____` and `t68_str_lit40___`;
+under `-debug all`, `t68_str_dbg_____` and `t68_str_dbg40___`; named
+in `log_wave`, `t68_str_log_____`; and in an unpacked array of two
+strings, `t68_str_arr_____`.
+The control of the tier is `t68_str_byte____`, an unpacked array of
+four `byte` holding the same four characters, where the search finds
+them at once, in the record `4a 58 51 5a` of the second arena: the
+element bytes in reverse order, as an unpacked array of bytes records
+them.
+So the search would find the characters if the file held them, and the
+value of a SystemVerilog string is not written anywhere.
+
+The length of the string changes nothing either.
+`t68_str_lit4____` and `t68_str_lit40___` are both 2619 bytes with
+`0xaac` of handle space, and under `-debug all` `t68_str_dbg_____` and
+`t68_str_dbg40___` are both 4048 bytes and hold the same one record of
+eight zero bytes.
+An unpacked array of strings under `-debug all` is one object of one
+placeholder per element and not one object per element:
+`string a [0:1]` in `t68_str_dbg_arr_` is a 64 bit declaration with a
+single 16 byte record of zeros at time 0, which the reader spells
+`(0...0, 0...0)`.
+Under typical the array is absent like the scalar, `t68_str_arr_____`,
+and naming the string in `log_wave` there does not create it:
+`t68_str_log_____` warns `No matching HDL object or HDL scope found`
+and leaves the file as `t68_str_lit4____`.
+
+*Found by* the search above over `t68_str_lit4____`,
+`t68_str_lit40___`, `t68_str_dbg_____`, `t68_str_dbg40___`,
+`t68_str_log_____` and `t68_str_arr_____`, against
+`t68_str_byte____`.
+*Confirmed by* the same search over `t11_sv_str______`,
+`t60_dbg_str_____` and `t60_dbg_str_log_`, whose `ab` and `xyz` are
+not in those files either.
+
 **Drive strength, pull sources and gates.**
 A drive strength is not in the file.
 `t62_str_strong__` drives a `wire` from `assign (weak0, weak1) w =
