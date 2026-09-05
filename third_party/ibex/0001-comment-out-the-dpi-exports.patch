@@ -1,0 +1,97 @@
+Subject: [PATCH] comment out the DPI exports of the simulation harness
+
+`export "DPI-C"` makes xsim generate C++ glue for the export and write
+it into a file it then compiles with the C compiler, which fails on
+`extern "C"` and `namespace`. The exports are there so a C++ harness
+can load the memory, read performance counters and hand the design a
+scramble key; nothing in this repository calls them, and the functions
+and tasks themselves stay.
+
+diff --git a/examples/simple_system/rtl/ibex_simple_system.sv b/examples/simple_system/rtl/ibex_simple_system.sv
+index 11184df..98af11a 100644
+--- a/examples/simple_system/rtl/ibex_simple_system.sv
++++ b/examples/simple_system/rtl/ibex_simple_system.sv
+@@ -374,13 +374,13 @@ module ibex_simple_system (
+       .timer_intr_o   (timer_irq)
+     );
+ 
+-  export "DPI-C" function mhpmcounter_num;
++  // export "DPI-C" function mhpmcounter_num;
+ 
+   function automatic int unsigned mhpmcounter_num();
+     return u_top.u_ibex_top.u_ibex_core.cs_registers_i.MHPMCounterNum;
+   endfunction
+ 
+-  export "DPI-C" function mhpmcounter_get;
++  // export "DPI-C" function mhpmcounter_get;
+ 
+   function automatic longint unsigned mhpmcounter_get(int index);
+     return u_top.u_ibex_top.u_ibex_core.cs_registers_i.mhpmcounter[index];
+diff --git a/rtl/ibex_if_stage.sv b/rtl/ibex_if_stage.sv
+index ab2dc91..7a09b91 100644
+--- a/rtl/ibex_if_stage.sv
++++ b/rtl/ibex_if_stage.sv
+@@ -402,8 +402,8 @@ module ibex_if_stage import ibex_pkg::*; import ibex_cheriot_pkg::*; #(
+     // implies. This then causes problems for linking against C++ testbench code that expected them.
+     // As a slightly ugly hack, let's define the DPI functions here (the real versions are defined
+     // in prim_util_get_scramble_params.svh)
+-    export "DPI-C" function simutil_get_scramble_key;
+-    export "DPI-C" function simutil_get_scramble_nonce;
++    // export "DPI-C" function simutil_get_scramble_key;
++    // export "DPI-C" function simutil_get_scramble_nonce;
+     function automatic int simutil_get_scramble_key(output bit [127:0] val);
+       return 0;
+     endfunction
+diff --git a/vendor/lowrisc_ip/ip/prim/rtl/prim_util_get_scramble_params.svh b/vendor/lowrisc_ip/ip/prim/rtl/prim_util_get_scramble_params.svh
+index 11245a8..284075d 100644
+--- a/vendor/lowrisc_ip/ip/prim/rtl/prim_util_get_scramble_params.svh
++++ b/vendor/lowrisc_ip/ip/prim/rtl/prim_util_get_scramble_params.svh
+@@ -3,7 +3,7 @@
+ // SPDX-License-Identifier: Apache-2.0
+ 
+ `ifndef SYNTHESIS
+-  export "DPI-C" function simutil_get_scramble_key;
++  // export "DPI-C" function simutil_get_scramble_key;
+ 
+   function int simutil_get_scramble_key(output bit [127:0] val);
+     int valid;
+@@ -12,7 +12,7 @@
+     return valid;
+   endfunction
+ 
+-  export "DPI-C" function simutil_get_scramble_nonce;
++  // export "DPI-C" function simutil_get_scramble_nonce;
+ 
+   function int simutil_get_scramble_nonce(output bit [319:0] nonce);
+     int valid;
+diff --git a/vendor/lowrisc_ip/ip/prim/rtl/prim_util_memload.svh b/vendor/lowrisc_ip/ip/prim/rtl/prim_util_memload.svh
+index ccb3e80..0f7b3fe 100644
+--- a/vendor/lowrisc_ip/ip/prim/rtl/prim_util_memload.svh
++++ b/vendor/lowrisc_ip/ip/prim/rtl/prim_util_memload.svh
+@@ -22,7 +22,7 @@
+ 
+ `ifndef SYNTHESIS
+   // Task for loading 'mem' with SystemVerilog system task $readmemh()
+-  export "DPI-C" task simutil_memload;
++  // export "DPI-C" task simutil_memload;
+ 
+   task simutil_memload;
+     input string file;
+@@ -31,7 +31,7 @@
+ 
+   // Function for setting a specific element in |mem|
+   // Returns 1 (true) for success, 0 (false) for errors.
+-  export "DPI-C" function simutil_set_mem;
++  // export "DPI-C" function simutil_set_mem;
+ 
+   function int simutil_set_mem(input int index, input bit [311:0] val);
+     int valid;
+@@ -41,7 +41,7 @@
+   endfunction
+ 
+   // Function for getting a specific element in |mem|
+-  export "DPI-C" function simutil_get_mem;
++  // export "DPI-C" function simutil_get_mem;
+ 
+   function int simutil_get_mem(input int index, output bit [311:0] val);
+     int valid;

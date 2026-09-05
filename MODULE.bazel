@@ -137,6 +137,27 @@ http_archive(
     urls = ["https://github.com/gtkwave/libfst/archive/c716c1f67e21a06aaf8722830b371516e70dc657.tar.gz"],
 )
 
+# Ibex, the lowRISC RISC-V core, as the SystemVerilog design nobody
+# wrote for this repository. Its `simple_system` example wires the core
+# to a bus, a memory and a timer, and takes the program as a memory
+# image, so the run needs no tool chain. Pinned to a commit, because
+# the project tags releases of other things.
+http_archive(
+    name = "ibex",
+    build_file = "//third_party/ibex:ibex.BUILD",
+    # The tree carries BUILD files of its own, and a file inside a
+    # subpackage cannot be named from the package above it, so they go.
+    patch_args = ["-p1"],
+    # xsim generates C++ glue for a DPI export and compiles it as C.
+    # The exports are there for the Verilator harness; the patch
+    # comments them out and changes nothing else.
+    patch_cmds = ["""find . -mindepth 2 \\( -name BUILD -o -name BUILD.bazel \\) -delete"""],
+    patches = ["//third_party/ibex:0001-comment-out-the-dpi-exports.patch"],
+    sha256 = "aec0551a234be078dbc50628d1996054631a464508b706eafa8999ac57c5dcf0",
+    strip_prefix = "ibex-34b0705760ef3dfa00e99637432473d2be8f22f3",
+    urls = ["https://github.com/lowRISC/ibex/archive/34b0705760ef.tar.gz"],
+)
+
 # PicoRV32, a size optimised RISC-V core in Verilog, as a second design
 # nobody wrote for this repository. Its `testbench_ez.v` carries a six
 # instruction program in an `initial` block, so the run needs no

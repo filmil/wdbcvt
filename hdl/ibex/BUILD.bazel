@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load(
+    "@rules_vivado//build/vivado:rules.bzl",
+    "vivado_library",
+    "vivado_simulation",
+)
+load("//build:fst_test.bzl", "fst_conversion_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# The Ibex sources come from the archive named in MODULE.bazel; only
+# the bench and the program are written here.
+vivado_library(
+    name = "lib",
+    srcs = [
+        # Compilation order matters to xvlog; do not sort.
+        # do not sort
+        "@ibex//:prims",
+        "@ibex//:rtl",
+        "@ibex//:system",
+        "tb.sv",
+    ],
+    hdrs = [
+        "@ibex//:dv_hdrs",
+        "@ibex//:prim_hdrs",
+    ],
+    defines = {
+        # ibex_top_tracing refuses to elaborate without RVFI, the
+        # formal interface its tracer reads.
+        "RVFI": "",
+        # The example defaults to the CHERIoT capability ISA of this
+        # fork. Plain RV32I is the configuration the program here uses
+        # and the one most Ibex users build.
+        "BASE_ISA": "ibex_pkg::BaseIsaRV32I",
+    },
+    # xvlog resolves `include "prim_assert.sv"` and the coverage macros
+    # against these. The paths are where the sandbox lays the external
+    # repository out.
+    includes = [
+        "//external/+http_archive+ibex/vendor/lowrisc_ip/dv/sv/dv_utils",
+        "//external/+http_archive+ibex/vendor/lowrisc_ip/ip/prim/rtl",
+    ],
+    library_name = "ibex",
+)
+
+# The program the core runs, loaded by the memory through $readmemh.
+filegroup(
+    name = "prog",
+    srcs = ["prog.vmem"],
+)
+
+# bazel build //hdl/ibex:sim
+#
+# Runs Ibex's own simple system, the core with a bus, a memory and a
+# timer, on the program in prog.vmem, and writes the waveform database
+# to bazel-bin/hdl/ibex/sim.wdb next to sim.vcd. The program ends the
+# run by writing to the simulation control register.
+vivado_simulation(
+    name = "sim",
+    data = [":prog"],
+    # A SystemVerilog string parameter needs its quotes on the xelab
+    # command line, and the runner passes the command through two
+    # shells, so each quote carries three backslashes.
+    generic_tops = {
+        "SRAM_INIT": "\\\"$(location :prog)\\\"",
+    },
+    library = ":lib",
+    top = "tb",
+    # Ibex sets no timescale in its sources, so one is given for every
+    # module, the way //hdl/serv:sim does.
+    xelab_args = [
+        "-timescale",
+        "1ns/1ps",
+    ],
+)
+
+# The database of this design converts to FST.
+fst_conversion_test(
+    name = "fst",
+    sim = ":sim",
+)

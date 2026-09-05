@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// The program the bench runs, assembled by hand. One 32 bit word per
+// line, loaded into the memory of Ibex's simple system, which sits at
+// 0x00100000. Ibex starts at the boot address plus 0x80, so the
+// program begins at word 0x20.
+//
+// It sums 7 twelve times, puts the answer in memory, reads it back,
+// and writes 1 to the simulation control register at 0x00020008,
+// which ends the run. The nops after it are there because the fetch
+// stage reads ahead of the branch, and reading a word the image never
+// wrote would leave X on the instruction bus.
+//
+// Written here rather than compiled, because building anything for
+// RISC-V needs a tool chain the runner does not have.
+
+@00000020
+000200b7  // lui   x1, 0x20
+00100137  // lui   x2, 0x100
+00c00293  // addi  x5, x0, 12
+00000313  // addi  x6, x0, 0
+00700393  // addi  x7, x0, 7
+00730333  // add   x6, x6, x7
+fff28293  // addi  x5, x5, -1
+fe029ce3  // bne   x5, x0, -8
+40612023  // sw    x6, 0x400(x2)
+40012403  // lw    x8, 0x400(x2)
+00100493  // addi  x9, x0, 1
+0090a423  // sw    x9, 8(x1)
+0000006f  // jal   x0, 0
+
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
+00000013  // nop
