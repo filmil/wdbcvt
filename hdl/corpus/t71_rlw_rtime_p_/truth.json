@@ -1,0 +1,37 @@
+{
+  "case": "t71_rlw_rtime_p_",
+  "axis": "the width of a real parameter. a realtime parameter beside a logic, to see where the 16 bits a real parameter declares comes from, when a real variable declares 32 and both hold one float64.",
+  "differs_from": "t71_rlw_sreal_p_",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "R",
+      "type": "realtime",
+      "declared": "parameter",
+      "value": "1.5"
+    }
+  ]
+}
