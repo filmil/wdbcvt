@@ -269,10 +269,11 @@ leaves, about 3.8 us per change.
 ## Every database has a conversion test
 
 `bazel test //...` converts every waveform database in the repository
-and fails if any conversion does. Each corpus case gets a `:fst`
+and fails if any conversion does. Each corpus case gets a `:convert`
 target from `wdb_case`, and each design outside the corpus has one of
-its own, which is 1055 tests whose only question is whether that
-database converts at all.
+its own, whose only question is whether that database converts at all,
+to FST and to the SQLite output of
+[sqlite-output.md](sqlite-output.md).
 
 They say less than `//pkg/fstout:fstout_test`, which reads the output
 back through libfst and compares it against the case's truth file, and

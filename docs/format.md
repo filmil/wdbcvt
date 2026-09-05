@@ -1319,6 +1319,11 @@ Keep the decoder's output model separate from the VCD writer, so that
 adding an FST writer is a new writer and not a rewrite.
 See [fst-output.md](fst-output.md).
 
+SQLite is the third writer, for the reader that queries rather than
+looks: the same signals and changes as rows, in the schema
+`go-vcd-parser` writes from a VCD.
+See [sqlite-output.md](sqlite-output.md).
+
 
 ## Method
 
