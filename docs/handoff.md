@@ -78,6 +78,14 @@ case, reads it back through libfst and compares against its
 leaves out. `docs/fst-output.md` states the mapping, what it costs and
 what is left.
 
+SQLite output works too: `wdbcvt -in <file>.wdb -sqlite <file>.db`
+writes the same signals and changes as rows, in the schema
+`go-vcd-parser` writes from a VCD, so one query reads either database.
+`pkg/sqlout` holds the mapping and `pkg/sqlout:sqlout_test` compares
+its rows against Vivado's own VCD, through that project's own writer.
+`docs/sqlite-output.md` states the schema, the two places it departs
+from the upstream DDL and why.
+
 `//hdl/ibex:sim` is the SystemVerilog design, added after tier 67:
 lowRISC's Ibex under its own `simple_system` example, 3287 objects,
 running a hand assembled program that ends the run. It found that a

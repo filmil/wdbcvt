@@ -1,5 +1,5 @@
 % SPDX-License-Identifier: Apache-2.0
-\section{Output: FST through libfst}
+\section{Output: FST through libfst, and SQLite}
 \label{sec:output}
 
 \begin{figure*}[t]
@@ -72,6 +72,47 @@ current value of every object and merging the arenas by record time.
 The state is the handle space, 2.8~MB for the largest design here,
 rather than the change history, which for that design is
 18\,875\,466 entries.
+
+\subsection{A second output: rows}
+
+A waveform viewer is one reader of a simulation; a query is another,
+and the questions a query answers -- when did this signal last hold
+that value, which signals changed in this window, do two runs agree --
+are awkward against a waveform file and natural against a table. The
+converter therefore also writes SQLite: one row per leaf in
+\texttt{Signals}, one row per leaf value change in \texttt{Svalues}.
+
+The schema is not invented here. It is the one
+\texttt{go-vcd-parser}~\cite{govcd} writes from a VCD, so a query
+written against a VCD-derived database reads a
+\texttt{.wdb}-derived one, with the objects the VCD never had. The
+mapping is the FST mapping: the same flattening of records and arrays
+into leaves, and two objects on one handle share an identifier code,
+as a VCD gives an aliased signal one code.
+
+Two things differ from that schema, and the second was a defect in it.
+A \texttt{Meta} table is added, because the timestamps count the
+file's own time unit and neither original table says which unit that
+is. And the columns are \texttt{TEXT} where the original declares
+\texttt{STRING}: SQLite gives a column whose declared type contains
+neither \texttt{TEXT} nor \texttt{INT} numeric affinity, so a
+\texttt{STRING} column stored the vector \texttt{00000001} as the
+integer 1 and a 22 bit value as the double
+\texttt{1.11111111111111e+21}, which is the value destroyed. Every
+signal wider than about 18 bits was affected, in that project as much
+as here; the fix is offered back to it.
+
+The rows are held to Vivado's own VCD, as the rest of this work is:
+the test converts a design, parses the VCD of the same run with
+\texttt{go-vcd-parser}, converts that with the same project's own
+writer, and requires every signal the VCD declares to be present at
+the same width and to hold the same value at every time the VCD names
+one.
+
+A row costs about 70 bytes, so the SQLite of a long trace is large
+where its FST is small: 150~MB and 21~s for SERV, 157~MB and 88~s for
+NEORV32, against 654~kB and 690~kB of FST. That is the trade the two
+outputs make, and it is why both exist.
 
 \subsection{Measurements}
 
