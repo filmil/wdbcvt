@@ -1,0 +1,90 @@
+{
+  "case": "t73_prt_gen_last",
+  "axis": "protected method scopes. A shared variable of a protected type, its methods called from the only process, with a generate statement after that process, to see which scope the second pair of method scopes hangs from.",
+  "differs_from": "t55_prot_pkg_prc",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "gs",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g(0).gs",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g(0).gs",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "tb.g(1).gs",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "tb.g(1).gs",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb",
+      "name": "ct",
+      "type": "counter_t",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "tb.p",
+      "name": "v",
+      "type": "integer",
+      "kind": "variable",
+      "port": ""
+    },
+    {
+      "scope": "tb.g(0)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "port": "",
+      "value": "0"
+    },
+    {
+      "scope": "tb.g(1)",
+      "name": "i",
+      "type": "integer",
+      "kind": "loop",
+      "port": "",
+      "value": "1"
+    }
+  ]
+}
