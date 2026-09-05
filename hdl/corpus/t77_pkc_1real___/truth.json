@@ -1,0 +1,42 @@
+{
+  "case": "t77_pkc_1real___",
+  "axis": "package handle space. A package that declares one real constant, read from the process, to see what each kind of declaration costs the handle space.",
+  "differs_from": "t77_pkc_1con____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "pk",
+      "name": "r",
+      "type": "real",
+      "kind": "constant",
+      "value": "1.5",
+      "logged": false
+    }
+  ]
+}

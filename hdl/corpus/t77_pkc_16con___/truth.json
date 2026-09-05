@@ -1,0 +1,162 @@
+{
+  "case": "t77_pkc_16con___",
+  "axis": "package handle space. A package that declares sixteen integer constants, read from the process, to see what each kind of declaration costs the handle space.",
+  "differs_from": "t77_pkc_4con____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "a",
+      "type": "integer",
+      "kind": "variable"
+    },
+    {
+      "scope": "pk",
+      "name": "c0",
+      "type": "integer",
+      "kind": "constant",
+      "value": "1",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c1",
+      "type": "integer",
+      "kind": "constant",
+      "value": "2",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c2",
+      "type": "integer",
+      "kind": "constant",
+      "value": "3",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c3",
+      "type": "integer",
+      "kind": "constant",
+      "value": "4",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c4",
+      "type": "integer",
+      "kind": "constant",
+      "value": "5",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c5",
+      "type": "integer",
+      "kind": "constant",
+      "value": "6",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c6",
+      "type": "integer",
+      "kind": "constant",
+      "value": "7",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c7",
+      "type": "integer",
+      "kind": "constant",
+      "value": "8",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c8",
+      "type": "integer",
+      "kind": "constant",
+      "value": "9",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c9",
+      "type": "integer",
+      "kind": "constant",
+      "value": "10",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c10",
+      "type": "integer",
+      "kind": "constant",
+      "value": "11",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c11",
+      "type": "integer",
+      "kind": "constant",
+      "value": "12",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c12",
+      "type": "integer",
+      "kind": "constant",
+      "value": "13",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c13",
+      "type": "integer",
+      "kind": "constant",
+      "value": "14",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c14",
+      "type": "integer",
+      "kind": "constant",
+      "value": "15",
+      "logged": false
+    },
+    {
+      "scope": "pk",
+      "name": "c15",
+      "type": "integer",
+      "kind": "constant",
+      "value": "16",
+      "logged": false
+    }
+  ]
+}
