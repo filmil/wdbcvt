@@ -2482,10 +2482,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1082 of 1082 cases, and the
+*Confirmed by* the region length check in 1090 of 1090 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1082 of 1082 cases and
+and *confirmed by* the reader's range check in 1090 of 1090 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

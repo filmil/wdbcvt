@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1082 cases pass unchanged.
+Every design and all 1090 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2242,6 +2242,28 @@ What is left after that is one number per associative array and
 nothing else; that it belongs to an iterator is still a guess, and
 question 24 says so.
 
+**Tier 71: the width a real parameter declares.**
+A `real` parameter declares 16 bits where a `real` variable declares
+32, and both record one `float64`.
+Tier 20 ruled out the value and the `localparam` keyword; this tier
+puts the type keyword in every other place it fits.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t71_rlw_sreal_p_` | `parameter shortreal R = 1.5` | `t25_v_prm_real__`: 16, as `real` does |
+| `t71_rlw_rtime_p_` | `parameter realtime R = 1.5` | `t71_rlw_sreal_p_`: 16, on the `realtime` entry |
+| `t71_rlw_untyped_` | `parameter R = 1.5` | `t71_rlw_sreal_p_`: 32, so the keyword carries the 16 |
+| `t71_rlw_specprm_` | `specparam d = 1.5` | `t71_rlw_sreal_p_`: 32, as an untyped parameter |
+| `t71_rlw_pkg_prm_` | the parameter in a package | `t71_rlw_sreal_p_`: 16, and no record, as a package parameter has none |
+| `t71_rlw_kid_prm_` | the parameter in a child module | `t71_rlw_sreal_p_`: 16 |
+| `t71_rlw_arr_prm_` | `parameter real R [0:1]` | `t71_rlw_sreal_p_`: 64, so 32 an element, on the same type entry |
+| `t71_rlw_vhdl_gen` | a VHDL `generic r : real` | `t71_rlw_sreal_p_`: 8 bytes, the float itself |
+
+The array is the one that settles it: two of the same parameters
+declare 32 each, so the 16 is not the type's and not the value's but
+the scalar parameter form's, and why that form declares half is what
+question 14 now asks.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2279,7 +2301,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1082 cases through tier 70, and
+5. The reader now reproduces all 1090 cases through tier 71, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

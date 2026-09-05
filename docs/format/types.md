@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 1082 of 1082 cases decoding with the entry lengths chaining
+*Confirmed by* 1090 of 1090 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -672,6 +672,24 @@ declares 32; both record one `float64` pair, and the 16 is open.
 An untyped parameter with a real literal, `parameter K = 1.5` in
 `t28_sv_prm_realu`, uses the `real` entry and declares 32 bits, so the
 16 goes with the `real` keyword.
+Tier 71 puts the same keyword in every other place it fits, and the
+16 turns out to be the scalar parameter's alone:
+
+| Declaration | Bits | Case |
+| :--- | ---: | :--- |
+| `parameter shortreal R = 1.5` | 16 | `t71_rlw_sreal_p_` |
+| `parameter realtime R = 1.5` | 16 | `t71_rlw_rtime_p_` |
+| `parameter real R` in a package | 16 | `t71_rlw_pkg_prm_` |
+| `parameter real R` in a child module | 16 | `t71_rlw_kid_prm_` |
+| `parameter R = 1.5`, untyped | 32 | `t71_rlw_untyped_` |
+| `specparam d = 1.5` | 32 | `t71_rlw_specprm_` |
+| `parameter real R [0:1]` | 64, so 32 an element | `t71_rlw_arr_prm_` |
+| a VHDL `generic r : real` | 8 bytes, the float | `t71_rlw_vhdl_gen` |
+
+So it is not the scope, not the keyword `parameter` against
+`localparam`, not the value, and not the type entry, which the array
+of two shares: a scalar parameter whose type names a real declares
+half of what everything else holding the same `float64` declares.
 A `realtime` is a real entry of its own, named `realtime`, with the
 variant `1` of a Verilog `real`: a `realtime` variable declares 32
 bits, `t28_sv_rtime_var`, and a `parameter realtime` 16,
