@@ -1,11 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Publishes a rolling `nightly` release, here and on the GitHub mirror,
-# holding the wdbcvt binary, a reference waveform database, the report
-# on the format work, and an archive of the source tree that built
-# them. A manual run may instead
+# holding the wdbcvt binaries for Linux amd64 and arm64 and for macOS,
+# a reference waveform database, the report on the format work, and an
+# archive of the source tree that built them. A manual run may instead
 # request a release tagged with the UTC build date, which then stays as
-# a fixed snapshot while `nightly` keeps rolling. The .wdb is the sample
+# a fixed snapshot while `nightly` keeps rolling.
+#
+# Vivado exists only for Linux amd64, so the other platforms get the Go
+# binary alone: they cross compile //cmd/wdbcvt through the zig based
+# hermetic C toolchain and build nothing else, and no tests run for
+# them. The test suite runs on amd64 in test.yml as always. The .wdb is the sample
 # every format decoding experiment starts from, so it is worth having a
 # stable download for it.
 #
@@ -70,7 +75,7 @@ jobs:
       - name: Build the release artifacts
         run: |
           bazelisk build -c opt \
-              //cmd/wdbcvt //hdl/counter:sim //docs/latex:report
+              //hdl/counter:sim //docs/latex:report
 
       - name: Gather them
         run: |
@@ -78,7 +83,6 @@ jobs:
           bin="$(bazelisk info -c opt bazel-bin)"
           rm -rf dist/release
           mkdir -p dist/release
-          cp "${bin}/cmd/wdbcvt/wdbcvt_/wdbcvt" dist/release/wdbcvt-linux-amd64
           cp "${bin}/hdl/counter/sim.wdb" dist/release/counter-sim.wdb
           cp "${bin}/hdl/counter/sim.vcd" dist/release/counter-sim.vcd
           # The report on the whole effort, built from //docs/latex.
@@ -88,6 +92,24 @@ jobs:
           # takes only tracked files, so dist/ itself stays out.
           git --no-pager archive --format=tar.gz --prefix=wdbcvt/ \
               -o dist/release/wdbcvt-source.tar.gz refs/ci/head
+          ls -l dist/release
+
+      - name: Build the Go binary for every release platform
+        run: |
+          set -euo pipefail
+          # Only //cmd/wdbcvt: Vivado exists solely for Linux amd64, so
+          # the cross platforms build the Go binary and nothing else,
+          # and run no tests. --strip=always keeps debug info out of
+          # release binaries, and also keeps the Go linker from running
+          # dsymutil, which the runner host does not have.
+          for platform in linux_amd64 linux_arm64 darwin_amd64 darwin_arm64; do
+            bazelisk build -c opt --strip=always \
+                "--platforms=@zig_sdk//platform:${platform}" //cmd/wdbcvt
+            # The bazel-bin symlink follows the configuration of the
+            # build just done, so it points at this platform's binary.
+            cp bazel-bin/cmd/wdbcvt/wdbcvt_/wdbcvt \
+                "dist/release/wdbcvt-${platform/_/-}"
+          done
           ls -l dist/release
 
       - name: Pick the tag

@@ -222,7 +222,7 @@ Three workflows live in `.forgejo/workflows/`, and all of them use
 | Workflow | Trigger | What it does |
 | :--- | :--- | :--- |
 | `test.yml` | pull request, push to `main`, weekly | `bazel build //...`, then `bazel test //...`, then checks that the simulation wrote a non-empty `.wdb` |
-| `release.yml` | manual dispatch, monthly | publishes the `wdbcvt` binary, the report, and a reference `.wdb` and `.vcd` to the rolling `nightly` release, here and on the GitHub mirror |
+| `release.yml` | manual dispatch, monthly | publishes the `wdbcvt` binaries for Linux amd64 and arm64 and for macOS, the report, and a reference `.wdb` and `.vcd` to the rolling `nightly` release, here and on the GitHub mirror |
 | `mirror.yml` | push to `main`, daily, on request | pushes `main` to the read-only GitHub mirror |
 
 The `vivado` runner must have `bazelisk` on its `PATH`, the installer
@@ -241,7 +241,16 @@ failing.
 That label runs jobs directly on the host, and the host has no `node`.
 No JavaScript action can run there, `actions/checkout` included.
 Every workflow here checks out with plain `git` for that reason.
-`forgejo-release` is fine: it is a composite action built from bash steps.
+An action is safe only when every step of it, and of anything it
+`uses`, is bash.
+Upstream `forgejo-release` is not: it embeds a node cache action behind
+a guard that never skips, so the release workflow uses the vendored,
+bash only copy in `.forgejo/actions/forgejo-release`.
+
+The non amd64 release binaries are cross compiled through the zig based
+hermetic C toolchain.
+Vivado exists only for Linux amd64, so those platforms build the Go
+binary alone, and no tests run for them.
 
 
 ## License

@@ -19,15 +19,37 @@ bazel_dep(name = "rules_shell", version = "0.8.0")
 # lives in the registry named first in .bazelrc.
 bazel_dep(name = "rules_latex_host", version = "0.3.0")
 
-# A hermetic C toolchain for the one cgo target, libfst. The host has a
-# compiler but no libstdc++ development files, which the cgo link step
-# asks for, and the release must not inherit the build machine's glibc.
+# A hermetic C toolchain for the cgo targets, libfst and go-sqlite3.
+# The host has a compiler but no libstdc++ development files, which the
+# cgo link step asks for, and the release must not inherit the build
+# machine's glibc. The same toolchain cross compiles the Go binaries of
+# the release for Linux arm64 and for macOS.
+#
+# The two patches make zig's macOS target complete enough for a cgo Go
+# binary: a resolv.h stub with the res_state layout the Go runtime
+# checks, a libresolv and a CoreFoundation stub to link against, and a
+# zig-wrapper that rewrites -lresolv and -framework to those stubs and
+# drops -no_pie, which zig's linker rejects.
 bazel_dep(name = "hermetic_cc_toolchain", version = "4.3.0")
+single_version_override(
+    module_name = "hermetic_cc_toolchain",
+    patch_strip = 1,
+    patches = [
+        "//patches:hermetic_cc_toolchain-darwin-resolv.patch",
+        "//patches:hermetic_cc_toolchain-darwin-lresolv-wrapper.patch",
+    ],
+    version = "4.3.0",
+)
 
 toolchains = use_extension("@hermetic_cc_toolchain//toolchain:ext.bzl", "toolchains")
 use_repo(toolchains, "zig_sdk")
 
-register_toolchains("@zig_sdk//toolchain:linux_amd64_gnu.2.31")
+register_toolchains(
+    "@zig_sdk//toolchain:linux_amd64_gnu.2.31",
+    "@zig_sdk//toolchain:linux_arm64_gnu.2.31",
+    "@zig_sdk//toolchain:darwin_amd64",
+    "@zig_sdk//toolchain:darwin_arm64",
+)
 
 bazel_dep(name = "buildifier_prebuilt", version = "8.5.1.4", dev_dependency = True)
 bazel_dep(name = "bazel_skylib_gazelle_plugin", version = "1.9.2", dev_dependency = True)
