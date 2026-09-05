@@ -1,0 +1,49 @@
+{
+  "case": "t69_vcl_bits_prm",
+  "axis": "value class. a parameter from $bits beside a logic, to see which value class of region 17 the declaration takes, and whether any form reaches the codes 2 and 5 that no case has produced.",
+  "differs_from": "t11_sv_logic____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "v",
+      "width": 8,
+      "type": "",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "v",
+      "value": "00001000"
+    }
+  ],
+  "generics": [
+    {
+      "instance": "",
+      "scope": "tb",
+      "name": "B",
+      "type": "",
+      "declared": "parameter",
+      "value": "00000000000000000000000000001000"
+    }
+  ]
+}
