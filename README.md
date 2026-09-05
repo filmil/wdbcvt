@@ -210,9 +210,9 @@ Three workflows live in `.forgejo/workflows/`, and all of them use
 
 | Workflow | Trigger | What it does |
 | :--- | :--- | :--- |
-| `build.yml` | pull request, push to `main`, weekly | `bazel build //...` |
-| `test.yml` | pull request, push to `main`, weekly | `bazel test //...`, then checks that the simulation wrote a non-empty `.wdb` |
-| `release.yml` | manual dispatch, monthly | publishes the `wdbcvt` binary and a reference `.wdb` and `.vcd` to the rolling `nightly` release |
+| `test.yml` | pull request, push to `main`, weekly | `bazel build //...`, then `bazel test //...`, then checks that the simulation wrote a non-empty `.wdb` |
+| `release.yml` | manual dispatch, monthly | publishes the `wdbcvt` binary, the report, and a reference `.wdb` and `.vcd` to the rolling `nightly` release |
+| `mirror.yml` | push to `main`, daily, on request | pushes `main` to the read-only GitHub mirror |
 
 The `vivado` runner must have `bazelisk` on its `PATH`, the installer
 archive at the path above, and write access to `/data/cache`.

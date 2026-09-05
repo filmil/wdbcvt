@@ -3,7 +3,10 @@
 # Builds everything and runs the test suite. `bazelisk test //...` builds
 # every target in the pattern, not only the tests and their
 # dependencies, because `--build_tests_only` is false by default, so a
-# separate build job would repeat this one.
+# separate build job would repeat this one. The build stays a step of
+# its own so that "does not build" and "does not pass" are different
+# lines in the step list; the second invocation costs an analysis pass
+# and no actions, because the first one filled the cache.
 #
 # It needs the `vivado` runner: that host holds the AMD installer
 # archive and the shared Vivado install cache that MODULE.bazel points
@@ -51,7 +54,10 @@ jobs:
           bazelisk --version
           cat .bazelversion
 
-      - name: Build everything and run the tests
+      - name: Build everything
+        run: bazelisk build //...
+
+      - name: Run the tests
         run: bazelisk test --test_output=errors //...
 
       - name: Check that the simulation produced a waveform database
