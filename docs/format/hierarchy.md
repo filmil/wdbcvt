@@ -682,6 +682,27 @@ gets one has no default to store.
 An array's bytes are its elements, a record's its declared size plus
 4, and the declared size of a record is a multiple of 8, so a record
 of one integer declares 8 bytes as a record of two does.
+
+Tier 80 places those bytes.
+The design there has a generic `k` at `0xde0` and a process variable
+`a` at `0xde4`, both past the signals, and adds one static value at a
+time to the function:
+
+| Added | Handle space | `s` | `k` | `a` |
+| :--- | ---: | ---: | ---: | ---: |
+| nothing | `0x11d8` | `0x768` | `0xde0` | `0xde4` |
+| an array local of four integers | `0x11e8` | `0x768` | `0xde0` | `0xde4` |
+| an array local of eight | `0x11f8` | `0x768` | `0xde0` | `0xde4` |
+| a record local of eight bytes | `0x11e4` | `0x768` | `0xde0` | `0xde4` |
+| two array locals of four | `0x11f8` | `0x768` | `0xde0` | `0xde4` |
+
+The costs are tier 56's, `0x10`, `0x20`, `0xc` and `0x20`, on another
+design.
+No handle moves: the signal, the generic and the process variable sit
+where they sat.
+So the bytes of a static value lie past every object, at the end of
+the handle space, and not among the objects that follow the signals.
+Why a record adds 4 over its declared size is still open.
 A process variable is not affected: `t56_prc_vec_noin` and
 `t56_prc_arr_noin` drop the initialiser of the tier 52 variables and
 keep their handle space and strides, `0x14` and `0x20`.
@@ -874,7 +895,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1146` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1151` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -2591,10 +2612,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1146 of 1146 cases, and the
+*Confirmed by* the region length check in 1151 of 1151 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1146 of 1146 cases and
+and *confirmed by* the reader's range check in 1151 of 1151 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

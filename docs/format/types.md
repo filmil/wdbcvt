@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 1146 of 1146 cases decoding with the entry lengths chaining
+*Confirmed by* 1151 of 1151 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -326,7 +326,7 @@ declares as a constrained subtype of `float` and whose entry is
 `ufixed` over `STD_ULOGIC`, indexed by `INTEGER`, with the bounds in
 the declaration record, and their values are one byte per element
 with the leftmost first: `to_sfixed(1.5, 3, -4)` is `00011000` and
-`to_sfixed(-2.25, 3, -4)` is `11461100`.
+`to_sfixed(-2.25, 3, -4)` is `11511100`.
 `float32` of `t41_float32` is the constrained entry above, 32 bytes,
 `to_float(1.5)` recorded as the IEEE 754 bits `0x3fc00000` one byte
 per bit.

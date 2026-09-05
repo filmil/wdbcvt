@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1146 cases pass unchanged.
+Every design and all 1151 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1146` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1151` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2443,6 +2443,25 @@ So a frame handle is an offset in the subprogram's own numbering
 rather than a place in the handle space, and the room below the first
 signal is not set aside for frames.
 
+**Tier 80: where the bytes of a static value lie.**
+Tier 56 measured what a subprogram's static composite values add to
+the handle space and could not say where those bytes sit.
+This design puts a generic and a process variable past the signals, so
+that anything inserted between them would show.
+
+| Case | The function declares | Handle space | `s` | `k` | `a` |
+| :--- | :--- | ---: | ---: | ---: | ---: |
+| `t80_stv_none____` | a scalar local only | `0x11d8` | `0x768` | `0xde0` | `0xde4` |
+| `t80_stv_arr4____` | an array local of four integers | `0x11e8` | `0x768` | `0xde0` | `0xde4` |
+| `t80_stv_arr8____` | an array local of eight | `0x11f8` | `0x768` | `0xde0` | `0xde4` |
+| `t80_stv_rec8____` | a record local of eight bytes | `0x11e4` | `0x768` | `0xde0` | `0xde4` |
+| `t80_stv_two_arr_` | two array locals of four | `0x11f8` | `0x768` | `0xde0` | `0xde4` |
+
+The four costs are tier 56's, on another design.
+Nothing moves: the signal keeps `0x768`, the generic `0xde0` and the
+variable `0xde4`, so the bytes lie past every object, at the end of
+the handle space.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2480,7 +2499,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1146 cases through tier 79, and
+5. The reader now reproduces all 1151 cases through tier 80, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
