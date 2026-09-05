@@ -1,0 +1,34 @@
+{
+  "case": "t75_acc_arr40___",
+  "axis": "access and file entries. an access to a forty element array, to see whether the two words after the designated or element type move with that type.",
+  "differs_from": "t75_acc_rec_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.p",
+      "name": "p",
+      "type": "arr_ptr",
+      "kind": "variable"
+    }
+  ]
+}
