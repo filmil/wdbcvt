@@ -540,6 +540,26 @@ Tier 55 hunts for it among the declarations of a subprogram that are
 neither parameters nor plain variables, and finds each of them either
 a local of class 3 or 4 or absent from the file, see the constant,
 alias, file and protected paragraphs below.
+Tier 76 hunts again, over the forms the corpus had not put inside a
+subprogram at all, and finds no 5 either:
+
+| Declaration | Class | Case |
+| :--- | ---: | :--- |
+| a `file` parameter of a procedure | absent | `t76_stc_file_prm` |
+| a `file` declared inside a procedure | absent | `t76_stc_file_loc` |
+| an `inout` parameter of an access type | 3 | `t76_stc_acc_prm_` |
+| a SystemVerilog `ref int` argument | 3 | `t76_stc_sv_ref__` |
+| a SystemVerilog `output int` argument | 3, with a port position | `t76_stc_sv_out__` |
+| a SystemVerilog `int a[2]` local | 3 | `t76_stc_sv_arr__` |
+| a SystemVerilog `string` local | absent | `t76_stc_sv_str__` |
+
+The unpacked array is the one that says something new: a
+SystemVerilog local is class 3 whatever its type, where a VHDL local
+of an array, string or record type is 4.
+So the 3 and 4 split is VHDL's, and the file object is the other
+answer: a file inside a subprogram, parameter or local, leaves no
+object at all, where a file of an architecture is class 2,
+`t51_sub_file_prm`.
 The reader keeps the word as `Storage` and the dump prints it when it
 is not 0; `Generic` stays the test for 2.
 
@@ -854,7 +874,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1112` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1119` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -2525,10 +2545,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1112 of 1112 cases, and the
+*Confirmed by* the region length check in 1119 of 1119 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1112 of 1112 cases and
+and *confirmed by* the reader's range check in 1119 of 1119 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

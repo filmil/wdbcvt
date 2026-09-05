@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1112 cases pass unchanged.
+Every design and all 1119 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1112` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1119` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2348,6 +2348,27 @@ for every file one, whatever it points at or holds.
 So the words are constants of the kind, and the runtime size reading
 fits the access side alone.
 
+**Tier 76: the storage class nothing has produced.**
+Word 28 of an instance record is a storage class with six seen values,
+and 5 has never appeared.
+Tier 55 looked among a subprogram's own declarations; this tier looks
+at the forms the corpus had never put inside a subprogram.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t76_stc_file_prm` | a `file` parameter of a procedure | `t51_sub_file_prm`: the parameter leaves no object |
+| `t76_stc_file_loc` | a `file` declared inside a procedure | `t76_stc_file_prm`: the same |
+| `t76_stc_acc_prm_` | an `inout` access parameter | `t50_sub_acc_loc_`: class 3, as the local of that type is |
+| `t76_stc_sv_ref__` | a SystemVerilog `ref int` argument | `t72_dbg_subprog_`: class 3 |
+| `t76_stc_sv_out__` | a SystemVerilog `output int` argument | `t76_stc_sv_ref__`: class 3, with a port position |
+| `t76_stc_sv_arr__` | a SystemVerilog `int a[2]` local | `t76_stc_sv_ref__`: class 3, where a VHDL composite local is 4 |
+| `t76_stc_sv_str__` | a SystemVerilog `string` local | `t76_stc_sv_arr__`: absent, as a string is under typical |
+
+No 5 again, and two things worth keeping: a SystemVerilog local is
+class 3 whatever its type, so the 3 and 4 split is VHDL's, and a file
+inside a subprogram leaves no object where a file of an architecture
+is class 2.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2385,7 +2406,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1112 cases through tier 75, and
+5. The reader now reproduces all 1119 cases through tier 76, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
