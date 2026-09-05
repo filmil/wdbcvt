@@ -874,7 +874,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1127` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1140` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -2574,10 +2574,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1127 of 1127 cases, and the
+*Confirmed by* the region length check in 1140 of 1140 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1127 of 1127 cases and
+and *confirmed by* the reader's range check in 1140 of 1140 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
