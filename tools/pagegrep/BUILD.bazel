@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "pagegrep_lib",
+    srcs = ["main.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/pagegrep",
+    visibility = ["//visibility:private"],
+    deps = ["//pkg/wdb"],
+)
+
+go_binary(
+    name = "pagegrep",
+    embed = [":pagegrep_lib"],
+    visibility = ["//visibility:public"],
+)
