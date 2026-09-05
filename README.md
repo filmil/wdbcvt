@@ -7,9 +7,14 @@
 
 Tools for reading the Vivado `xsim` waveform database (`.wdb`).
 
-AMD does not document that format.
-This repository builds a known-good sample of one, and the tooling used to
-take it apart.
+Based on the fraction of understood data sematics, **it should
+support 95%+ of WDB features** as of this writing.
+
+The WDB format is not publicly documented by AMD.
+This repository is an independent study of the WDB format, resulting in
+a program which is able to read a wide range of WDB files, and write
+FST files.
+
 See [docs/format.md](docs/format.md) for what has been measured so
 far and how the work proceeds.
 
