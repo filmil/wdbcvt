@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1097 cases pass unchanged.
+Every design and all 1101 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2290,6 +2290,21 @@ A narrow mode on its own writes no database: `-debug line` without
 simulation was compiled without trace information`, which is why
 every case pairs it with `wave`.
 
+**Tier 73: which scope the protected methods hang from.**
+When a package declares a protected type, the second pair of method
+scopes hangs from the last process of the architecture, tier 55, and
+the guess was that the writer keeps whatever scope it visited last.
+Each case here follows that process with another scope.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t73_prt_gen_last` | a generate after the process | `t55_prot_pkg_prc`: the pair stays under `tb.p` |
+| `t73_prt_inst_lst` | an entity instance after the process | `t73_prt_gen_last`: the same |
+| `t73_prt_blk_last` | a block after the process | `t73_prt_gen_last`: the same |
+| `t73_prt_arch_gen` | the type in the architecture, generate last | `t73_prt_gen_last`: the pair moves back under `tb` |
+
+So the guess is wrong: it is the last process, not the last scope.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2327,7 +2342,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1097 cases through tier 72, and
+5. The reader now reproduces all 1101 cases through tier 73, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

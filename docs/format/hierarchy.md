@@ -854,7 +854,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1097` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1101` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -1598,6 +1598,16 @@ So the second pair sits under the last process of the architecture
 that declares the variable, whatever calls the methods and when.
 A process scope can therefore have children, and the reader's scope
 tree allows it.
+It is the last process and not the last scope: tier 73 puts a
+generate, an entity instance and a block after that process, and the
+pair stays under `tb.p` in all three, `t73_prt_gen_last`,
+`t73_prt_inst_lst` and `t73_prt_blk_last`, where the generate
+iterations, the instance and the block are the scopes the writer
+visits after it.
+With the type declared in the architecture the same generate leaves
+the pair under `tb`, `t73_prt_arch_gen`, as tier 55 measured.
+So the guess that the writer hangs the methods from whatever scope it
+visited last is wrong; what it keeps is the last process.
 `t55_prot_pkg_sv_` declares the shared variable in the package as well
 and reaches it through two package subprograms named `bump` and `get`
 like the methods.
@@ -1611,7 +1621,8 @@ a package constant is not.
 `t55_prot_pkg____` against `t55_prot_shared_`.
 *Confirmed by* `t55_sub_prot_typ`, `t55_sub_prot_2__`,
 `t55_prot_arch_pr`, `t55_prot_arch_2p`, `t55_prot_pkg_prc`,
-`t55_prot_pkg_2p_`, `t55_prot_pkg_2pl` and `t55_prot_pkg_sv_`.
+`t55_prot_pkg_2p_`, `t55_prot_pkg_2pl` and `t55_prot_pkg_sv_`, and by
+the three tier 73 cases that follow the process with another scope.
 
 
 ## Two architectures of one entity
@@ -2514,10 +2525,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1097 of 1097 cases, and the
+*Confirmed by* the region length check in 1101 of 1101 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1097 of 1097 cases and
+and *confirmed by* the reader's range check in 1101 of 1101 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
