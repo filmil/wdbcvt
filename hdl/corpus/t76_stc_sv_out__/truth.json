@@ -1,0 +1,51 @@
+{
+  "case": "t76_stc_sv_out__",
+  "axis": "storage classes. an output argument of a task, to see which storage class word 28 of the instance record gives it, and whether any form gives the 5 that no case has produced.",
+  "differs_from": "t76_stc_sv_ref__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "r",
+      "width": 32,
+      "type": "int"
+    },
+    {
+      "scope": "tb.two",
+      "name": "y",
+      "width": 32,
+      "type": "int",
+      "port": "out",
+      "logged": false
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "r",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "r",
+      "value": "2"
+    }
+  ]
+}

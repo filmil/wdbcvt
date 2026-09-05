@@ -1,0 +1,42 @@
+{
+  "case": "t76_stc_file_loc",
+  "axis": "storage classes. a file local of a procedure, to see which storage class word 28 of the instance record gives it, and whether any form gives the 5 that no case has produced.",
+  "differs_from": "t76_stc_file_prm",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.w",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "in"
+    }
+  ],
+  "absent": [
+    {
+      "scope": "tb.w",
+      "name": "f",
+      "type": "int_file"
+    }
+  ]
+}
