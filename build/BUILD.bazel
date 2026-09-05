@@ -8,17 +8,17 @@ bzl_library(
     name = "wdb_case",
     srcs = ["wdb_case.bzl"],
     deps = [
-        ":fst_test",
+        ":convert_test",
         "@rules_vivado//build/vivado:rules",
     ],
 )
 
 bzl_library(
-    name = "fst_test",
+    name = "convert_test",
     # keep: gazelle's bzl plugin drops this attribute, and the library
     # is empty without it.
-    srcs = ["fst_test.bzl"],
+    srcs = ["convert_test.bzl"],
     deps = ["@rules_shell//shell:rules_bzl"],
 )
 
-exports_files(["fst_convert_test.sh"])
+exports_files(["convert_test.sh"])
