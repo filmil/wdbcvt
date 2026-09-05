@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "gent60",
+    srcs = ["gent60.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/corpus/gent60",
+    visibility = ["//visibility:public"],
+    deps = ["//tools/corpus/gencommon"],
+)

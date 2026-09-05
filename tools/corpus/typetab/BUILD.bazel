@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "typetab_lib",
+    srcs = ["main.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/corpus/typetab",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "typetab",
+    embed = [":typetab_lib"],
+    visibility = ["//visibility:public"],
+)

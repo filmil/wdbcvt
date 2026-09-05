@@ -14,17 +14,6 @@ bazel_dep(name = "zlib", version = "1.3.1.bcr.8")
 bazel_dep(name = "rules_cc", version = "0.2.14")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
-# The corpus generators and the tools beside them are Bazel targets, so
-# they run on the interpreter Bazel fetches rather than whatever python3
-# the machine has.
-bazel_dep(name = "rules_python", version = "2.3.3")
-
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(
-    is_default = True,
-    python_version = "3.12",
-)
-
 # The report under //docs/latex is built by pdflatex from the host, which
 # the `vivado` runner has along with the IEEEtran class. rules_latex_host
 # lives in the registry named first in .bazelrc.

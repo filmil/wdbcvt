@@ -1,60 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # The corpus generators, as build targets. Each writes the sources, the
-# BUILD file and the truth of one tier into //hdl/corpus, so they run
-# with `bazel run`, on the interpreter Bazel fetches:
+# BUILD file and the truth of one tier into //hdl/corpus:
 #
-#     bazel run //tools/corpus:gen_t67
+#     bazel run //tools/corpus/gen_t67
 #
 # They write into the source tree on purpose: a corpus case is checked
 # in, so that a database can be rebuilt from the same sources tomorrow.
-
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
-
-package(default_visibility = ["//visibility:public"])
-
-py_library(
-    name = "gen_common",
-    srcs = ["gen_common.py"],
-    imports = ["."],
-)
-
-# Tier 61 and tier 62 read the case template of tier 60, so that one is
-# a library as well as a program.
-py_library(
-    name = "gen_t60_lib",
-    srcs = ["gen_t60.py"],
-    imports = ["."],
-    deps = [":gen_common"],
-)
-
-[
-    py_binary(
-        name = tier,
-        srcs = ["%s.py" % tier],
-        main = "%s.py" % tier,
-        deps = [":gen_common"] + ([":gen_t60_lib"] if tier in ("gen_t61", "gen_t62") else []),
-    )
-    for tier in [
-        "gen_t57",
-        "gen_t58",
-        "gen_t59",
-        "gen_t60",
-        "gen_t61",
-        "gen_t62",
-        "gen_t63",
-        "gen_t64",
-        "gen_t65",
-        "gen_t66",
-        "gen_t67",
-    ]
-]
-
-# Splits the type table of a database and prints every entry as words,
-# for entries the reader does not parse yet:
-#
-#     bazel run //tools/corpus:typetab -- "$PWD/bazel-bin/hdl/corpus/t60_dbg_queue___/sim.wdb"
-py_binary(
-    name = "typetab",
-    srcs = ["typetab.py"],
-)
+# Running every one of them and then `git status hdl/corpus` is the
+# check that a generator still writes the cases it is supposed to.
