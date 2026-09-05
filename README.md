@@ -18,6 +18,20 @@ FST files.
 See [docs/format.md](docs/format.md) for what has been measured so
 far and how the work proceeds.
 
+That 95% counts one kind of file: behavioural VHDL, Verilog and
+SystemVerilog, simulated by Vivado 2025.2.
+Not supported:
+
+* gate level netlists with SDF back annotation, untried
+* encrypted IP models, untried
+* UPF power intent, untried
+* more than one top in an elaboration, untried
+* any other Vivado version, untried
+* values of SystemVerilog strings, queues, dynamic arrays,
+  associative arrays and class handles: the file holds none
+* `trireg` and `let`: `xsim` rejects both
+* writing a database: this tool only reads
+
 
 ## Where this lives
 
