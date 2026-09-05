@@ -222,11 +222,21 @@ Three workflows live in `.forgejo/workflows/`, and all of them use
 | Workflow | Trigger | What it does |
 | :--- | :--- | :--- |
 | `test.yml` | pull request, push to `main`, weekly | `bazel build //...`, then `bazel test //...`, then checks that the simulation wrote a non-empty `.wdb` |
-| `release.yml` | manual dispatch, monthly | publishes the `wdbcvt` binary, the report, and a reference `.wdb` and `.vcd` to the rolling `nightly` release |
+| `release.yml` | manual dispatch, monthly | publishes the `wdbcvt` binary, the report, and a reference `.wdb` and `.vcd` to the rolling `nightly` release, here and on the GitHub mirror |
 | `mirror.yml` | push to `main`, daily, on request | pushes `main` to the read-only GitHub mirror |
 
 The `vivado` runner must have `bazelisk` on its `PATH`, the installer
 archive at the path above, and write access to `/data/cache`.
+
+Two repository secrets, and each job runs without its own:
+
+| Secret | Used by | What it is |
+| :--- | :--- | :--- |
+| `GH_MIRROR_KEY` | `mirror.yml` | the private half of a deploy key the mirror accepts for writing |
+| `GH_RELEASE_TOKEN` | `release.yml` | a fine grained GitHub token with `Contents: read and write` on the mirror, for the release it copies there |
+
+A job whose secret is missing writes a warning and stops, rather than
+failing.
 
 That label runs jobs directly on the host, and the host has no `node`.
 No JavaScript action can run there, `actions/checkout` included.
