@@ -82,6 +82,11 @@ where the tool should not be used.
 * `hdl/picorv32/` holds PicoRV32 under the project's own
   `testbench_ez.v`, which carries the program it runs, so nothing but
   the build file in `third_party/picorv32/` is written here.
+* `hdl/ibex/` holds Ibex under the `simple_system` example lowRISC
+  ships with it, a SystemVerilog core with a bus, a memory and a timer.
+  Only the bench and a hand assembled program are written here;
+  `third_party/ibex/` holds the build file and the patch for the
+  pinned archive.
 * `hdl/neorv32/` holds NEORV32, a dual core RISC-V processor in VHDL,
   under the project's own testbench, booting the instruction memory
   image of the release.

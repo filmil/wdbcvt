@@ -32,7 +32,7 @@ test is not optional.
 
 \subsection{Scale}
 
-At the time of writing the corpus holds 1049 cases in 66 tiers. The
+At the time of writing the corpus holds 1052 cases in 67 tiers. The
 reader opens every one and reproduces its truth file, and the VCD
 cross-check runs over every case and every design. A full test run
 takes about two minutes.
@@ -56,6 +56,7 @@ SERV~\cite{serv} & Verilog & 968 & 9\,233\,899 \\
 Potato~\cite{potato} & VHDL & 557 & 7\,441 \\
 PicoRV32~\cite{picorv32} & Verilog & 280 & 40\,589 \\
 NEORV32~\cite{neorv32} & VHDL & 5\,696 & 18\,875\,466 \\
+Ibex~\cite{ibex} & SystemVerilog & 3\,287 & 73\,835 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -75,6 +76,13 @@ established that there was nothing left to teach:
   \item \emph{PicoRV32} produced nothing new, which is the expected
         result for a design in a language the corpus already covers,
         and is reported as such.
+  \item \emph{Ibex}, in SystemVerilog, produced the width of an
+        enumeration: it is the range the entry carries after its
+        literals, and not the width of the base type, which for
+        \texttt{enum logic [1:0]} is a plain \texttt{logic}. The
+        reader had this right and the VCD cross check did not, so an
+        enumeration inside a packed struct was compared one bit too
+        narrow and every field after it moved. Tier 67 pins the rule.
   \item \emph{NEORV32} produced the rule that the chunk map belongs to
         the signal at the handle. Its DMA has an 88 byte record port
         at offset 1408 of a 1760 byte array whose initial write is

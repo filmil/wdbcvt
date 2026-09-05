@@ -12,8 +12,8 @@ Everything is scoped to Vivado 2025.2.
 
 ## What we have
 
-The reader, `wdbcvt`, opens every one of the 1049 corpus cases of tiers
-1 to 66 and reproduces their `truth.json` and Vivado's own VCD.
+The reader, `wdbcvt`, opens every one of the 1052 corpus cases of tiers
+1 to 67 and reproduces their `truth.json` and Vivado's own VCD.
 Run `bazelisk test //pkg/... --test_output=errors` to check.
 
 Decoded and confirmed, with the case that found each in `format.md`:
@@ -78,6 +78,13 @@ case, reads it back through libfst and compares against its
 leaves out. `docs/fst-output.md` states the mapping, what it costs and
 what is left.
 
+`//hdl/ibex:sim` is the SystemVerilog design, added after tier 67:
+lowRISC's Ibex under its own `simple_system` example, 3287 objects,
+running a hand assembled program that ends the run. It found that a
+SystemVerilog enumeration takes its width from the range on its own
+entry, which the reader had right and the VCD cross check had wrong,
+and tier 67 pins that.
+
 ## What we do not have, and why
 
 **The content of dynamic objects.**
@@ -106,10 +113,10 @@ whole classes of objects came first.
 
 Work on branch `ai-dev-20260904-rtd-designs`, PR #13, until it merges;
 then branch from `hd/main`.
-The generators of tiers 57 to 66 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t66.py`.
-The registration anchor for tier 67 in `hdl/corpus/BUILD.bazel` is the
-last tier 66 case in sorted order, `t66_prc_task____`.
+The generators of tiers 57 to 67 are in `tools/corpus/`, see its
+README; a new tier starts by copying `gen_t67.py`.
+The registration anchor for tier 68 in `hdl/corpus/BUILD.bazel` is the
+last tier 67 case in sorted order, `t67_esz_pk_int__`.
 
 1. Pick the next lead from the open questions of `format.md` and
    design minimal pairs for it, one variable per case, the case names
@@ -119,12 +126,12 @@ last tier 66 case in sorted order, `t66_prc_task____`.
    open part.
 2. Generate, register, build, dump, and write the truths from the
    dump only after reading the raw records; then run
-   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t67|TestVCD/t67'`.
+   `bazelisk test //pkg/wdb:wdb_test --test_filter='TestCorpus/t68|TestVCD/t68'`.
 3. Document in the `format/` page for the area, then `format.md`:
    findings rows before "Whole file properties, also measured:",
-   comparison rows after the tier 66 rows, guesses in the open
+   comparison rows after the tier 67 rows, guesses in the open
    questions; a tier section in `corpus.md` before "Record which
-   comparison produced which finding"; and the count 1049 upward
+   comparison produced which finding"; and the count 1052 upward
    everywhere (`docs/format/*.md`, `docs/corpus.md`, `README.md`,
    `docs/format.md`, `docs/corpus.md` "through tier NN").
    Keep lines at 80 columns and check with the awk loop in

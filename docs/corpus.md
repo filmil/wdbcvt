@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1049 cases pass unchanged.
+Every design and all 1052 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -1220,6 +1220,43 @@ which it reads as a real.
 `third_party/go_vcd_parser` holds the patch, applied to the module in
 `MODULE.bazel`, until the fix is released:
 https://github.com/filmil/go-vcd-parser/pull/23.
+
+`//hdl/ibex:sim` is **Ibex** at commit `34b0705`, the lowRISC RISC-V
+core, as the `simple_system` example the project ships: the core with
+a bus, a memory, a timer and a control register block, in
+SystemVerilog throughout.
+It is the design that reads that language at scale, where the corpus
+knows it only in miniature.
+Two files are written here: `hdl/ibex/tb.sv`, which instantiates the
+system and hands it the memory image, and `hdl/ibex/prog.vmem`, a
+twelve instruction program assembled by hand because building anything
+for RISC-V needs a tool chain the runner does not have.
+The program sums 7 twelve times, stores the answer, reads it back and
+writes to the simulation control register, which ends the run at
+156 ns.
+Ibex starts at the boot address plus `0x80`, so the image begins at
+word `0x20`; the run before that was reading a memory the image never
+wrote and the core's own assertions said so.
+One patch comments out the `export "DPI-C"` lines: xsim generates C++
+glue for an export and compiles it with the C compiler, which fails on
+`extern "C"`.
+The database holds 3287 objects over 1481 scopes and 150 types, and
+73835 values.
+
+Ibex found a defect in the checker rather than in the reader, which is
+the first time that has happened.
+A SystemVerilog enumeration declares its width in the entry's own
+range, after the literals, and not in the base type, which for
+`enum logic [1:0]` is a plain `logic`.
+The reader had this right, because `bitsOf` passes the entry's ranges
+down.
+`TestVCD` did not: it spelled an enumeration with the width of the
+base type, so an enumeration field of a packed struct contributed one
+bit instead of two or four and every field after it moved.
+The corpus had `t11_sv_enum4`, an enumeration of four bits, and the
+error was invisible there because a VCD strips leading zeros and the
+enumeration was not inside anything.
+Tier 67 pins it.
 
 Not written yet: a `string` value, which has no object to hold one,
 see `t11_sv_str`.
@@ -2112,6 +2149,19 @@ instance at the `bind` line.
 | `t66_prc_spec_0__` | the path delay set to 0 | `t66_prc_specify_`: 0 and 50 ns, and the handle space of the plain child |
 | `t66_prc_covgrp__` | `covergroup cg @(posedge s)` with one coverpoint | `t66_prc_ass_imm_`: nine scopes, three `xlnx_isim_covergroup_cg::` functions |
 
+**Tier 67: an enumeration inside a packed struct.**
+A packed struct of a logic, an enumeration and another logic, so that
+the neighbours move if the enumeration's width is wrong.
+The width is the range the enumeration entry carries after its
+literals; the base type of `enum logic [1:0]` is a plain `logic` and
+says nothing.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t67_esz_pk_2bit_` | `enum logic [1:0]` between two logics | `t11_sv_struct___`: 4 bits, and the VCD reads `1011` where a one bit enumeration would give `111` |
+| `t67_esz_pk_4bit_` | the same over four bits | `t67_esz_pk_2bit_`: 6 bits, `100011` |
+| `t67_esz_pk_int__` | the same over `int` | `t67_esz_pk_2bit_`: 34 bits, the width on the base type instead |
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2149,7 +2199,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1049 cases through tier 66, and
+5. The reader now reproduces all 1052 cases through tier 67, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
