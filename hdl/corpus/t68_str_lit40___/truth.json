@@ -1,0 +1,34 @@
+{
+  "case": "t68_str_lit40___",
+  "axis": "string storage. a string variable of forty characters beside a logic, to see whether the characters of a SystemVerilog string reach the database, and where.",
+  "differs_from": "t68_str_lit4____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "absent": [
+    {
+      "scope": "tb",
+      "name": "str",
+      "type": "string"
+    }
+  ]
+}

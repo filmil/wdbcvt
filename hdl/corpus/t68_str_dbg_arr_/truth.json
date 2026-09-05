@@ -1,0 +1,42 @@
+{
+  "case": "t68_str_dbg_arr_",
+  "axis": "string storage. the array of two strings under -debug all beside a logic, to see whether the characters of a SystemVerilog string reach the database, and where.",
+  "differs_from": "t68_str_dbg_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "a",
+      "width": 64,
+      "type": "",
+      "elements": 2,
+      "element_width": 32,
+      "element_type": "",
+      "declared": "memory of string"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "a",
+      "value": "(00000000000000000000000000000000, 00000000000000000000000000000000)"
+    }
+  ]
+}
