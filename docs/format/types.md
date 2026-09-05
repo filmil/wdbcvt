@@ -35,7 +35,7 @@ offers, and the decoder checks that it names every entry.
 *Found by* the correlation sweep, which matched the word at `32` to the
 number of type names in every case, once `TRUE` and `FALSE` were
 classified as `BOOLEAN`'s literals rather than as types.
-*Confirmed by* 1074 of 1074 cases decoding with the entry lengths chaining
+*Confirmed by* 1082 of 1082 cases decoding with the entry lengths chaining
 exactly to the word at `36`.
 
 
@@ -828,7 +828,41 @@ it keeps, in this order:
   `int` `0` and the array `2`, `int a[int]` gives `int` `0` and the
   array `3`, and a queue declared after either continues at `3` or
   `4`, `t61_num_a_then_q` and `t61_num_ai_thn_q`.
-  What the hidden numbers belong to is open.
+  Tier 70 separates the key from the element, which the tier 61 cases
+  could not: their key was either a `string`, which takes no number,
+  or the element's own type.
+
+| Declaration | Element | Key | The array | Case |
+| :--- | ---: | ---: | ---: | :--- |
+| `int a[string]` | 0 | none | 2 | `t60_dbg_assoc___` |
+| `logic [3:0] a[string]` | 0 | none | 2 | `t70_num_a_v_str_` |
+| `byte a[string]` | 0 | none | 2 | `t70_num_a_b_str_` |
+| `int a[byte]` | 0 | 1 | 3 | `t70_num_a_i_byte` |
+| `byte a[int]` | 0 | 1 | 3 | `t70_num_a_b_int_` |
+| `int a[int]` | 0 | unwritten | 3 | `t60_dbg_assoc_i_` |
+| `int a[e_t]` | 2 | none | 4 | `t70_num_a_e_key_` |
+
+  So the key is a numbered type in its own right: `byte` and `int`
+  carry the number in their own entry when they are the key and not
+  the element, and `int a[int]` still spends the number, on an entry
+  that already holds the element's `0` and cannot hold a second.
+  A `string` key spends nothing, as a `string` never does.
+  An enumeration key spends nothing either, and its own declaration
+  takes the two numbers before the element instead: the typedef of
+  `t70_num_a_e_key_` sits before the variable and leaves `int` at
+  `2`.
+  One number is left over in every one of these, between the last
+  numbered part and the array itself, and nothing in the file carries
+  it; that it belongs to an iterator is the guess of question 24.
+  The leftover is the associative array's alone: a dynamic array and a
+  queue take the number after their element and no other, `int d[]`
+  and `int q[$]` giving `int` `0`, the dynamic array `1` and the queue
+  `2`, `t70_num_d_then_q`.
+  Nesting repeats the whole rule: `int a[string][int]` numbers `int`
+  `0`, the inner array `3` for an `int` key and the outer `5` for a
+  `string` key, `t70_num_a_2dim__`, and a class with an associative
+  field counts from the class, `c_t` `0`, `int` `1`, the array `3`,
+  `t70_num_a_in_cls`.
 
 The variable's own class or container therefore holds `0` when the
 element takes no number, and the class of a handle variable always

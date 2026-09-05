@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1074 cases pass unchanged.
+Every design and all 1082 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2219,6 +2219,29 @@ Two forms have no case because xsim rejects them:
 and `let five = 5;` is `ERROR: [XSIM 43-3980] The SystemVerilog
 feature "Let" is not supported yet for simulation`.
 
+**Tier 70: what an associative array's spare numbers are.**
+Under `-debug all` an associative array of `int` keyed by `string`
+takes the numbers 0 and 2, and one keyed by `int` takes 0 and 3, so
+one or two numbers go to something the file does not write, tier 61.
+Neither of those cases can say what: their key is either a `string`,
+which takes no number, or the element's own type.
+Every case here gives the key a type of its own.
+
+| Case | Axis | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t70_num_a_v_str_` | `logic [3:0] a[string]` | `t60_dbg_assoc___`: the numbers do not move with the element |
+| `t70_num_a_b_str_` | `byte a[string]` | `t60_dbg_assoc___`: nor with a narrower one |
+| `t70_num_a_i_byte` | `int a[byte]` | `t60_dbg_assoc_i_`: the `byte` key holds the number 1 in its own entry |
+| `t70_num_a_b_int_` | `byte a[int]` | `t70_num_a_b_str_`: so does an `int` key that is not the element |
+| `t70_num_a_e_key_` | `int a[e_t]` | `t60_dbg_assoc_i_`: an enumeration key spends none, and its typedef spends two before the element |
+| `t70_num_a_2dim__` | `int a[string][int]` | `t60_dbg_assoc___`: the rule repeats per dimension, 3 then 5 |
+| `t70_num_a_in_cls` | a class with an `int a[string]` field | `t60_dbg_class___`: the count starts at the class, which takes 0 |
+| `t70_num_d_then_q` | `int d[]` then `int q[$]` | `t61_num_a_then_q`: a dynamic array and a queue leave nothing over |
+
+What is left after that is one number per associative array and
+nothing else; that it belongs to an iterator is still a guess, and
+question 24 says so.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2256,7 +2279,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1074 cases through tier 69, and
+5. The reader now reproduces all 1082 cases through tier 70, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
