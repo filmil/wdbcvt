@@ -1,0 +1,26 @@
+{
+  "case": "t78_scp_base____",
+  "axis": "scope handle space. one process, to see what a scope costs beyond its objects, and what a generate iteration saves against an instance of the same body.",
+  "differs_from": "t52_var_int_____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}
