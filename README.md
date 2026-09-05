@@ -226,3 +226,10 @@ Every workflow here checks out with plain `git` for that reason.
 ## License
 
 Apache 2.0. See [LICENSE](LICENSE).
+
+
+## Prior Art
+
+* https://github.com/Ross0907/Vivado-WDB-Waveform-Converter: direct inspiration to revive some prior work.
+* https://adaptivesupport.amd.com/s/question/0D52E00006hpSPUSA2/export-xsim-waveform-wdb-to-other-format: one of
+  many similar threads where people lament the lack of a converter tool
