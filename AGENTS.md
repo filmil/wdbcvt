@@ -220,3 +220,24 @@ Rules that follow from it, and that apply to every change here:
 * No em-dashes or en-dashes anywhere.
 * In markdown, start every sentence on its own line and wrap at 80 columns.
 * No mannered phrases.
+* Name the thing that acts.
+  The file, the writer, the reader or the simulator does something; a
+  value, an object or a type does not.
+  Write "the handle space grows by 8 bytes for one integer constant",
+  not "each object takes its value size rounded up to 8".
+* State the measurement before the shorthand, or instead of it.
+  A sentence that only a reader who already knows the numbers can
+  follow is not a finding, it is a note to yourself.
+  "A package costs its objects and nothing else" says nothing; the
+  numbers it stood for, 8 bytes for one integer, 16 for four, 64 for
+  sixteen, say it.
+* Define a term the first time this repository uses it, in the page
+  that uses it.
+  Handle space, arena, chunk and value class are this project's own
+  words, not the reader's.
+* Prefer the concrete number to the category.
+  "0x50 for a sixteen element array, its 64 bytes and 16 more" beats
+  "an array costs extra".
+* A word that could be cut is cut.
+  "in order to", "it should be noted that", "essentially", "simply",
+  "of course" carry nothing.
