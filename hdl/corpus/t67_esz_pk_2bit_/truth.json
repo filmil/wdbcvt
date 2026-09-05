@@ -1,0 +1,68 @@
+{
+  "case": "t67_esz_pk_2bit_",
+  "axis": "an enumeration in a packed struct. a two bit enumeration between two logics, under typical, to see how wide the enumeration's bits are where a neighbour depends on it.",
+  "differs_from": "t11_sv_struct___",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 4,
+      "type": "rec_t",
+      "fields": [
+        {
+          "scope": "",
+          "name": "a",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        },
+        {
+          "scope": "",
+          "name": "e",
+          "width": 2,
+          "type": "e2_t"
+        },
+        {
+          "scope": "",
+          "name": "b",
+          "width": 1,
+          "type": "logic",
+          "declared": "logic"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s.a",
+      "value": "0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.e",
+      "value": "E0"
+    },
+    {
+      "time_ns": 0,
+      "signal": "s.b",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.a",
+      "value": "1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.e",
+      "value": "E1"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s.b",
+      "value": "1"
+    }
+  ]
+}
