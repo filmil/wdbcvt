@@ -393,4 +393,4 @@ Everything outside the mask is deterministic, which is what makes a
 pairwise diff between two cases meaningful.
 A byte of a timestamp only shows as noise when its two values differ,
 so build the mask from several pairs and take the union.
-`tools/noise_mask.sh` does the two runs.
+`bazel run //tools:noise_mask` does the two runs.

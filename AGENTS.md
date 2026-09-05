@@ -20,6 +20,14 @@ guesses in the open questions section where they are labelled as guesses.
 * Build with `bazel build //...` and test with `bazel test //...`.
 * Never run `go` directly.
   Run `bazel run @rules_go//go -- <args>` instead.
+* Never run a script directly either.
+  Every tool in `//tools` is a target: `bazel run //tools/corpus:gen_t67`
+  writes a tier, `bazel run //tools/corpus:typetab -- <file>` splits a
+  type table, and `bazel run //tools:noise_mask -- <target>` measures
+  the noise mask.
+  A new script arrives with the `py_binary` or `sh_binary` that runs
+  it, so that it uses the interpreter Bazel fetches and not the one the
+  machine happens to have.
 * Run `bazel run //:gazelle` after adding or moving Go files.
 * Run `bazel run //:buildifier` before committing Bazel files.
   Do not run it over the VHDL filegroups: it reorders `srcs`, and the

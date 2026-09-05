@@ -6,19 +6,24 @@ Each `gen_tNN.py` writes the sources, the `BUILD.bazel` and the
 They are kept so that a case can be regenerated, or a tier extended, by
 editing the script instead of every file by hand.
 
-Run one from anywhere:
+Each is a Bazel target, so it runs on the interpreter Bazel fetches
+rather than on whatever `python3` the machine has:
 
 ```
-python3 tools/corpus/gen_t60.py
+bazel run //tools/corpus:gen_t60
 ```
 
-Then register the new cases in `hdl/corpus/BUILD.bazel`, fix the SPDX
-comment of VHDL files (`emit` writes a `//` header), build the cases
+The generators write into the source tree, which is where the corpus
+lives, and they reproduce it exactly: running every one of them and
+then `git status` is how to check that a generator still writes the
+cases it is supposed to.
+
+Then register the new cases in `hdl/corpus/BUILD.bazel`, build them,
 and fill in the truths from the dump.
 
 `typetab.py` splits the type table of a waveform database and prints
 every entry as words, for entries the reader does not parse yet:
 
 ```
-python3 tools/corpus/typetab.py bazel-bin/hdl/corpus/t60_dbg_queue___/sim.wdb
+bazel run //tools/corpus:typetab -- "$PWD/bazel-bin/hdl/corpus/t60_dbg_queue___/sim.wdb"
 ```

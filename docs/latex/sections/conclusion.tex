@@ -39,7 +39,11 @@ cache, so the simulator is a build input rather than something a
 person installed, and the corpus is 1052 simulation targets that one
 command re-runs. The C library of Section~\ref{sec:output} is built
 with a Bazel-fetched toolchain, so the release binary does not depend
-on the compiler of the machine that made it.
+on the compiler of the machine that made it. The tools that write the
+corpus are targets too, on an interpreter Bazel fetches, and they
+reproduce the checked-in cases byte for byte, so a tier can be
+regenerated years later without a Python on the machine agreeing with
+the one that wrote it.
 
 The reasoning behind that setup is written up on the author's site:
 hermetic, ephemeral and reproducible builds~\cite{her}, the hardware

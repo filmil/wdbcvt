@@ -30,7 +30,7 @@ So the first experiment is not a comparison between two designs.
 It is the same design, simulated twice:
 
 ```sh
-tools/noise_mask.sh //hdl/corpus/t1_bit_one_edge:sim /tmp/mask
+bazel run //tools:noise_mask -- //hdl/corpus/t1_bit_one_edge_:sim /tmp/mask
 ```
 
 Note what the script had to do to be correct.
