@@ -33,7 +33,7 @@ the files by eye.
 
 ## What the VCD carries
 
-All 1101 cases, `//hdl/counter:sim`, `//hdl/uart:sim`, `//hdl/serv:sim`
+All 1107 cases, `//hdl/counter:sim`, `//hdl/uart:sim`, `//hdl/serv:sim`
 and `//hdl/potato:sim` pass, and every object of the database is either
 in its VCD or covered by one line of this table.
 
@@ -172,7 +172,7 @@ Two kinds of object have a VCD value that is not the value:
 | Case | Object | What the VCD writes |
 | :--- | :--- | :--- |
 | `t11_sv_struct_r` | `tb.s`, `{real r; logic a;}` | `reg 64`; the `r` slot at `r = 1.5` is `00zzzzzzzzzzz` and zeros, 32 bits that spell no value |
-| `t28_sv_prm_time`, `t30_sv_ptm_10ps` through `t30_sv_ptm_two` | `tb.T`, `parameter T = 10ns` without a type | `parameter 64`; `b111101010000z00000000z00z000000000000000000`, the four state reading of the `float64` bytes |
+| `t28_sv_prm_time`, `t30_sv_ptm_10ps` through `t30_sv_ptm_two` | `tb.T`, `parameter T = 10ns` without a type | `parameter 64`; `b111107010000z00000000z00z000000000000000000`, the four state reading of the `float64` bytes |
 
 The database holds `1.5` as a 64 bit float, and `truth.json` agrees.
 So for a real inside an unpacked struct there is no VCD guard at all,

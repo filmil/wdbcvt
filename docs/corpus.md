@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1101 cases pass unchanged.
+Every design and all 1107 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1101` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1107` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2305,6 +2305,29 @@ Each case here follows that process with another scope.
 
 So the guess is wrong: it is the last process, not the last scope.
 
+**Tier 74: why a package signal is not logged.**
+The default script's `log_wave -recursive *` leaves a package signal
+unlogged and `log_wave -recursive /sig_pkg` logs it, tier 13.
+Each case here runs the same design under another script, and prints
+what its queries matched.
+
+| Case | Script | Differs from, and what it showed |
+| :--- | :--- | :--- |
+| `t74_lgw_star____` | `log_wave -recursive *` | `t13_pkg_log_all_`: the baseline, `g` unlogged |
+| `t74_lgw_root____` | `log_wave -recursive /*` | `t74_lgw_star____`: nothing changes |
+| `t74_lgw_cur_root` | `current_scope /` first | `t74_lgw_star____`: nothing changes |
+| `t74_lgw_objects_` | `log_wave [get_objects -r /*]` | `t74_lgw_star____`: nothing changes |
+| `t74_lgw_pkg_obj_` | `log_wave [get_objects /sig_pkg/*]` | `t74_lgw_star____`: `g` is logged |
+| `t74_lgw_pkg_name` | `log_wave -recursive /sig_pkg` | `t74_lgw_star____`: `g` is logged |
+
+The scripts print their queries: `get_scopes -r /*` gives
+`/tb /tb/line__17 /tb/p /sig_pkg` in every case, `get_objects -r /*`
+gives `/tb/x` alone, and `get_objects /sig_pkg/*` gives
+`/sig_pkg/g`.
+So a recursive wildcard matches the package scope and none of its
+objects, and it is the object query that skips a package rather than
+`log_wave`.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2342,7 +2365,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1101 cases through tier 73, and
+5. The reader now reproduces all 1107 cases through tier 74, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
