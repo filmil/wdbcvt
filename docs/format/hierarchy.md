@@ -895,7 +895,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1151` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1157` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -916,6 +916,30 @@ root unit, and the rest of what each package costs the handle space,
 tier 47, lies past the second region: `0x78` for `textio`, `0x70`
 for `env`, `0x15c` for `std_logic_1164`, `0x100` for `numeric_std`
 and `0xf8` for `math_real`.
+
+Tier 81 splits the two parts for a package of the design, on a bench
+whose generic `k` and process variable `a` sit past the signals at
+`0xde0` and `0xde4`:
+
+| The design adds | Handle space | `k` | Block | Past the region |
+| :--- | ---: | ---: | ---: | ---: |
+| nothing | `0x11d8` | `0xde0` | | |
+| a package with one function | `0x1250` | `0xe08` | `0x28` | `0x50` |
+| a package with one integer constant | `0x1258` | `0xe10` | `0x30` | `0x50` |
+| a package with four integer constants | `0x1260` | `0xe18` | `0x38` | `0x50` |
+| a package with a constant array of sixteen | `0x12a0` | `0xe58` | `0x78` | `0x50` |
+| two packages with one constant each | `0x12d8` | `0xe40` | `0x60` | `0xa0` |
+
+The block is what moves `k`: `0x28` for a package that declares no
+object, and `0x28` plus the object bytes rounded up to 8 otherwise,
+`0x78` for the array of sixteen integers, which is its 64 bytes and
+the 16 an array adds.
+Past the second region every one of them leaves `0x50`, whatever it
+declares, and two packages leave `0xa0`.
+So a package of the design leaves a flat `0x50` there, and the
+`0x78`, `0x70`, `0x15c`, `0x100` and `0xf8` of the library packages
+are that `0x50` and something else each, which question 6 of
+[../format.md](../format.md) keeps.
 A package of the design has the block a scope has, `0x28` plus its
 constants rounded up to 8: `pk` with one integer constant moves the
 variable by `0x30`, its constant sits at `0xd40`, `0x98` before the
@@ -2612,10 +2636,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1151 of 1151 cases, and the
+*Confirmed by* the region length check in 1157 of 1157 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1151 of 1151 cases and
+and *confirmed by* the reader's range check in 1157 of 1157 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
