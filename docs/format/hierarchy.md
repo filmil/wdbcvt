@@ -874,7 +874,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1140` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1146` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -1526,6 +1526,23 @@ its own base, and the number looks like an offset into the
 subprogram's frame rather than a place in the handle space.
 They do not move the handle space: `t22_dbg_subprog` has `0x1468` as
 `t22_base` does.
+
+Tier 79 fills a frame to find its limits, and finds none in the file.
+One procedure with 1, 16, 64, 256 and 512 integer variables numbers
+them from `0xd0` upward, 4 bytes apart, reaching `0xd4`, `0x110`,
+`0x1d0`, `0x4d0` and `0x8d0`.
+The last of those runs past `0x768`, the handle of the signal `s`,
+and the signal stays at `0x768` in all five, with the handle space at
+`0x11d0` in all five.
+Two procedures with 64 variables each number both frames from `0xd0`
+and reach `0x1d0`, so the frames lie on top of each other rather than
+side by side.
+So a frame handle is an offset in the subprogram's own numbering, not
+a place in the handle space the signals use: it may fall below the
+first signal or above it, and nothing else moves either way.
+The space below the first signal's handle is therefore not room set
+aside for frames, which is one reading fewer for question 6 of
+[../format.md](../format.md).
 A composite local and a composite literal do, by the bytes of the
 value, see the static values paragraph below.
 `-debug subprogram` on its own, `-debug line` and `-debug off` produce
@@ -2574,10 +2591,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1140 of 1140 cases, and the
+*Confirmed by* the region length check in 1146 of 1146 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1140 of 1140 cases and
+and *confirmed by* the reader's range check in 1146 of 1146 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

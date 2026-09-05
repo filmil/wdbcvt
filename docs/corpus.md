@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1140 cases pass unchanged.
+Every design and all 1146 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1140` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1146` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2421,6 +2421,28 @@ either way, so the difference sits in the fixed part.
 The child with a port costs `0x40` per copy more than the portless
 one, which is why the comparison uses the portless child.
 
+**Tier 79: what lies below the first signal's handle.**
+Every first signal sits at `0x768`, and what the `0x738` below it
+holds is part of question 6.
+Subprogram frame objects are the only ones seen down there, so this
+tier fills a frame and watches the signal.
+
+| Case | The procedure declares | Frame runs | `s` | Handle space |
+| :--- | :--- | :--- | ---: | ---: |
+| `t79_frm_001int__` | one integer variable | `0xd0` to `0xd4` | `0x768` | `0x11d0` |
+| `t79_frm_016int__` | sixteen | `0xd0` to `0x110` | `0x768` | `0x11d0` |
+| `t79_frm_064int__` | sixty four | `0xd0` to `0x1d0` | `0x768` | `0x11d0` |
+| `t79_frm_256int__` | two hundred and fifty six | `0xd0` to `0x4d0` | `0x768` | `0x11d0` |
+| `t79_frm_512int__` | five hundred and twelve | `0xd0` to `0x8d0` | `0x768` | `0x11d0` |
+| `t79_frm_two_64__` | two procedures, sixty four each | `0xd0` to `0x1d0` | `0x768` | `0x11d0` |
+
+The frame of 512 integers runs past the signal's own handle and
+nothing moves, and the two procedures number their frames from the
+same `0xd0`.
+So a frame handle is an offset in the subprogram's own numbering
+rather than a place in the handle space, and the room below the first
+signal is not set aside for frames.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2458,7 +2480,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1140 cases through tier 78, and
+5. The reader now reproduces all 1146 cases through tier 79, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
