@@ -1,0 +1,41 @@
+{
+  "case": "t70_num_d_then_q",
+  "axis": "debugging. a dynamic array then a queue beside a logic, under -debug all where every SystemVerilog case before tier 60 ran under typical, to see what the flag adds to the type table and the debug section.",
+  "differs_from": "t61_num_a_then_q",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "logic",
+      "declared": "logic"
+    },
+    {
+      "scope": "tb",
+      "name": "d",
+      "width": 32,
+      "type": "",
+      "logged": false
+    },
+    {
+      "scope": "tb",
+      "name": "q",
+      "width": 32,
+      "type": "",
+      "logged": false
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ]
+}
