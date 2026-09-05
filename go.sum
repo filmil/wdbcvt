@@ -8,6 +8,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/filmil/go-vcd-parser v0.1.0 h1:xcU4ZW72q5kDM7aiTZ8xBVUuRo/f9OJbmSjDPzpdbcQ=
 github.com/filmil/go-vcd-parser v0.1.0/go.mod h1:OXQCgXGAlsPTKMF3uxWMm7cYD+60tJQnl5DCS5kYQfI=
+github.com/filmil/go-vcd-parser v0.3.0 h1:L4yWJwolQ1/vjxh4FQbkA1nc5ktZCfH95X9wuYqISdg=
+github.com/filmil/go-vcd-parser v0.3.0/go.mod h1:8VMJV6+lAWAfjV+bhCVgR9qSGe8Bqx34TGjYdhAV2j0=
 github.com/golang/glog v1.2.5 h1:DrW6hGnjIhtvhOIiAKT6Psh/Kd/ldepEa81DKeiRJ5I=
 github.com/golang/glog v1.2.5/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=

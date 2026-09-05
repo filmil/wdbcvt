@@ -1217,9 +1217,9 @@ NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
 such as `#0`, which the parser's lexer reads as a timestamp, and `R0`,
 which it reads as a real.
-`third_party/go_vcd_parser` holds the patch, applied to the module in
-`MODULE.bazel`, until the fix is released:
-https://github.com/filmil/go-vcd-parser/pull/23.
+The fix is https://github.com/filmil/go-vcd-parser/pull/23, released
+in v0.3.0, which is the version this repository takes; it carried the
+patch in `third_party/go_vcd_parser` until then.
 
 `//hdl/ibex:sim` is **Ibex** at commit `34b0705`, the lowRISC RISC-V
 core, as the `simple_system` example the project ships: the core with

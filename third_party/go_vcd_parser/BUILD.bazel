@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: Apache-2.0
-
-# The patch for the go-vcd-parser module lives here so that
-# MODULE.bazel can name it. Nothing in this package is built.
-exports_files(["0001-read-the-id-code-after-a-value-as-a-word.patch"])
