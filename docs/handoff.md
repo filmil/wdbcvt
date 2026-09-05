@@ -114,7 +114,7 @@ whole classes of objects came first.
 Work on branch `ai-dev-20260904-rtd-designs`, PR #13, until it merges;
 then branch from `hd/main`.
 The generators of tiers 57 to 67 are in `tools/corpus/`, see its
-README; a new tier starts by copying `gen_t67.py`.
+README; a new tier starts by copying `gen_t67/main.go`.
 The registration anchor for tier 68 in `hdl/corpus/BUILD.bazel` is the
 last tier 67 case in sorted order, `t67_esz_pk_int__`.
 
