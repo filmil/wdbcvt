@@ -10,12 +10,15 @@
 //	bazel run //cmd/wdbcvt -- -in $PWD/bazel-bin/hdl/counter/sim.wdb
 //	bazel run //cmd/wdbcvt -- -dump -in $PWD/bazel-bin/hdl/counter/sim.wdb
 //	bazel run //cmd/wdbcvt -- -in $PWD/bazel-bin/hdl/counter/sim.wdb -fst out.fst
+//	bazel run //cmd/wdbcvt -- -in $PWD/bazel-bin/hdl/counter/sim.wdb -sqlite out.db
 //
 // Without -dump the tool probes: it reports the measurements a decoder
 // has to be built on. With -dump it decodes every structure it knows
 // and prints them, ending with each object's values over time. With
 // -fst it converts the database into an FST waveform file, which
-// GTKWave, Surfer and nvc read; see //docs/fst-output.md.
+// GTKWave, Surfer and nvc read; see //docs/fst-output.md. With -sqlite
+// it writes the signals and their changes into an SQLite file in the
+// schema go-vcd-parser writes from a VCD; see //docs/sqlite-output.md.
 package main
 
 import (
@@ -24,11 +27,22 @@ import (
 	"os"
 
 	"git.hdlfactory.com/HDL/wdbcvt/pkg/fstout"
+	"git.hdlfactory.com/HDL/wdbcvt/pkg/sqlout"
 	"git.hdlfactory.com/HDL/wdbcvt/pkg/wdb"
 )
 
 // runFST converts the database at in into an FST file at out.
 func runFST(in, out string) error {
+	return convert(in, out, fstout.Write)
+}
+
+// runSQLite converts the database at in into an SQLite file at out.
+func runSQLite(in, out string) error {
+	return convert(in, out, sqlout.Write)
+}
+
+// convert reads the database and hands it to one of the writers.
+func convert(in, out string, write func(*wdb.File, string) error) error {
 	if in == "" {
 		return fmt.Errorf("-in is required")
 	}
@@ -36,7 +50,7 @@ func runFST(in, out string) error {
 	if err != nil {
 		return err
 	}
-	if err := fstout.Write(f, out); err != nil {
+	if err := write(f, out); err != nil {
 		return fmt.Errorf("%s: %w", out, err)
 	}
 	return nil
@@ -46,14 +60,19 @@ func main() {
 	in := flag.String("in", "", "the .wdb file to inspect (required)")
 	dump := flag.Bool("dump", false, "decode the file and print every known structure")
 	out := flag.String("fst", "", "convert the file into an FST waveform file at this path")
+	sqliteOut := flag.String("sqlite", "", "convert the file into an SQLite database at this path")
 	maxStrings := flag.Int("max_strings", 40, "how many printable runs to print")
 	maxBlocks := flag.Int("max_blocks", 16, "how many entropy blocks to print")
 	flag.Usage = usage
 	flag.Parse()
 
 	var err error
-	if *out != "" {
+	if *out != "" && *sqliteOut != "" {
+		err = fmt.Errorf("give one of -fst and -sqlite, not both")
+	} else if *out != "" {
 		err = runFST(*in, *out)
+	} else if *sqliteOut != "" {
+		err = runSQLite(*in, *sqliteOut)
 	} else if *dump {
 		err = runDump(*in)
 	} else {
