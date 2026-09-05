@@ -285,7 +285,7 @@ The offsets are in the documents linked in the last column.
 | The second pair of a protected type's method scopes hangs from the last process of the architecture that declares the variable, and not from the last scope the writer visits: a generate, an instance or a block after that process does not take it | `t73_prt_gen_last` against `t55_prot_pkg_prc`, the pair still under `tb.p` with two generate iterations after it | `t73_prt_inst_lst`, `t73_prt_blk_last`, and `t73_prt_arch_gen`, where the type in the architecture keeps the pair under `tb` | hierarchy |
 | The two words of an access or file type entry are constants of the kind, `8 48` and `8 40`, and do not move with the designated or element type; every access variable declares 48 bytes and every file variable 0 | `t75_acc_rec_____` and `t75_acc_acc_____` against `t23_access`, a record and another access behind the pointer | `t75_acc_arr40___`, `t75_fil_rec_____`, `t75_fil_arr_____` | types |
 | A SystemVerilog subprogram local is storage class 3 whatever its type, where a VHDL local of an array, string or record type is 4; a file inside a subprogram, parameter or local, leaves no object at all | `t76_stc_sv_arr__` against `t50_sub_func_prm`, an `int a[2]` local at 3 where a VHDL vector local is 4 | `t76_stc_sv_ref__`, `t76_stc_sv_out__`, `t76_stc_sv_str__`, `t76_stc_file_prm`, `t76_stc_file_loc`, `t76_stc_acc_prm_` | hierarchy |
-| A package of the design costs the handle space its objects take and nothing else: each object its value size rounded up to 8, an array 16 bytes over its elements, and a type or a subprogram nothing | `t77_pkc_16con___` against `t77_pkc_1con____`, `0x1290` against `0x1258` for fifteen more integers | `t77_pkc_4con____`, `t77_pkc_1real___`, `t77_pkc_arr16___`, `t77_pkc_1fn_____`, `t77_pkc_4fn_____`, `t77_pkc_1type___` | hierarchy |
+| A package of the design grows the handle space only for the objects it declares, by each object's value size rounded up to a multiple of 8 bytes, and by 16 more for an array; a type or a subprogram adds nothing | `t77_pkc_16con___` against `t77_pkc_1con____`, `0x1290` against `0x1258` for fifteen more integers | `t77_pkc_4con____`, `t77_pkc_1real___`, `t77_pkc_arr16___`, `t77_pkc_1fn_____`, `t77_pkc_4fn_____`, `t77_pkc_1type___` | hierarchy |
 | A recursive wildcard matches a package scope and none of its objects, so no form of `log_wave` with a pattern logs a package signal, whatever the pattern is anchored to; naming the package, as a scope or through `get_objects /pkg/*`, is what logs it | `t74_lgw_root____` and `t74_lgw_cur_root` against `t74_lgw_pkg_name`, `/*` and the root made current logging nothing more than `*` | `t74_lgw_objects_`, `t74_lgw_pkg_obj_`, and the `OBJECTS:` and `SCOPES:` lines the six scripts print | values |
 | A page written out before the end of the run keeps one record per key and time, the last; the last page of an arena keeps every delta | `t14_v_spill_dd` against `t14_v_page_dd`, one record at 5 ns against two at 190 ns | `t14_v_spill_dd2`, two records at 428 ns in the second page; the missing `X` of `t13_v_tr430` is the same loss | values |
 | At every time the VCD lists a value, the last database value at that time spells it, for every VCD variable of every case; the changes of value in the VCD are the changes of value in the database, and the VCD keeps a few of the database's writes of the value held and drops the rest | `TestVCD`, `bazel test //pkg/wdb:wdb_test --test_filter=TestVCD` | 1127 of 1127, `//hdl/counter:sim`, `//hdl/uart:sim` and `//hdl/serv:sim`; one real field of `t11_sv_struct_r` and every untyped time parameter excepted, where the VCD writes the `float64` bytes as a vector; the times were equal in every case through tier 35 and differ from tier 36 on | vcd |
@@ -1062,8 +1062,8 @@ claim rests on and rerun the comparison.
 | `t75_fil_rec_____`, `t75_fil_arr_____` against `t23_file_int____` | a record and an array as the file's element | the same `8 40`, and the same 0 byte variable |
 | `t76_stc_sv_arr__` against `t50_sub_func_prm` | an unpacked array local in SystemVerilog instead of VHDL | storage class 3, where the VHDL composite local is 4 |
 | `t76_stc_file_prm`, `t76_stc_file_loc` against `t51_sub_file_prm` | a file inside the subprogram rather than the architecture | no object at all, where the architecture's file is class 2 |
-| `t77_pkc_1fn_____`, `t77_pkc_4fn_____`, `t77_pkc_1type___` against `t77_pkc_1con____` | subprograms and a type in place of the constant | `0x1250`, the base: neither costs handle space |
-| `t77_pkc_arr16___` against `t77_pkc_16con___` | the same 64 bytes as one array instead of sixteen constants | `0x10` more, the 16 bytes an array takes over its elements |
+| `t77_pkc_1fn_____`, `t77_pkc_4fn_____`, `t77_pkc_1type___` against `t77_pkc_1con____` | subprograms and a type in place of the constant | `0x1250`, the base: neither adds handle space |
+| `t77_pkc_arr16___` against `t77_pkc_16con___` | the same 64 bytes as one array instead of sixteen constants | `0x10` more, the 16 bytes an array adds beyond its elements |
 | `t74_lgw_root____`, `t74_lgw_cur_root` against `t74_lgw_star____` | the wildcard rooted, and the root made current | nothing changes: the package stays unlogged |
 | `t74_lgw_pkg_obj_`, `t74_lgw_pkg_name` against `t74_lgw_star____` | the package named, by its objects and as a scope | the package signal is logged, either way |
 | `//hdl/ibex:sim` against `//hdl/neorv32:sim` | a SystemVerilog design of 3287 objects | the enumeration width above; nothing else the reader had wrong |
@@ -1160,13 +1160,14 @@ separates the readings.
    region's strides lack in the second region; what remains open is
    what a library package costs by, `0x604` for `std_logic_1164`,
    `0x1f8` for `numeric_std` and `0x400` for `math_real`.
-   A package of the design costs its objects and nothing else, tier
-   77: each takes its value size rounded up to 8, an array 16 bytes
-   over its elements, and a type or a subprogram nothing, however
-   many there are.
-   The three library figures are larger than their constants account
-   for under that rule, so a library package pays for something else
-   besides; see [format/container.md](format/container.md).
+   For a package of the design the handle space grows only for the
+   objects it declares, tier 77: by the object's value size rounded
+   up to a multiple of 8 bytes, and by 16 more for an array, while a
+   type or a subprogram adds nothing however many there are.
+   The three library figures are larger than the constants those
+   packages declare account for under that rule, so something else in
+   a library package adds handle space too; see
+   [format/container.md](format/container.md).
 2. Trailer `+0x10`, `0x800`, and `+0x20`, `0xc8`, read as the arena
    span and the arena table offset by their values.
    Both are constant, so that is a reading, not a finding.

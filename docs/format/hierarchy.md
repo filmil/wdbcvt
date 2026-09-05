@@ -915,18 +915,20 @@ what the package declares:
 | sixteen integer constants | `0x1290` | `0x40` |
 | a constant array of sixteen integers | `0x12a0` | `0x50` |
 
-So a package costs its objects and nothing else: each takes its value
-size rounded up to 8, four integers taking the 16 bytes they occupy
-and a real the 8 of one, while a type and a subprogram take nothing at
-all, however many there are.
-An array takes 16 bytes over its elements, `0x50` for the 64 bytes of
-sixteen integers, which is the 16 a subprogram frame gives an array
-over its value.
+The handle space grows only for the objects a package declares, and
+the growth is the object's value size rounded up to a multiple of 8
+bytes: 8 for one integer of 4 bytes, 8 for one real of 8, 16 for four
+integers, 64 for sixteen.
+A constant array of sixteen integers adds 80, its 64 bytes and a
+further 16, the same 16 a subprogram frame adds for an array.
+A declaration that is not an object adds nothing, however many of them
+there are: one function, four functions and one type all leave the
+handle space at `0x1250`.
 The `0x604` of `std_logic_1164`, the `0x1f8` of `numeric_std` and the
-`0x400` of `math_real` are larger than their declared constants
-account for under this rule, so a library package pays for something
-else besides, and question 1 of [../format.md](../format.md) keeps
-that part.
+`0x400` of `math_real` are larger than the constants those packages
+declare account for under this rule, so something else in a library
+package adds handle space too, and question 1 of
+[../format.md](../format.md) keeps that part.
 The package is in the file when a use clause names it or a name
 refers into it, `t54_pkg_use_var_` and `t54_pkg_con_var_` alike, and
 absent when neither does, `t54_pkg_unused__`, with the handle space

@@ -2369,7 +2369,7 @@ class 3 whatever its type, so the 3 and 4 split is VHDL's, and a file
 inside a subprogram leaves no object where a file of an architecture
 is class 2.
 
-**Tier 77: what a package costs the handle space.**
+**Tier 77: how much handle space a package adds.**
 Tier 54 measured a package with one constant and with two; this tier
 varies what the package declares and reads the handle space off each.
 
@@ -2384,10 +2384,12 @@ varies what the package declares and reads the handle space off each.
 | `t77_pkc_16con___` | sixteen integer constants | `0x1290` |
 | `t77_pkc_arr16___` | a constant array of sixteen integers | `0x12a0` |
 
-So a package costs its objects and nothing else: each takes its value
-size rounded up to 8, and an array 16 bytes over its elements, which
-is what a subprogram frame gives an array.
-A type and a subprogram cost nothing, however many there are.
+The handle space grows only for the objects the package declares, by
+the object's value size rounded up to a multiple of 8 bytes: 8 for one
+integer, 8 for one real, 16 for four integers, 64 for sixteen.
+The array of sixteen integers adds 80, its 64 bytes and a further 16,
+the same 16 a subprogram frame adds for an array.
+A type and a subprogram add nothing, however many there are.
 
 ## Record which comparison produced which finding
 
