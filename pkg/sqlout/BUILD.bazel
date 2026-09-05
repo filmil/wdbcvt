@@ -1,0 +1,29 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "sqlout",
+    srcs = ["sqlout.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/pkg/sqlout",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/wdb",
+        "@com_github_mattn_go_sqlite3//:go-sqlite3",
+    ],
+)
+
+go_test(
+    name = "sqlout_test",
+    srcs = ["sqlout_test.go"],
+    data = [
+        "//hdl/counter:sim",
+        "//hdl/uart:sim",
+    ],
+    deps = [
+        ":sqlout",
+        "//pkg/wdb",
+        "@com_github_filmil_go_vcd_parser//cvt",
+        "@com_github_filmil_go_vcd_parser//db",
+        "@com_github_filmil_go_vcd_parser//vcd",
+        "@com_github_mattn_go_sqlite3//:go-sqlite3",
+    ],
+)
