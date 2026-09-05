@@ -874,7 +874,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1119` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1127` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -900,6 +900,33 @@ constants rounded up to 8: `pk` with one integer constant moves the
 variable by `0x30`, its constant sits at `0xd40`, `0x98` before the
 root unit's block, and the two constants of `t54_pkg_2con_var` at
 `0xd40` and `0xd44` move it by `0x30` as well.
+
+Tier 77 reads the rest of that arithmetic off one design, varying only
+what the package declares:
+
+| The package declares | Handle space | Over the base |
+| :--- | ---: | ---: |
+| one type, no object | `0x1250` | 0 |
+| one function | `0x1250` | 0 |
+| four functions | `0x1250` | 0 |
+| one integer constant | `0x1258` | `0x08` |
+| one real constant | `0x1258` | `0x08` |
+| four integer constants | `0x1260` | `0x10` |
+| sixteen integer constants | `0x1290` | `0x40` |
+| a constant array of sixteen integers | `0x12a0` | `0x50` |
+
+So a package costs its objects and nothing else: each takes its value
+size rounded up to 8, four integers taking the 16 bytes they occupy
+and a real the 8 of one, while a type and a subprogram take nothing at
+all, however many there are.
+An array takes 16 bytes over its elements, `0x50` for the 64 bytes of
+sixteen integers, which is the 16 a subprogram frame gives an array
+over its value.
+The `0x604` of `std_logic_1164`, the `0x1f8` of `numeric_std` and the
+`0x400` of `math_real` are larger than their declared constants
+account for under this rule, so a library package pays for something
+else besides, and question 1 of [../format.md](../format.md) keeps
+that part.
 The package is in the file when a use clause names it or a name
 refers into it, `t54_pkg_use_var_` and `t54_pkg_con_var_` alike, and
 absent when neither does, `t54_pkg_unused__`, with the handle space
@@ -2545,10 +2572,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1119 of 1119 cases, and the
+*Confirmed by* the region length check in 1127 of 1127 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1119 of 1119 cases and
+and *confirmed by* the reader's range check in 1127 of 1127 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

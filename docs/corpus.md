@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1119 cases pass unchanged.
+Every design and all 1127 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1119` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1127` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2369,6 +2369,26 @@ class 3 whatever its type, so the 3 and 4 split is VHDL's, and a file
 inside a subprogram leaves no object where a file of an architecture
 is class 2.
 
+**Tier 77: what a package costs the handle space.**
+Tier 54 measured a package with one constant and with two; this tier
+varies what the package declares and reads the handle space off each.
+
+| Case | The package declares | Handle space |
+| :--- | :--- | ---: |
+| `t77_pkc_1type___` | one type, no object | `0x1250` |
+| `t77_pkc_1fn_____` | one function | `0x1250` |
+| `t77_pkc_4fn_____` | four functions | `0x1250` |
+| `t77_pkc_1con____` | one integer constant | `0x1258` |
+| `t77_pkc_1real___` | one real constant | `0x1258` |
+| `t77_pkc_4con____` | four integer constants | `0x1260` |
+| `t77_pkc_16con___` | sixteen integer constants | `0x1290` |
+| `t77_pkc_arr16___` | a constant array of sixteen integers | `0x12a0` |
+
+So a package costs its objects and nothing else: each takes its value
+size rounded up to 8, and an array 16 bytes over its elements, which
+is what a subprogram frame gives an array.
+A type and a subprogram cost nothing, however many there are.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2406,7 +2426,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1119 cases through tier 76, and
+5. The reader now reproduces all 1127 cases through tier 77, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
