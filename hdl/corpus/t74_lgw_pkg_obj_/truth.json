@@ -1,0 +1,42 @@
+{
+  "case": "t74_lgw_pkg_obj_",
+  "axis": "the log_wave pattern. log_wave over get_objects /sig_pkg/*, to see why the default script's log_wave -recursive * leaves a package signal unlogged.",
+  "differs_from": "t74_lgw_star____",
+  "end_time_ns": 20,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "x",
+      "width": 1,
+      "type": "std_ulogic"
+    },
+    {
+      "scope": "sig_pkg",
+      "name": "g",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "x",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "x",
+      "value": "1"
+    },
+    {
+      "time_ns": 0,
+      "signal": "sig_pkg.g",
+      "value": "0"
+    },
+    {
+      "time_ns": 10,
+      "signal": "sig_pkg.g",
+      "value": "1"
+    }
+  ]
+}
