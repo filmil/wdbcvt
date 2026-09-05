@@ -1,0 +1,42 @@
+{
+  "case": "t79_frm_001int__",
+  "axis": "the space below the first signal. a procedure with 1 integer variables, to see what lies under the handle `0x768` that every first signal has, and whether filling it moves the signal.",
+  "differs_from": "t50_sub_in_var__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.w",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "in"
+    },
+    {
+      "scope": "tb.w",
+      "name": "a0",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    }
+  ]
+}

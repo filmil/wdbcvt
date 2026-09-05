@@ -1,0 +1,483 @@
+{
+  "case": "t79_frm_064int__",
+  "axis": "the space below the first signal. a procedure with 64 integer variables, to see what lies under the handle `0x768` that every first signal has, and whether filling it moves the signal.",
+  "differs_from": "t50_sub_in_var__",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.w",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": "in"
+    },
+    {
+      "scope": "tb.w",
+      "name": "a0",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a1",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a2",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a3",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a4",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a5",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a6",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a7",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a8",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a9",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a10",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a11",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a12",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a13",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a14",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a15",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a16",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a17",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a18",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a19",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a20",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a21",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a22",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a23",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a24",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a25",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a26",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a27",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a28",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a29",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a30",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a31",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a32",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a33",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a34",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a35",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a36",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a37",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a38",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a39",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a40",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a41",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a42",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a43",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a44",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a45",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a46",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a47",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a48",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a49",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a50",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a51",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a52",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a53",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a54",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a55",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a56",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a57",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a58",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a59",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a60",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a61",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a62",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.w",
+      "name": "a63",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    }
+  ]
+}
