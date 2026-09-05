@@ -198,10 +198,18 @@ func (f *File) vcdSpell(v Value) string {
 		}
 		return b.String()
 	case KindValues:
-		// A SystemVerilog enum is written as the bits of its value.
-		for _, ev := range ty.Values {
-			if ev.Name == v.Scalar {
-				return vcdExtend(strconv.FormatUint(ev.Value, 2), f.bitWidth(ty.Elem))
+		// A SystemVerilog enum is written as the bits of its value,
+		// and its width is the one the entry carries after the
+		// literals, not the width of the base type on its own:
+		// `enum logic [1:0]` has a base of plain logic and a range of
+		// (1 downto 0). //hdl/ibex:sim has both widths in one file,
+		// csr_op_e over two bits and x_debug_ver_e over four.
+		brs := ty.Ranges
+		if w, err := f.bitsOf(ty.Elem, &brs); err == nil {
+			for _, ev := range ty.Values {
+				if ev.Name == v.Scalar {
+					return vcdExtend(strconv.FormatUint(ev.Value, 2), w)
+				}
 			}
 		}
 	case KindArray:
@@ -344,7 +352,7 @@ var vcdDeviations = map[string]string{
 // bit offsets of Verilog ports bound to slices. //hdl/potato:sim is
 // Potato, a RISC-V core in VHDL, whose 32768 byte memories found the
 // second split of a wide value's last chunk.
-var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv", "hdl/potato", "hdl/picorv32", "hdl/neorv32"}
+var designs = []string{"hdl/counter", "hdl/uart", "hdl/serv", "hdl/potato", "hdl/picorv32", "hdl/neorv32", "hdl/ibex"}
 
 // changesOnly drops the records that repeat the value before them.
 func changesOnly(ch []change) []change {
