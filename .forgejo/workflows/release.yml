@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# Publishes a rolling `nightly` release holding the wdbcvt binary, a
-# reference waveform database, the report on the format work, and an
-# archive of the source tree that built them. A manual run may instead
+# Publishes a rolling `nightly` release, here and on the GitHub mirror,
+# holding the wdbcvt binary, a reference waveform database, the report
+# on the format work, and an archive of the source tree that built
+# them. A manual run may instead
 # request a release tagged with the UTC build date, which then stays as
 # a fixed snapshot while `nightly` keeps rolling. The .wdb is the sample
 # every format decoding experiment starts from, so it is worth having a
@@ -11,6 +12,13 @@
 # The report is built by pdflatex from the host through
 # rules_latex_host, so the `vivado` runner needs a TeX Live with the
 # IEEEtran class installed, next to the other host tools.
+#
+# The artifacts also go to the GitHub mirror's release of the same tag,
+# through the REST API with plain curl, because the runner has no node
+# and cannot run the release actions written for it. That step needs
+# one secret, `GH_RELEASE_TOKEN`: a fine grained token with `Contents:
+# read and write` on the mirror and on nothing else. Without it the
+# step says so and stops, and the forge release is unaffected.
 #
 # The Publish step uses the vendored copy of forgejo-release in
 # //.forgejo/actions/forgejo-release, not the upstream action. Upstream
@@ -108,3 +116,99 @@ jobs:
           release-dir: dist/release
           override: true
           token: ${{ secrets.FORGEJO_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Publish to the GitHub mirror
+        env:
+          MIRROR: ${{ vars.GH_MIRROR_REPO }}
+          TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          SHA: ${{ github.sha }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          repo="${MIRROR:-filmil/wdbcvt}"
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::warning::GH_RELEASE_TOKEN is not set; nothing was copied to ${repo}"
+            exit 0
+          fi
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          umask 077
+
+          # api METHOD PATH [json] -> body in ${tmp}/body, status printed.
+          api() {
+            local method="$1" path="$2" json="${3:-}"
+            local args=(-sS -X "${method}"
+              -H "Authorization: Bearer ${TOKEN}"
+              -H "Accept: application/vnd.github+json"
+              -H "X-GitHub-Api-Version: 2022-11-28"
+              -o "${tmp}/body" -w '%{http_code}')
+            if [ -n "${json}" ]; then
+              args+=(-H "Content-Type: application/json" -d "@${json}")
+            fi
+            curl "${args[@]}" "https://api.github.com${path}"
+          }
+
+          # The mirror carries `main` and nothing else, so a release can
+          # only be cut from a commit it already has. mirror.yml runs on
+          # every push, and both jobs take the same serial runner, so
+          # this is a guard and not a race to wait out.
+          code="$(api GET "/repos/${repo}/commits/${SHA}")"
+          if [ "${code}" != "200" ]; then
+            echo "::warning::${repo} does not carry ${SHA} yet; nothing was uploaded"
+            exit 0
+          fi
+
+          # `nightly` rolls, and GitHub does not move a tag that already
+          # exists, so the release and its tag are removed and made
+          # again at this commit. A dated tag is overwritten the same
+          # way, which is what `override: true` does on the forge side.
+          code="$(api GET "/repos/${repo}/releases/tags/${TAG}")"
+          if [ "${code}" = "200" ]; then
+            id="$(jq -r '.id' "${tmp}/body")"
+            api DELETE "/repos/${repo}/releases/${id}" >/dev/null
+            api DELETE "/repos/${repo}/git/refs/tags/${TAG}" >/dev/null
+          fi
+
+          jq -n --arg tag "${TAG}" --arg sha "${SHA}" \
+                --arg url "${SERVER_URL}/${REPOSITORY}" \
+                --argjson pre "$([ "${TAG}" = nightly ] && echo true || echo false)" '
+            {
+              tag_name: $tag,
+              target_commitish: $sha,
+              name: $tag,
+              prerelease: $pre,
+              body: ("Built from `\($sha)` by the release workflow of \($url), "
+                     + "which is where this project is developed. This repository "
+                     + "is a read-only mirror of its `main` branch.\n\n"
+                     + "The format knowledge in `wdbcvt` was worked out by an AI "
+                     + "agent running experiments on files Vivado 2025.2 wrote. "
+                     + "It is not a specification; see `docs/provenance.md`.")
+            }' > "${tmp}/release.json"
+          code="$(api POST "/repos/${repo}/releases" "${tmp}/release.json")"
+          if [ "${code}" != "201" ]; then
+            echo "could not create the release on ${repo}: HTTP ${code}" >&2
+            jq -r '.message // empty' "${tmp}/body" >&2 || true
+            exit 1
+          fi
+          id="$(jq -r '.id' "${tmp}/body")"
+
+          for f in dist/release/*; do
+            name="$(basename "${f}")"
+            code="$(curl -sS -X POST \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@${f}" \
+              -o "${tmp}/body" -w '%{http_code}' \
+              "https://uploads.github.com/repos/${repo}/releases/${id}/assets?name=${name}")"
+            if [ "${code}" != "201" ]; then
+              echo "could not upload ${name}: HTTP ${code}" >&2
+              jq -r '.message // empty' "${tmp}/body" >&2 || true
+              exit 1
+            fi
+            echo "uploaded ${name}"
+          done
+          echo "published ${TAG} to ${repo}"
