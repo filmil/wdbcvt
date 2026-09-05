@@ -2,8 +2,22 @@
 """Shared helpers of the tier 11 and later generators."""
 import json, os, sys
 
-ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "hdl", "corpus")
+# Under `bazel run` the script executes from its runfiles, and the
+# corpus it writes is in the source tree, which BUILD_WORKSPACE_DIRECTORY
+# names. Outside Bazel the path back from this file is the same place.
+WORKSPACE = os.environ.get("BUILD_WORKSPACE_DIRECTORY") or os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.join(WORKSPACE, "hdl", "corpus")
+# The comment marker of the language the file is in. A VHDL file with a
+# Verilog comment on its first line does not compile, and the tiers
+# before 60 were fixed by hand after every run.
+HDRS = {".vhdl": "--", ".vhd": "--"}
 HDR = "// SPDX-License-Identifier: Apache-2.0\n"
+
+
+def header(filename):
+    mark = HDRS.get(os.path.splitext(filename)[1], "//")
+    return "%s SPDX-License-Identifier: Apache-2.0\n" % mark
 
 def sig(scope, name, typ, width=1, **kw):
     d = {"scope": scope, "name": name, "width": width, "type": typ}
@@ -83,7 +97,7 @@ def emit(name, axis, differs, files, signals, transitions, end=100, extra=None, 
     srcs = []
     for fn, body in files:
         with open(os.path.join(d, fn), "w") as f:
-            f.write(HDR + body)
+            f.write(header(fn) + body)
         srcs.append(fn)
     with open(os.path.join(d, "BUILD.bazel"), "w") as f:
         f.write('# SPDX-License-Identifier: Apache-2.0\n\n'

@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Simulates one design twice with the caches emptied and reports what
+# differs between the two runs, which is how the noise mask was found:
+#
+#     bazel run //tools:noise_mask -- //hdl/corpus/t1_bit_one_edge_:sim
+#
+# It drives bazelisk itself, so it runs from the workspace root rather
+# than from its runfiles; see the script and //docs/corpus.md.
+sh_binary(
+    name = "noise_mask",
+    srcs = ["noise_mask.sh"],
+)
