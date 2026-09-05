@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1090 cases pass unchanged.
+Every design and all 1097 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2264,6 +2264,32 @@ declare 32 each, so the 16 is not the type's and not the value's but
 the scalar parameter form's, and why that form declares half is what
 question 14 now asks.
 
+**Tier 72: what each -debug mode writes.**
+Tier 24 read the flag bytes of header words 14 and 15 off a design
+with two drivers and nothing else, which left byte 2 of word 15
+looking as though `line` set it by accident.
+This tier repeats every mode on one design whose function has an
+input and a local, so that what each mode writes is visible beside
+what it flags.
+
+| Case | `-debug` | Words 14, 15 | Differs from, and what it showed |
+| :--- | :--- | :--- | :--- |
+| `t72_dbg_typical_` | `typical` | `0x101`, `0x101` | `t11_sv_logic____`: the function's scope, none of its objects |
+| `t72_dbg_wave____` | `wave` | `0x1`, `0x1` | `t72_dbg_typical_`: not even the scope |
+| `t72_dbg_line____` | `wave line` | `0x1`, `0x10101` | `t72_dbg_wave____`: the scope and its three objects |
+| `t72_dbg_subprog_` | `wave subprogram` | `0x1`, `0x10101` | `t72_dbg_line____`: the same file, to the byte |
+| `t72_dbg_all_____` | `all` | `0x101`, `0x10101` | `t72_dbg_typical_`: drivers and the subprogram together |
+| `t72_dbg_drivers_` | `wave drivers` | `0x101`, `0x1` | `t72_dbg_wave____`: one byte, and no scope |
+| `t72_dbg_readers_` | `wave readers` | `0x10001`, `0x1` | `t72_dbg_drivers_`: byte 2 alone, so the bytes are independent |
+
+So `line` and `subprogram` are one mode under two names, byte 1 of
+word 15 is a subprogram's scope and byte 2 is its own declarations,
+and question 21 is answered.
+A narrow mode on its own writes no database: `-debug line` without
+`wave` ends the run with `ERROR: [Simulator 45-10] The current
+simulation was compiled without trace information`, which is why
+every case pairs it with `wave`.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2301,7 +2327,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1090 cases through tier 71, and
+5. The reader now reproduces all 1097 cases through tier 72, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.

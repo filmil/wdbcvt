@@ -854,7 +854,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1090` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1097` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -1735,9 +1735,39 @@ of `xlibs` above.
 have `0x101` and `0x10101`.
 So byte 0 of each word is always `1`; byte 1 of word 14 is
 `drivers` and byte 2 is `readers`; byte 1 of word 15 is `line` and
-byte 2 is `subprogram`, which `line` alone also sets and `typical`
-does not, though `typical` includes `line`.
-Why `line` alone sets byte 2 of word 15 is open.
+byte 2 is `subprogram`.
+
+Tier 72 says what the two bytes of word 15 stand for, on a design
+whose function has a local, and it says that `line` and `subprogram`
+are one mode rather than two:
+
+| `-debug` | Word 14 | Word 15 | Scopes | Objects | Case |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| `typical` | `0x101` | `0x101` | 4 | 2 | `t72_dbg_typical_` |
+| `wave` | `0x1` | `0x1` | 3 | 2 | `t72_dbg_wave____` |
+| `wave line` | `0x1` | `0x10101` | 4 | 5 | `t72_dbg_line____` |
+| `wave subprogram` | `0x1` | `0x10101` | 4 | 5 | `t72_dbg_subprog_` |
+| `all` | `0x101` | `0x10101` | 4 | 5 | `t72_dbg_all_____` |
+| `wave drivers` | `0x101` | `0x1` | 3 | 2 | `t72_dbg_drivers_` |
+| `wave readers` | `0x10001` | `0x1` | 3 | 2 | `t72_dbg_readers_` |
+
+`wave line` and `wave subprogram` write the same file, to the byte:
+4499 bytes, the same counts, the same two words.
+So the two options name one mode in xsim, and byte 2 of word 15 marks
+it rather than being set by `line` in passing.
+What each byte buys is in the counts beside them: `typical`, with byte
+1 alone, has the function's scope `tb.f` and none of its objects,
+while the three files with byte 2 declare the function's return
+variable, its input and its local, unlogged, on their own handles.
+So byte 1 is the scope of a subprogram and byte 2 is its declarations.
+`wave readers` sets byte 2 of word 14 and not byte 1, so the two
+bytes of that word are independent: the `0x10101` of
+`t24_dbg_readers` is `typical`, which brings `drivers`, and not
+`readers` implying it.
+A narrow mode on its own writes no database at all: `-debug line`
+without `wave` ends the run with `ERROR: [Simulator 45-10] The
+current simulation was compiled without trace information`, which is
+why every case pairs it with `wave`.
 `xlibs` sets no byte.
 The statement index and lines of regions 14 and 15 exist under
 `line`: word 11 counts 9 statement lines in every case that has it
@@ -1752,7 +1782,9 @@ but `xlibs`.
 file offset `0x303`, and `t24_dbg_line` against `t24_dbg_drv_only`
 for the two words and region 15 moving together.
 *Confirmed by* `t24_dbg_sub_only`, `t24_dbg_xlibs`, `t24_dbg_drivers`
-and the `header words` line of the dump of every case.
+and the `header words` line of the dump of every case, and by the
+tier 72 sweep above, which repeats every mode on one design and reads
+what each wrote.
 
 
 ## Verilog modules, processes and nets
@@ -2482,10 +2514,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1090 of 1090 cases, and the
+*Confirmed by* the region length check in 1097 of 1097 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1090 of 1090 cases and
+and *confirmed by* the reader's range check in 1097 of 1097 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.
