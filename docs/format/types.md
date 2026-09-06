@@ -113,7 +113,7 @@ It is an ordinary enumeration whose nine literals are written out as
 `(crimson, viridian, cobalt)` is written the same way.
 `CHARACTER` is an enumeration of 261 literals, which is why `t2_character`
 is 1461 bytes larger than the one bit baseline where the other scalar
-types cost about 400.
+types add about 400.
 
 *Found by* `strings -a -t d` on `t1_bit_one_edge`, which shows
 `STD_ULOGIC` followed by the nine literals 4 bytes apart.
@@ -867,9 +867,9 @@ it keeps, in this order:
   `string q[$]` gives the queue `0`, `t61_num_q_str___`, and a
   `string` or `real` field leaves the others as they were,
   `t61_num_cls_str_`, `t61_num_cls_3f__`.
-* An associative array takes two numbers with a `string` key and
-  three with an `int` key, and holds the last: `int a[string]` gives
-  `int` `0` and the array `2`, `int a[int]` gives `int` `0` and the
+* An associative array is numbered twice with a `string` key and
+  three times with an `int` key, and holds the last number:
+  `int a[string]` gives `int` `0` and the array `2`, `int a[int]` gives `int` `0` and the
   array `3`, and a queue declared after either continues at `3` or
   `4`, `t61_num_a_then_q` and `t61_num_ai_thn_q`.
   Tier 70 separates the key from the element, which the tier 61 cases

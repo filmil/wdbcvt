@@ -50,7 +50,7 @@ and lands in whatever arena that handle names.
 arena 1 holds nothing else.
 `t7_gen_for` puts its three generate indexes and three generics in
 arena 2 at `0x1040`, `0x1130`, `0x1070`, `0x1248`, `0x10a0` and
-`0x1360`, in elaboration order, while its three signals take `0x768`,
+`0x1360`, in elaboration order, while its three signals sit at `0x768`,
 `0x858` and `0x948` in arenas 0 and 1.
 The elaboration time objects were written first, so arena 2's record is
 the first in the page directory; see [container.md](container.md).
@@ -1261,7 +1261,7 @@ field's width needs, and puts the last field lowest: in
 A field wider than 32 bits takes the pairs a standalone value would:
 `t11_sv_struct40` stores `a[39:0]` in pairs 1 and 2, low word first,
 and `b` in pair 0.
-A `real` field takes one pair: `t11_sv_struct_r` has `a` in pair 0
+A `real` field fills one pair: `t11_sv_struct_r` has `a` in pair 0
 and the `float64` in pair 1.
 The declared size follows: 96 for `t11_sv_struct3` and
 `t11_sv_struct40`, 64 for `t11_sv_struct_r`, 41 for the packed
@@ -1599,7 +1599,7 @@ the run, `t59_frc_release_`, holds `0` twice at time 0, and
 at 15 ns and `1` again at 20 ns.
 A force of another value after `run 15 ns`, `t59_frc_mid_____`,
 holds `0` at 15 ns and nothing at 20 ns.
-`remove_forces` records the value the signal takes twice, `1` twice
+`remove_forces` records the value the signal already held twice, `1` twice
 at 15 ns in `t59_frc_release_`, and so does a second `add_force` on
 a forced signal, `0` twice at 15 ns in `t59_frc_twice___`; a force
 cancelled by `-cancel_after 5ns`, `t59_frc_s_cancel`, records the

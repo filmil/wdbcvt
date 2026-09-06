@@ -101,7 +101,8 @@ comparing, by the rules the comparison found necessary:
 * An unpacked struct puts every field in a slot of whole 32 bit words,
   so `{logic a; logic [3:0] b;}` is declared `reg 64` and `a = 1,
   b = 1010` is written `b1` followed by 28 zeros and `1010`.
-  A 40 bit field takes a 64 bit slot: `t11_sv_struct40` is `reg 96`.
+  The VCD gives a 40 bit field a 64 bit slot: `t11_sv_struct40` is
+  `reg 96`.
   The database holds the fields at their own widths; see
   [values.md](values.md).
 

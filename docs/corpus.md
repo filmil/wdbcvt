@@ -1565,7 +1565,7 @@ The large cases list their signals in `truth.json` as one entry with a
 **Tier 47: what a use clause costs.**
 VHDL.
 The nine tier 2 cases with `use ieee.numeric_std.all` had `0x1f8` more
-handle space than the rest, which tier 46 recorded as a type cost.
+handle space than the rest, which tier 46 read as the cost of a type.
 The tier adds use clauses to the tier 1 baseline one at a time, and
 packages of the design with nothing, types, subprograms and constants
 in them.
@@ -1688,7 +1688,7 @@ procedure.
 | `t51_sub_file_prm` | `t23_sub_sig_prm_` | a `file` parameter | absent, 8 bytes of frame; the file object a size 0 variable |
 | `t51_sub_pkg_proc` | `t23_sub_sig_prm_` | the procedure in a package | `pk.drive` under `pk` |
 
-**Tier 52: strides of the second handle region, and scope costs.**
+**Tier 52: strides of the second handle region, and what a scope adds.**
 VHDL.
 Fifteen cases declare `a : T` and then `b : integer`, as process
 variables, as architecture constants or as generics, and read the
@@ -1806,8 +1806,8 @@ VHDL, under `-debug subprogram`.
 A function with a `std_ulogic` parameter and an integer local,
 `t56_typ_none____`, gains one type declaration or one composite local at
 a time, to find what each costs the handle space and the frame.
-A type costs nothing, a composite local costs the bytes of its static
-initial value, and each aggregate or string literal in the body costs
+A type adds nothing, a composite local adds the bytes of its static
+initial value, and each aggregate or string literal in the body adds
 its bytes again.
 Three process variable cases without initialisers check that the tier
 52 rule does not depend on the initialiser.

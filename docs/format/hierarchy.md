@@ -611,11 +611,11 @@ second constant in `t55_sub_2con____` is on `0x58` with `v` on
 `0x6c`.
 A real constant in `t55_sub_con_real` is on `0x48` with `v` on `0x60`,
 24 bytes past it.
-So a scalar constant takes its size plus 16 bytes of the frame, where
-a variable of the same type takes its size alone: `u` and `v` of
+So the frame gives a scalar constant its size plus 16 bytes, where a
+variable of the same type gets its size alone: `u` and `v` of
 `t55_sub_var_init` are on `0x44` and `0x48`.
 The array constant of `t55_sub_con_arr_` is on `0x48` with `v` on
-`0x60`, the 24 byte descriptor an array variable takes.
+`0x60`, the 24 byte descriptor the frame gives an array variable.
 None of them moves the handle space, which stays `0x11d0` from
 `t55_sub_loop____` through `t55_sub_con_real`.
 *Found by* `t55_sub_con_loc_` against `t55_sub_loop____`.
@@ -671,8 +671,8 @@ local, `t56_typ_none____` at `0x11d0`, and adds one thing at a time:
 | a record local of 16 bytes | `+0x14` | `t56_sub_rec_3int`, `t56_sub_rec_4int`, `t56_sub_rec_2rl_` |
 | a record local initialised by `(a => c, n => 1)` from the parameter | `+0` | `t56_typ_rec_prm_` |
 
-So a type costs nothing, and a scalar local nothing, but every static
-value of a composite type costs its bytes: the initial value of a
+So a type adds nothing, and a scalar local nothing, but every static
+value of a composite type adds its bytes: the initial value of a
 composite local when it is a literal or the default, and every
 aggregate or string literal in the body, or in the call, which is the
 4 that `"0001"` costs `t50_sub_func_prm` and `"abcd"` costs
@@ -798,7 +798,7 @@ The 109 cases of the corpus with both kinds of object all put every
 signal before every other object.
 Within the second region the stride from one object to the next is
 the value's size, the next object starting on a multiple of its own
-size, and an array or a string takes 16 bytes more than its elements.
+size, and an array or a string adds 16 bytes over its elements.
 Tier 52 declares `a : T` and then `b : integer` for eleven types, as
 two process variables, as two architecture constants and as two
 generics, and reads the distance from `a` to `b`:
@@ -933,7 +933,7 @@ the variable by `0xd8` in both shapes; `std_logic_1164` with
 `textio` is `0x98` of the `0xd8`; `numeric_std` by `0xf8` more and
 `math_real` by `0x308` more.
 Those are the blocks of the packages, between the signals and the
-root unit, and the rest of what each package costs the handle space,
+root unit, and the rest of what each package adds to the handle space,
 tier 47, lies past the second region: `0x78` for `textio`, `0x70`
 for `env`, `0x15c` for `std_logic_1164`, `0x100` for `numeric_std`
 and `0xf8` for `math_real`.
@@ -1072,9 +1072,9 @@ A component declaration with default binding, `t9_comp`, an alias of a
 signal, `t9_alias`, a function with a variable, `t9_func`, and a
 procedure with a variable declared in the process, `t9_proc_local`,
 add no unit, scope, declaration or object.
-The subprograms cost 8 bytes of handle space each, a procedure with a
-`signal` parameter costs `0x48`, and none of that space shows up as
-an object; see [container.md](container.md).
+The handle space grows by 8 bytes for each subprogram, and by `0x48`
+for a procedure with a `signal` parameter, and none of that space
+shows up as an object; see [container.md](container.md).
 
 
 ## Generics and entity naming
@@ -1421,12 +1421,12 @@ A package with only a type in it gets the scope too, with no object:
 This was recorded until tier 42 as "no scope, as in `t2_record`", but
 `t2_record` declares its type in the architecture and has no package.
 
-A SystemVerilog package takes the same place: `p` of `t13_sv_pkg`,
+A SystemVerilog package sits in the same place: `p` of `t13_sv_pkg`,
 imported into `tb` for a typedef and a parameter, is the second child
 of the root beside `tb`, with a unit of kind `0x08` and the parameter
 `W` as its object.
 The typedef is a type entry and not an object, as in VHDL.
-Its scope and object cost handle space: `t13_sv_pkg` has `0xafc`
+Its scope and object add handle space: `t13_sv_pkg` has `0xafc`
 where `t12_sv_typedef`, the same typedef inside `tb`, has `0x91c`.
 
 A SystemVerilog package enters the file when a declaration uses one of
@@ -1666,8 +1666,8 @@ std_ulogic; constant v : in std_ulogic)` in `t23_sub_sig_prm` is
 `0x15` `port out`, and `v` beside it is the ordinary `0x14` `port
 in`.
 `q` is on `0xd0`, the procedure base of `t22_dbg_sub_proc`, and `v`
-on `0x110`, 64 bytes later, so a signal parameter takes 64 bytes of
-the frame where a `std_ulogic` value takes one.
+on `0x110`, 64 bytes later, so the frame gives a signal parameter 64
+bytes where a `std_ulogic` value gets one.
 The object has both handles and no record, and the signal `s` passed
 to `q` keeps its own handle and records.
 *Found by* `t23_sub_sig_prm` against `t22_dbg_sub_proc`.
@@ -2027,7 +2027,8 @@ declare `xilinx_isim_temp_0_ln5castingOp` before `s` and
 one implicit process, `tb.Initial5_1`.
 The count starts again in a child module: `t29_sv_cast_sub` has
 `tb.u.xilinx_isim_temp_0_ln5castingOp` before `tb.u.s`.
-The variable takes the type of the cast, and its value class with it:
+The variable is declared with the type of the cast, and with its
+value class:
 an 8 bit vector of class 1 for `signed'(8'h05)` in `t29_sv_cast_sgn`
 and a `real` of class 0 for `real'(3)` in `t29_sv_cast_real`, each
 in a module of `0xaac` handle space like `t28_sv_int_cast`.
@@ -2292,7 +2293,7 @@ The same holds for a `string`, whose variable is otherwise absent from
 the file: `t68_str_noinit__` has `0xa14` of handle space where
 `t68_str_lit4____`, the same design with `string str = "ZQXJ";`, has
 `0xaac`, the `0x98` of the scope.
-An unpacked array of strings takes the scope too, and 8 bytes more,
+An unpacked array of strings brings the scope too, and 8 bytes more,
 `0xab4` in `t68_str_arr_____`.
 A `reg` declared inside a generate loop gets one implicit scope per
 iteration: `t12_v_gen_reg` has `tb.Initial11_0` and `tb.Initial11_1`
@@ -2596,7 +2597,7 @@ tiers had not declared produced only 0, 1, 3 and 4:
 | an enumeration from `e_t'('x)` | 0 | `t69_vcl_enum_xcs` |
 | a net with an initializer, `wire w = 1'b1` | 0 | `t69_vcl_wire_ini` |
 
-So a `const` variable takes the class of its initializer and nothing
+So a `const` variable is classed by its initializer and nothing
 else, an override from a `defparam` or from the command line leaves a
 parameter looking like any other, and a `specparam` is a parameter
 declaration with an object and a record.
@@ -2670,7 +2671,7 @@ leaves, and the variable it initializes runs as a process and is 0:
 `t28_sv_int_cast` holds `[3 0 0]` for both, and `t28_sv_v8_szcast`
 `[3 0 0] [0 0 0]`, the hidden variable first; see the cast paragraph
 above.
-The hidden variable takes the class of the cast: 1 for `signed'(8'h05)`
+The hidden variable is classed by the cast: 1 for `signed'(8'h05)`
 in `t29_sv_cast_sgn`, `[1 0 0] [0 0 0]`, and 0 for `real'(3)` in
 `t29_sv_cast_real`, `[0 0 0]` alone.
 What the codes stand for is open; the table reads as the kind of

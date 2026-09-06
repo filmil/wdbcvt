@@ -101,8 +101,8 @@ as a 5 KB one.
 *Confirmed by* `t46_v_gen_70000_`.
 
 A slot can be `0` in the middle of the table as well as at its end.
-`t9_pkg_sig` declares a signal in a package, and that signal takes the
-first handle `0x768` but is never logged, so arena 0 is never written
+`t9_pkg_sig` declares a signal in a package, and that signal sits at
+the first handle `0x768` but is never logged, so arena 0 is never written
 and slot 0 is `0` while slot 1 names the arena of the testbench's own
 signal.
 A wide value spans arenas, see [values.md](values.md): the 12000 byte
@@ -184,7 +184,7 @@ two bits, and `0x2a38` for twenty.
 It is larger than the file in every case, so it is not a file offset.
 It grows by `0x148` per one bit signal in the runs of the tier 6 and
 tier 7 signal count cases, and each signal's handle is `0xf0` past the
-previous one, so a signal costs `0x58` beyond its handle stride.
+previous one, so the handle space grows `0x58` beyond a signal's stride.
 The arena table has one slot per `0x800` of it, which is what makes it
 the size of the handle space.
 Tier 46 splits the `0x58`: a signal nothing drives costs `0xf8`,
@@ -257,7 +257,7 @@ So `library ieee` with `use ieee.std_logic_1164.all` is `0x604` of
 the `0x1088` of `t0_nosig`, a package of the design is `0x80` for its
 scope and unit plus the rounded storage of its constants, and its
 types and subprograms are free.
-What a library package costs is not its types or subprograms by that
+What a library package adds is not its types or subprograms by that
 rule, and not its constants either: `numeric_std` declares two null
 range constants, which cost `0x20` in a package of the design, and
 takes `0x1f8`.
