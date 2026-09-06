@@ -683,6 +683,27 @@ An array's bytes are its elements, a record's its declared size plus
 4, and the declared size of a record is a multiple of 8, so a record
 of one integer declares 8 bytes as a record of two does.
 
+Tier 83 asks how many times that 4 is added:
+
+| The local is | Declared | Handle space over the base |
+| :--- | ---: | ---: |
+| a record of one integer | 8 | `0xc` |
+| a record of one `std_ulogic` | 8 | `0xc` |
+| a record of four integers | 16 | `0x14` |
+| a record of eight integers | 32 | `0x24` |
+| a record holding another record | 16 | `0x14` |
+| a record holding two records | 16 | `0x14` |
+| a record holding an array of four integers | 16 | `0x14` |
+| an array of two records | 16 | `0x14` |
+| an array of four records | 32 | `0x24` |
+
+Every row is the declared size and 4, whatever is inside it: a record
+in a record, two of them, an array in a record and an array of four
+records all add the same 4 as a record of one integer.
+So the 4 goes with the value, once, and not with each record in it,
+while a static value with no record in it adds its bytes alone.
+What the 4 holds is still open.
+
 Tier 80 places those bytes.
 The design there has a generic `k` at `0xde0` and a process variable
 `a` at `0xde4`, both past the signals, and adds one static value at a
@@ -895,7 +916,7 @@ libraries, the signal and the `std.env.stop` away in turn:
 | `t54_none_nosig__` | `standard`, `textio`, `env` | none | `0x810` | `0xa8c` |
 | `t54_lib_none_var` | `standard`, `textio`, `env` | `0x768` | `0x938` | `0xbd4` |
 | `t54_1164_noenv__` | `standard`, `textio`, `std_logic_1164` | `0x768` | `0xda0` | `0x1128` |
-| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1163` |
+| `t54_nosig_var___` | those and `env` | none | `0xcb8` | `0x1172` |
 | `t54_lib_1164_bit` | those and `env`, `s` a `bit` | `0x768` | `0xde0` | `0x11d8` |
 | `t54_lib_numstd_v` | those and `numeric_std` | `0x768` | `0xed8` | `0x13d0` |
 | `t54_lib_mathrl_v` | those and `math_real` | `0x768` | `0x10e8` | `0x15d8` |
@@ -2661,10 +2682,10 @@ and that is a guess.
 *Found by* `t25_sv_two_class` against `t25_sv_two_same`, where word
 13 went from 1 to 2 with the second object's type, and region 17 from
 16 to 24 bytes.
-*Confirmed by* the region length check in 1163 of 1163 cases, and the
+*Confirmed by* the region length check in 1172 of 1172 cases, and the
 tier 25 to 30 sweeps over the initializer forms.
 The word 1 index was *found by* `t31_sv_w1_swap` against
 `t31_sv_w1_i5`, where swapping the declarations swapped the words,
-and *confirmed by* the reader's range check in 1163 of 1163 cases and
+and *confirmed by* the reader's range check in 1172 of 1172 cases and
 by `t12_v_params`, where the six words select the entry the table
 above gives each declaration.

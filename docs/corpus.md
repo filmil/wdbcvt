@@ -1211,7 +1211,7 @@ with `a first write of 146 bytes at 0x9422, which does not cover it`.
 It now takes the chunk map from the largest object on the handle, and
 checks that the first write's records together cover the object
 rather than that one of them does.
-Every design and all 1163 cases pass unchanged.
+Every design and all 1172 cases pass unchanged.
 
 NEORV32 also caught a limitation of `go-vcd-parser`: a VCD identifier
 code may be any printable ASCII, and a design this size gets codes
@@ -2051,7 +2051,7 @@ this version.
 | `t62_str_and_2___` | two `and` gates in one statement, two nets | `t62_str_and_____`: `Forked11_1` and `Forked11_2` |
 | `t62_str_nmos____` | `nmos (w, 1'b1, s);` | `t62_str_bufif___`: the same |
 | `t62_str_vec_pu__` | `wire [3:0] v` under `pullup p [3:0] (v);` and a driver of `zz01` | `t62_str_pu_drv__`: one `Forked` scope; 9 records at time 0 and 4 at 50 ns, per bit |
-| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1163` |
+| `t62_str_vec_1drv` | `wire [3:0] v` with one driver | `t62_str_wire____`: `XXXX`, `0000`, `1172` |
 | `t62_str_vec_2drv` | a second literal driver `z1zz` | `t62_str_vec_1drv`: one record per bit per write; `0X00` then `Z101` |
 | `t62_str_gate_dly` | `and #3 (w, s, 1'b1);` | `t62_str_and_____`: `0` at 3 ns, `1` at 53 ns |
 
@@ -2506,6 +2506,25 @@ bytes, past the second region.
 So a library package leaves `0x50` and the static values of its
 subprograms.
 
+**Tier 83: how often the four bytes of a record are added.**
+A static value of a record type adds its declared size and 4, tier 56.
+This tier asks whether the 4 comes once or once per record.
+
+| Case | The local is | Declared | Added |
+| :--- | :--- | ---: | ---: |
+| `t83_rec_1int____` | a record of one integer | 8 | `0xc` |
+| `t83_rec_1sul____` | a record of one `std_ulogic` | 8 | `0xc` |
+| `t83_rec_4int____` | a record of four integers | 16 | `0x14` |
+| `t83_rec_8int____` | a record of eight integers | 32 | `0x24` |
+| `t83_rec_nested__` | a record holding another record | 16 | `0x14` |
+| `t83_rec_2nested_` | a record holding two records | 16 | `0x14` |
+| `t83_rec_arr4____` | a record holding an array of four integers | 16 | `0x14` |
+| `t83_rec_arr_of__` | an array of two records | 16 | `0x14` |
+| `t83_rec_arr4rec_` | an array of four records | 32 | `0x24` |
+
+Every row is the declared size and one 4, so the 4 goes with the
+value and not with each record inside it.
+
 ## Record which comparison produced which finding
 
 A finding is only as good as the comparison behind it, and a comparison
@@ -2543,7 +2562,7 @@ it.
    reproduces it.
 4. Only once the reader reproduces every `truth.json` in Tiers 0 and 1
    is it worth writing anything larger.
-5. The reader now reproduces all 1163 cases through tier 82, and
+5. The reader now reproduces all 1172 cases through tier 83, and
    matches the VCD of every one of them, and of `//hdl/counter:sim`,
    `//hdl/uart:sim`, `//hdl/serv:sim` and `//hdl/potato:sim`, where
    the VCD holds anything.
