@@ -1,0 +1,49 @@
+{
+  "case": "t83_rec_8int____",
+  "axis": "the four bytes of a record. a record of eight integers, to see how much handle space the static value of a record adds beyond the bytes the record declares.",
+  "differs_from": "t83_rec_4int____",
+  "end_time_ns": 100,
+  "signals": [
+    {
+      "scope": "tb",
+      "name": "s",
+      "width": 1,
+      "type": "std_ulogic"
+    }
+  ],
+  "transitions": [
+    {
+      "time_ns": 0,
+      "signal": "s",
+      "value": "0"
+    },
+    {
+      "time_ns": 50,
+      "signal": "s",
+      "value": "1"
+    }
+  ],
+  "variables": [
+    {
+      "scope": "tb.f",
+      "name": "c",
+      "type": "std_ulogic",
+      "kind": "local",
+      "port": "in"
+    },
+    {
+      "scope": "tb.f",
+      "name": "r",
+      "type": "rec_t",
+      "kind": "local",
+      "port": ""
+    },
+    {
+      "scope": "tb.f",
+      "name": "v",
+      "type": "integer",
+      "kind": "local",
+      "port": ""
+    }
+  ]
+}
