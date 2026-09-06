@@ -257,7 +257,7 @@ value is 24 bytes in row major order with each vector's leftmost
 element first.
 An element type that is constrained adds nothing: `stack_t`, an
 `array (0 to 1) of mat_t` in `t19_arr_of_2dim`, has `dims` `1` and
-the one triple `(0 to 1)`, while its declaration record carries all
+the one triple `(0 to 1)`, while its declaration record holds all
 three ranges `(0 to 1) (0 to 1) (0 to 2)`.
 
 *Found by* `t18_arr_2dim` against `t2_array2d`, where the reader ran
@@ -273,7 +273,7 @@ with bounds.
 std_ulogic_vector` in `t42_arr_unc_both` is the same entry; the two
 files differ in the index word, an `INTEGER` entry for the `(0 to 1)`
 of the first and `NATURAL` for the second, and in nothing else.
-The declaration carries `(0 to 1) (3 downto 0)` in both, from
+The declaration holds `(0 to 1) (3 downto 0)` in both, from
 `arr_t(open)(3 downto 0)` and `arr_t(0 to 1)(3 downto 0)`.
 An `array (0 to 1) of bundle_t` over a record with an unconstrained
 field, `t42_rec_unc_arr`, is the same shape, `(0, 0, -2) (0, 0, -2)`
@@ -307,10 +307,10 @@ array type.
 **Constrained subtype of an array.**
 A signal declared with a constrained subtype of an unconstrained array
 type, `subtype byte_t is vec_t(3 downto -4)` in `t41_arr_subtype`,
-gets an entry named `byte_t` that carries the subtype's range
+gets an entry named `byte_t` that holds the subtype's range
 `(3 downto -4)` as its one triple, and the base type `vec_t` is not in
 the table.
-The declaration record carries the same range.
+The declaration record holds the same range.
 So the entry is named after the subtype the signal is declared with,
 as the enumeration entries are, and holds the subtype's constraint
 where the base type held none.
@@ -352,7 +352,7 @@ The VHDL 2008 `integer_vector`, `real_vector`, `time_vector` and
 `boolean_vector` are unconstrained array entries named in upper case,
 `INTEGER_VECTOR` and so on, over the scalar entry and indexed by
 `NATURAL`, with the one triple `(0, 0, -2)`.
-A signal `s : integer_vector(0 to 3)` carries `(0 to 3)` in its
+A signal `s : integer_vector(0 to 3)` holds `(0 to 3)` in its
 declaration record and nothing in the type, where the user type
 `int_array_t` of `t5_int_arr`, an `array (0 to 3) of integer`, holds
 `(0 to 3)` in the type entry as well.
@@ -370,7 +370,7 @@ brings the `TIME` physical entry in under origin `0xa`.
 `t23_file_text` had brought the entry in behind `text`; a string
 signal of the design brings it in on its own, and `character` and
 `POSITIVE` with it, where `t2_character` had `character` alone.
-The declaration of `s : string(1 to 5)` carries `(1 to 5)` and 5
+The declaration of `s : string(1 to 5)` holds `(1 to 5)` and 5
 bytes, and `(3 to 7)` under `string(3 to 7)`, so the bounds are the
 ones written and not renumbered from 1.
 The value is one byte per character, the `character` literal's index,
@@ -386,8 +386,8 @@ and has no record, as an `integer` variable has none.
 Each field is `name NUL [u32 type][u32 nranges]` then that many
 triples.
 A field of a scalar type has no triples.
-A field of a vector type carries its bounds, `(7 downto 0)`.
-A field whose type is itself a record carries the inner record's
+A field of a vector type holds its bounds, `(7 downto 0)`.
+A field whose type is itself a record holds the inner record's
 constraint, flattened: one triple per inner field, in the inner
 record's field order.
 An inner vector field contributes its bounds.
@@ -428,7 +428,7 @@ exactly three triples in field order.
 **A field declared without bounds.**
 VHDL 2008 lets a record field be an unconstrained array, with the
 bounds given where a signal of the record is declared.
-The field then carries the unconstrained triple `(0, 0, -2)`, and the
+The field then holds the unconstrained triple `(0, 0, -2)`, and the
 bounds are in the declaration record alone: `bravo : std_ulogic_vector`
 constrained as `bundle_t(bravo(7 downto 0))` in `t42_rec_uncons` gives
 `bravo:[3]((0, 0, dir -2))` in the entry and `(7 downto 0)` on the
@@ -454,13 +454,13 @@ the record in field order, whether the field had them or not.
 first field constrained in the record and the second at the signal,
 both declare `(3 downto 0) (7 downto 0)`, and `t7_rec_in2v` with all
 bounds in the fields declares `(3 downto 0) (1 downto 0)` the same way.
-An unconstrained two dimensional field carries two `(0, 0, -2)`
-triples and the declaration carries both ranges, `(0 to 1) (0 to 2)`
+An unconstrained two dimensional field holds two `(0, 0, -2)`
+triples and the declaration holds both ranges, `(0 to 1) (0 to 2)`
 for `m : mat_t` constrained `rec_t(m(0 to 1, 0 to 2))` in
 `t42_rec_unc_2dim`.
-A field whose type is a record with an unconstrained field carries
+A field whose type is a record with an unconstrained field holds
 the inner field's `(0, 0, -2)` in its flattened list, `i:[1]((0, 0,
-dir -2))` in `t42_rec_unc_nest`, and the declaration carries the one
+dir -2))` in `t42_rec_unc_nest`, and the declaration holds the one
 range `(3 downto 0)`.
 The inner record is padded to 8 bytes on its own, so `outer_t` with a
 four element vector inside `inner_t` and one `std_ulogic` after it is
@@ -535,7 +535,7 @@ A `union packed` says `6`.
 *Found by* `t11_sv_struct` against `t11_sv_ustruct`, the same two
 field struct packed and unpacked, which differ in this half word and
 in the declaration size.
-*Confirmed by* `t11_v_mem4`, whose two array entries carry both values.
+*Confirmed by* `t11_v_mem4`, whose two array entries hold both values.
 The union is `t24_sv_union`, whose `union packed { logic [7:0] b;
 logic [7:0] c; } u_t` is a record entry with an empty name, origin
 `1`, layout `6` and the fields `b` and `c`, each `(7 downto 0)` over
@@ -566,7 +566,7 @@ alike.
 is four long for both and the variant tells them apart.
 The class word is `1` for both, outside the VHDL classes above, and
 what the variant words mean is open.
-The last word is `0` where a VHDL enumeration carries its value size.
+The last word is `0` where a VHDL enumeration holds its value size.
 `real` has no bounds: both are `0`.
 `scalar_int` is the index type of every Verilog array, as `NATURAL` is
 the index type of `STD_ULOGIC_VECTOR`, and its low bound is
@@ -612,7 +612,7 @@ bounds moved from the declaration into the type entry and took a name.
 **Two dimensional packed arrays.**
 `logic [1:0][3:0]` in `t11_sv_arr2d` is an array of an array: the
 outer entry has `dims` `1`, element the inner vector entry, and two
-`(0, 0, -2)` triples, and the declaration carries `(1 downto 0)
+`(0, 0, -2)` triples, and the declaration holds `(1 downto 0)
 (3 downto 0)` and size 8.
 A memory `reg [7:0] m [0:3]` is the same shape with layout `2` on the
 outer entry.
@@ -623,7 +623,7 @@ whose element is the entry for the dimensions inside it.
 `logic [3:0] m [0:1][0:2]` in `t12_sv_unp2d` has three entries: the
 shared vector entry, an entry of layout `2` over it with two
 `(0, 0, -2)` triples, and an entry of layout `2` over that with three.
-The declaration points at the outermost and carries every bound,
+The declaration points at the outermost and holds every bound,
 `(0 to 1) (0 to 2) (3 downto 0)`, with size 24.
 An entry's triple count is one more than the entry it wraps, so the
 count says how deep the entry is, and the triples themselves hold no
@@ -665,12 +665,12 @@ A typedef of a struct is an alias with no ranges wrapping the record
 entry, and an unpacked array of that typedef is an array entry of
 layout `2` over the alias: `s_t m [0:1]` in `t13_sv_struct_ar` has
 the record, the alias `s_t` and the array in that order, and the
-declaration carries `(0 to 1)` with size 10.
+declaration holds `(0 to 1)` with size 10.
 
 A typedef of that array, `typedef rec_t arr_t [0:1]` in
 `t35_sv_ust_tdef_` and `typedef s_t arr_t [0:1]` in
 `t35_sv_pst_tdef_`, adds a second alias `arr_t` over the array entry,
-carrying the `(0 to 1)` the declaration then drops, as
+holding the `(0 to 1)` the declaration then drops, as
 `t13_sv_tdef_ua` does for a vector element.
 The unpacked struct itself is the same record entry of layout `2`
 whether it stands alone, `t11_sv_ustruct`, sits in an array,
@@ -679,11 +679,11 @@ whether it stands alone, `t11_sv_ustruct`, sits in an array,
 `rec_t` as the field type.
 An unpacked array field, `logic [3:0] v [0:1]` in `t35_sv_st_uarr__`,
 is an unnamed array entry of layout `2` over the unnamed vector entry,
-with two `(0, 0, -2)` placeholders, and the field carries
+with two `(0, 0, -2)` placeholders, and the field holds
 `(0 to 1)(3 downto 0)`.
 
 *Found by* `t12_sv_typedef` against `t11_v_vec8`, whose declaration
-carries `(7 downto 0)` and whose type has no alias.
+holds `(7 downto 0)` and whose type has no alias.
 *Confirmed by* `t13_sv_pkg`, `t13_sv_struct_ar`, `t35_sv_ust_tdef_`,
 `t35_sv_pst_tdef_`, `t35_sv_ust_nest_` and `t35_sv_st_uarr__`.
 
@@ -749,7 +749,7 @@ against `t11_v_vec8_asc`.
 A `struct` is a record entry with an empty name, origin `1`, layout
 `2` or `3`, and fields written as in VHDL: `name NUL [u32 type]
 [u32 nranges]` then triples.
-A vector field carries its bounds, `(39 downto 0)` in
+A vector field holds its bounds, `(39 downto 0)` in
 `t11_sv_struct40`, and a scalar field none.
 The `typedef` that names it is a separate entry of kind `0x07`:
 `[1][target][0]`, where `target` is the index of the struct entry,
@@ -807,7 +807,7 @@ The class entry comes before the predefined entries of its field
 types, the way an outer record comes before its fields; a derived
 class's parent comes first.
 A field of a class is written the way a record field is: name, type
-index, range count and triples, `g` of `logic [3:0]` carrying
+index, range count and triples, `g` of `logic [3:0]` holding
 `(3, 0, -1)` in `t60_dbg_class_2_`; and one more word, `0` in every
 field seen, follows the triples.
 The inherited field `f` is listed under `b_t` only, not repeated under
@@ -887,7 +887,7 @@ it keeps, in this order:
 | `int a[e_t]` | 2 | none | 4 | `t70_num_a_e_key_` |
 
   So the key is a numbered type in its own right: `byte` and `int`
-  carry the number in their own entry when they are the key and not
+  hold the number in their own entry when they are the key and not
   the element, and `int a[int]` still spends the number, on an entry
   that already holds the element's `0` and cannot hold a second.
   A `string` key spends nothing, as a `string` never does.
@@ -896,7 +896,7 @@ it keeps, in this order:
   `t70_num_a_e_key_` sits before the variable and leaves `int` at
   `2`.
   One number is left over in every one of these, between the last
-  numbered part and the array itself, and nothing in the file carries
+  numbered part and the array itself, and nothing in the file holds
   it; that it belongs to an iterator is the guess of question 24.
   The leftover is the associative array's alone: a dynamic array and a
   queue take the number after their element and no other, `int d[]`

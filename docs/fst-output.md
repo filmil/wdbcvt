@@ -37,7 +37,7 @@ FST has somewhere to put them. From `fstapi.h`:
 That last row matters more than it looks. The database stores
 enumeration literals as text, `'U' 'X' '0' '1' 'Z' 'W' 'L' 'H' '-'` for
 `std_ulogic` and `crimson viridian cobalt` for a user type. FST can
-carry those names through to the viewer. VCD cannot.
+pass those names through to the viewer. VCD cannot.
 
 
 ## The order of work, revised
@@ -76,7 +76,7 @@ The issue never got an answer, so it is worth stating the current
 position plainly.
 
 The library now lives in its own repository, `gtkwave/libfst`, and that
-repository carries an **MIT** licence file, copyright Tony Bybell,
+repository holds an **MIT** licence file, copyright Tony Bybell,
 2009 to 2025.
 GTKWave consumes it as a meson subproject.
 The bundled compressors keep their own permissive licences: LZ4 is BSD
@@ -208,7 +208,7 @@ always be read back from the leaves while the reverse is not true.
 
 **Scalars.** `std_ulogic`, `bit`, Verilog `logic` and their vectors
 are wires, told apart by the class word of the enumeration entry, and
-their values are the nine state characters FST already carries, in
+their values are the nine state characters FST already holds, in
 lower case. An integer is `FST_VT_VCD_INTEGER` of 32 bits holding
 two's complement, a real is `FST_VT_VCD_REAL`, which libfst stores as
 the eight bytes of the double, and a `character` or a `string` is

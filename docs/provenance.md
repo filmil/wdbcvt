@@ -60,8 +60,7 @@ an array produce no `$var` and no value changes at all. Only
 
 So this guard covers bit and vector signals of a VHDL design, and
 nothing else of one. For the other types there is no independent
-reading of the same run, and guards 3 and 5 have to carry the weight
-alone. A Verilog design fares better: its VCD also carries `integer`,
+reading of the same run, and guards 3 and 5 do that work alone. A Verilog design fares better: its VCD also holds `integer`,
 `time`, `real`, parameters, enums and structs, and leaves out only
 unpacked arrays and strings. `TestVCD` in `pkg/wdb/vcd_test.go` holds
 every case to its VCD, and [format/vcd.md](format/vcd.md) states what
@@ -78,7 +77,7 @@ it cannot read, and put them back afterwards; values, times and codes
 reach the test as the parser reports them.
 The parser is taken as it is released: v0.1.0 read an identifier code
 that spells another token, `#0` or `R0`, as a timestamp or a real,
-which no design here produced before NEORV32, and this project carried
+which no design here produced before NEORV32, and this project kept
 a patch for it until the fix was released.
 It is in v0.3.0, https://github.com/filmil/go-vcd-parser/pull/23, and
 the patch is gone; the checker is an implementation this project did
@@ -102,7 +101,7 @@ This guard inherits the same limit as guard 1, because it is read
 through VCD. GHDL emits nothing for the same types Vivado's VCD drops.
 The Verilog and SystemVerilog cases of tiers 11 to 13 have no independent
 simulator yet; their guards are the truth file and Vivado's own VCD,
-which for Verilog also carries `integer`, `real`, `time`, structs and
+which for Verilog also holds `integer`, `real`, `time`, structs and
 enums, but not memories or strings.
 
 **5. `libfst` for the output side.**

@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "prose",
+    srcs = ["prose.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/prose",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "prose_test",
+    srcs = ["prose_test.go"],
+    embed = [":prose"],
+)

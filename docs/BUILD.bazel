@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+
+load("@rules_go//go:def.bzl", "go_test")
+
+# Every document of the repository, held to the writing rules of
+# AGENTS.md. Run it alone with:
+#
+#     bazel test //docs:docs_test
+go_test(
+    name = "docs_test",
+    srcs = ["prose_test.go"],
+    data = [
+        "//:markdown",
+        "//docs:markdown",
+    ],
+    deps = ["//tools/prose"],
+)
+
+filegroup(
+    name = "markdown",
+    srcs = glob([
+        "*.md",
+        "format/*.md",
+    ]),
+    visibility = ["//visibility:public"],
+)

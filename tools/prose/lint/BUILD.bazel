@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "lint_lib",
+    srcs = ["main.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/prose/lint",
+    visibility = ["//visibility:private"],
+    deps = ["//tools/prose"],
+)
+
+go_binary(
+    name = "lint",
+    embed = [":lint_lib"],
+    visibility = ["//visibility:public"],
+)

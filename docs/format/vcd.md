@@ -23,7 +23,7 @@ Every `$var` must name an object of the database, and at every time the
 VCD lists a value, the last value the database holds at that time must
 spell the same.
 Where the VCD says nothing, the test demands a reason from the rule in
-`vcdOmitted`, and fails when the VCD carries an object the rule says it
+`vcdOmitted`, and fails when the VCD holds an object the rule says it
 leaves out.
 Where the VCD spells a value wrongly, the test expects the mismatch from
 the list in `vcdDeviations`, and fails when the mismatch goes away.
@@ -31,7 +31,7 @@ So the three tables below are held to the corpus, not to a reading of
 the files by eye.
 
 
-## What the VCD carries
+## What the VCD holds
 
 All 1172 cases, `//hdl/counter:sim`, `//hdl/uart:sim`, `//hdl/serv:sim`
 and `//hdl/potato:sim` pass, and every object of the database is either
@@ -118,7 +118,7 @@ comparing, by the rules the comparison found necessary:
   Three writes to one variable in one time step, `t13_v_same_t`, are
   one VCD entry and three database records.
   Delta cycles that return a signal to its old value, `t7_delta`, are
-  one VCD entry carrying the old value and two database records.
+  one VCD entry holding the old value and two database records.
 * The set of times at which an object has a VCD entry equalled the
   set of times at which it has a database record through tier 35.
   In particular the missing time 0 `X` record of a spilled Verilog

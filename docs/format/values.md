@@ -20,14 +20,14 @@ bazel run //cmd/wdbcvt -- -dump -in "$PWD/bazel-bin/hdl/corpus/t5_tr1000_______/
 
 ## Handles, arenas and keys
 
-Every object carries a 64 bit handle in its instance record, see
+Every object holds a 64 bit handle in its instance record, see
 [hierarchy.md](hierarchy.md).
 The handle splits in two:
 
 | Bits | Meaning |
 | :--- | :--- |
 | `handle >> 11` | arena index, into the arena table and the page directory |
-| `handle & 0x7ff` | key, the number a value record carries |
+| `handle & 0x7ff` | key, the number a value record holds |
 
 Found by `t5_sig10`, the first case with more than one arena for
 signals.
@@ -258,7 +258,7 @@ listed and that writes on the signal's handle.
 ## Wide values: chunks
 
 A value of 275 bytes or more is not one record.
-It is written as a run of records with consecutive keys, each carrying
+It is written as a run of records with consecutive keys, each holding
 a chunk of the value, and a chunk is addressed by its handle: the
 object's handle plus the chunk's byte offset in the value.
 So a wide object occupies a range of handle space as long as its value,
@@ -355,8 +355,8 @@ What 24 and 299 are is open.
 `t10_real40`, 40 reals of 8 bytes, is chunked exactly as
 `t10_vec320`, 80 bytes four times, so the element type does not enter.
 
-The last chunk takes the rest only while the rest is 275 bytes or
-less.
+The writer gives the last chunk the rest only while the rest is 275
+bytes or less.
 The rest can be up to `n - 1` bytes longer than a chunk, and the count
 `n` grows with the size, so from about 20000 bytes on the rest can pass
 275.
@@ -502,7 +502,7 @@ type entry gives every unit's scale in it.
 `t21_real_neg` stores -1.5 as `0xbff8000000000000`.
 An integer subtype `range 0 to 7`, `t21_int_sub`, and a new integer
 type of the same range, `t21_int_newtype`, are 4 bytes like `INTEGER`,
-and their entries carry the narrow bounds under the subtype's name;
+and their entries hold the narrow bounds under the subtype's name;
 the two cases are byte identical outside the noise mask.
 `bit_vector(7 downto 0)`, `t21_bitvec8`, is one byte per `BIT` like a
 `std_ulogic_vector`.
@@ -516,7 +516,7 @@ That is the order in the type table and the order in the IEEE source.
 A type of 300 literals stores its index as a little endian `uint32`:
 `t20_enum_300` holds `e299` as `2b 01 00 00`, and `t20_enum_256` and
 `t20_enum_257` put the boundary between 256 and 257 literals.
-The type entry's last word carries the size, so the reader does not
+The type entry's last word holds the size, so the reader does not
 count literals.
 Inside a record such a value is aligned to 4: the `w` field of
 `t20_enum_300_rec` sits at offset 4 after a `std_ulogic`, and the
@@ -542,7 +542,7 @@ The total is rounded up to 8.
 An array of records uses that rounded size as its stride: the three
 `pair_t` of `t5_arr_rec` are at 0, 8 and 16.
 
-A record field of record type carries an extra range triple `(0, 8, 1)`
+A record field of record type holds an extra range triple `(0, 8, 1)`
 in the type table, which was first read as this alignment; tier 7
 showed it to be the range of the inner `std_ulogic` field, `(0, 1, 1)`
 for a `bit` and absent for an inner record without an array field.
@@ -633,7 +633,7 @@ the port's offset plus the part's offset.
 `x(3 downto 0)` of an 8 byte `x`, offset 4, and the child's
 `v(1 downto 0) <= "11"` is a 2 byte record at `+6`.
 `t34_pmap_field__` binds `a : out std_ulogic` to the record field
-`r.b`, and the port carries `r`'s handle with offset 1, as a slice
+`r.b`, and the port holds `r`'s handle with offset 1, as a slice
 binding does; the child's `a <= '1'` is a 1 byte record at `+1`.
 `t34_port_fld_out` binds a record port `p : out trio_t` whole to `r`
 and writes `p.b` in the child: a 1 byte record at `+1`, the same as
@@ -773,7 +773,7 @@ The tier 9 slice cases bind a port to part of a signal:
 | `t9_port_sliceto` | `std_ulogic_vector(0 to 1)` | `a => x(0)` | `std_ulogic` | 0 |
 | `t34_pmap_field__` | record of three `std_ulogic` | `a => r.b` | `std_ulogic` | 1 |
 
-The port carries the signal's handle and, in the instance record word
+The port holds the signal's handle and, in the instance record word
 at `+20`, the byte offset of its first element from the signal's left
 element, or of the field it is bound to, see
 [hierarchy.md](hierarchy.md).
@@ -1535,7 +1535,7 @@ A `reg` gets no extra: `s` is read by `assign w = s` in every one of
 these cases and holds one `X`.
 So a net holds one `X` record at time 0 per object on its handle, and
 one more when anything reads it, was the tier 16 reading.
-The `truth.json` of these cases carries the count as `records` on
+The `truth.json` of these cases holds the count as `records` on
 the signal, and `TestCorpus` holds the object to it.
 
 *Found by* `t16_v_wire_rd1` against `t11_v_wire`, one record more.

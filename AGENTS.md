@@ -20,6 +20,16 @@ guesses in the open questions section where they are labelled as guesses.
 * Build with `bazel build //...` and test with `bazel test //...`.
 * Never run `go` directly.
   Run `bazel run @rules_go//go -- <args>` instead.
+* `bazel test //docs:docs_test` holds every document to the rules of
+  the writing style section below.
+  It fails on data given a verb, on a verb chosen for texture where a
+  plainer one fits, on a term this repository coined, on a word that
+  adds nothing, and on an em dash or an en dash.
+  A passage that quotes a violation so as to correct it marks itself
+  with `<!-- prose-lint: allow -->`, which holds to the next blank
+  line.
+  `bazel run //tools/prose/lint -- <file>` checks one file, and the
+  rules live in `//tools/prose`.
 * Never run a script directly either.
   Every tool in `//tools` is a target: `bazel run //tools/corpus/gen_t67`
   writes a tier, `bazel run //tools/corpus/typetab -- <file>` splits a
@@ -223,11 +233,13 @@ Rules that follow from it, and that apply to every change here:
 * Name the thing that acts.
   The file, the writer, the reader or the simulator does something; a
   value, an object or a type does not.
+  <!-- prose-lint: allow -->
   Write "the handle space grows by 8 bytes for one integer constant",
   not "each object takes its value size rounded up to 8".
 * State the measurement before the shorthand, or instead of it.
   A sentence that only a reader who already knows the numbers can
   follow is not a finding, it is a note to yourself.
+  <!-- prose-lint: allow -->
   "A package costs its objects and nothing else" says nothing; the
   numbers it stood for, 8 bytes for one integer, 16 for four, 64 for
   sixteen, say it.
@@ -236,8 +248,10 @@ Rules that follow from it, and that apply to every change here:
   Handle space, arena, chunk and value class are this project's own
   words, not the reader's.
 * Prefer the concrete number to the category.
+  <!-- prose-lint: allow -->
   "0x50 for a sixteen element array, its 64 bytes and 16 more" beats
   "an array costs extra".
 * A word that could be cut is cut.
+  <!-- prose-lint: allow -->
   "in order to", "it should be noted that", "essentially", "simply",
-  "of course" carry nothing.
+  "of course" add nothing.

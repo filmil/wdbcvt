@@ -151,7 +151,7 @@ The fields grew with the ladder, and `//pkg/wdb:corpus_test.go` reads
 them all.
 A signal or a variable can say `"logged": false`, and the test then
 expects an object with no records and outside every logged range.
-A generic can carry `name`, `type`, `value` and `width`, and the test
+A generic can hold `name`, `type`, `value` and `width`, and the test
 checks the declaration and the recorded value against them; a `scope`
 puts it outside `tb`, as the package parameter of `t13_sv_pkg` is, and
 `"logged": false` expects no record of it.
@@ -161,7 +161,7 @@ transitions.
 `final_per_time` names the signals whose writes within one time step
 the file cannot order, and the test compares the last value of each
 time step for them instead of the sequence; see the tier 12 notes.
-A signal can carry `records`, the number of records its object holds
+A signal can hold `records`, the number of records its object holds
 with repeats of one value included, for the cases that count the `X`
 records of a net at time 0; see the tier 16 notes.
 A signal can say `"unsigned": true` for an integral type declared
@@ -170,7 +170,7 @@ decoded value back as an unsigned number of `width` bits before the
 comparison; see the tier 27 notes.
 An `absent` list names declarations the source has and the file does
 not, `parameter string P` or an `event`, and the test checks that no
-object carries the name; see the tier 25 and 26 notes.
+object holds the name; see the tier 25 and 26 notes.
 A generic of an untyped time parameter gives `value` as the reader
 spells the `float64`, `1e+09` for `1s`; the `stored` field that once
 named the storage went away when the reader learned to decode it, in
@@ -422,7 +422,7 @@ Each case is one axis against a tier 11 case, and the transition and
 | `t12_v_neg_range` | `reg [-4:3]` | signed bounds, the record unchanged |
 | `t12_v_noinit`, `t12_sv_noinit`, `t12_sv_enum_noin` | no initializer | no implicit scope; one `X` record, or the first literal for an enum |
 | `t12_sv_shortreal` | `shortreal` | the `real` entry and record |
-| `t12_sv_typedef` | `typedef logic [7:0]` | the alias carries the bounds |
+| `t12_sv_typedef` | `typedef logic [7:0]` | the alias holds the bounds |
 | `t12_sv_unp2d` | `logic [3:0] m [0:1][0:2]` | one array entry per unpacked dimension |
 | `t12_v_params`, `t12_v_param64` | five parameter declarations; a 64 bit one | parameter types; 16 bits for a `real`; consecutive handles by record size |
 | `t12_v_task`, `t12_v_func` | a `task` and a `function` | unit kinds `0x03` and `0x04`; arguments and locals are objects; the return variable first |
@@ -452,7 +452,7 @@ file of the case directory, which gets the same `{{VCD_FILE}}` and
 | `t13_sv_pkg` | a package with a typedef and a parameter | unit kind `0x08` beside `tb`; the parameter is an object with no record |
 | `t13_sv_alwaysff` | `always_ff` and `always_comb` | `Always` scopes |
 | `t13_v_inout` | an `inout` port driven `Z` then `1` | port mode `0`; the port shares the wire; `Z` as one record |
-| `t13_sv_tdef_ua` | a typedef of an unpacked array | the alias carries both ranges |
+| `t13_sv_tdef_ua` | a typedef of an unpacked array | the alias holds both ranges |
 | `t13_sv_real_arr` | `real r [0:1]` | one pair per element, last lowest; an unchanged value writes nothing |
 | `t13_sv_struct_ar` | an unpacked array of a packed struct | one contiguous value, element 0 at the top |
 | `t13_v_str_param` | `parameter P = "hello"` | a 40 bit vector, `h` at the top |
@@ -503,7 +503,7 @@ Tier 15 takes the rest of that list.
 
 Tier 16 asks what writes the extra `X` record of a net at time 0,
 by adding readers to the wire of `t11_v_wire`.
-These truths carry a `records` count per signal, and `TestCorpus`
+These truths hold a `records` count per signal, and `TestCorpus`
 holds the object to it.
 
 | Case | Axis | Found |
@@ -1218,7 +1218,7 @@ code may be any printable ASCII, and a design this size gets codes
 such as `#0`, which the parser's lexer reads as a timestamp, and `R0`,
 which it reads as a real.
 The fix is https://github.com/filmil/go-vcd-parser/pull/23, released
-in v0.3.0, which is the version this repository takes; it carried the
+in v0.3.0, which is the version this repository takes; it kept the
 patch in `third_party/go_vcd_parser` until then.
 
 `//hdl/ibex:sim` is **Ibex** at commit `34b0705`, the lowRISC RISC-V
@@ -1527,7 +1527,7 @@ Every case so far logged everything under the top from time 0 in one
 `run -all`.
 The tier starts logging late, logs twice, logs one signal or one
 scope, splits the run, and elaborates two top entities.
-The cases with a script of their own carry it as `xsim.tcl`, and the
+The cases with a script of their own hold it as `xsim.tcl`, and the
 late ones name the log time as `log_ns` in `truth.json`, because the
 VCD backdates the first value to `#0`.
 
@@ -2152,7 +2152,7 @@ instance at the `bind` line.
 **Tier 67: an enumeration inside a packed struct.**
 A packed struct of a logic, an enumeration and another logic, so that
 the neighbours move if the enumeration's width is wrong.
-The width is the range the enumeration entry carries after its
+The width is the range the enumeration entry holds after its
 literals; the base type of `enum logic [1:0]` is a plain `logic` and
 says nothing.
 
@@ -2163,7 +2163,7 @@ says nothing.
 | `t67_esz_pk_int__` | the same over `int` | `t67_esz_pk_2bit_`: 34 bits, the width on the base type instead |
 
 **Tier 68: where the value of a SystemVerilog string goes.**
-Every case carries characters that occur nowhere else in a database,
+Every case holds characters that occur nowhere else in a database,
 `ZQXJ` and `WPMK`, so that the whole file can be searched for them:
 
 ```
@@ -2252,7 +2252,7 @@ puts the type keyword in every other place it fits.
 | :--- | :--- | :--- |
 | `t71_rlw_sreal_p_` | `parameter shortreal R = 1.5` | `t25_v_prm_real__`: 16, as `real` does |
 | `t71_rlw_rtime_p_` | `parameter realtime R = 1.5` | `t71_rlw_sreal_p_`: 16, on the `realtime` entry |
-| `t71_rlw_untyped_` | `parameter R = 1.5` | `t71_rlw_sreal_p_`: 32, so the keyword carries the 16 |
+| `t71_rlw_untyped_` | `parameter R = 1.5` | `t71_rlw_sreal_p_`: 32, so the keyword holds the 16 |
 | `t71_rlw_specprm_` | `specparam d = 1.5` | `t71_rlw_sreal_p_`: 32, as an untyped parameter |
 | `t71_rlw_pkg_prm_` | the parameter in a package | `t71_rlw_sreal_p_`: 16, and no record, as a package parameter has none |
 | `t71_rlw_kid_prm_` | the parameter in a child module | `t71_rlw_sreal_p_`: 16 |

@@ -21,3 +21,10 @@ gazelle_binary(
 buildifier(
     name = "buildifier",
 )
+
+# The markdown of the repository root, for //docs:docs_test.
+filegroup(
+    name = "markdown",
+    srcs = glob(["*.md"]),
+    visibility = ["//visibility:public"],
+)

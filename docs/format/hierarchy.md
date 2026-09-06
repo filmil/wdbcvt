@@ -8,7 +8,7 @@ It says which scopes exist, which entity or process each scope was
 elaborated from, which signals, generics and variables are declared in
 each, and where in the source each of those came from.
 It ends with one instance record per logged object, and that record
-carries the handle that names the object's values in the pages.
+holds the handle that names the object's values in the pages.
 
 Everything below is a measurement on files written by Vivado 2025.2.
 Reproduce any of it with:
@@ -735,7 +735,7 @@ value.
 `t49_sub_rec_loc_` at `0x11d0` with its record initialised from the
 parameter, `t50_sub_func_prm` and `t50_sub_str_loc_`.
 
-The handle is the number a value record in a page carries, split as
+The handle is the number a value record in a page holds, split as
 `handle >> 11` for the arena and `handle & 0x7ff` for the key.
 See [values.md](values.md).
 
@@ -1094,7 +1094,7 @@ Two instances with equal generics share one `child(sim)` unit and one
 set of declarations.
 Two instances with different generics get a unit record each, still
 named `child(sim)`, and their declarations are repeated.
-The unit name never carries the generic value.
+The unit name never holds the generic value.
 The scope names are the instance labels, `dut` and `dut2`, in both.
 So the file does not name a parameterized entity differently.
 A reader that wants to tell the two apart has to read the generic's own
@@ -1130,7 +1130,7 @@ set: 7 units and 6 declarations against 5 and 4, with the same 7
 scopes and 6 objects.
 An unconstrained `out` port is the same, `t43_port_unc_out`, and so
 is a port of a record with an unconstrained field, `t43_port_unc_rec`,
-whose declaration carries the actual's `(7 downto 0)` and 16 bytes
+whose declaration holds the actual's `(7 downto 0)` and 16 bytes
 while the record type, from a package, keeps the field unconstrained.
 So a unit is one elaboration of an entity, and a reader that keys
 units by entity and architecture name has to allow several.
@@ -1139,7 +1139,7 @@ units by entity and architecture name has to allow several.
 `t43_port_unc_asc`, `t43_port_unc_out` and `t43_port_unc_rec` against
 `truth.json`.
 
-The declaration of an array generic carries the range of the value it
+The declaration of an array generic holds the range of the value it
 ends up with, not the range of its subtype.
 A generic declared as the unconstrained `std_ulogic_vector` with the
 default `x"A"`, `t40_gen_uncons`, is declared with 4 bytes and the
@@ -1221,7 +1221,7 @@ the driven values.
 VHDL signal crosses into Verilog and back.
 The leaf's input port holds `0` then `1` and no `U`, where the VHDL
 port of `t21_mix_vh_in_v` held `U` first: the Verilog net above it
-carries the VHDL `0` from elaboration, where the `reg` of
+holds the VHDL `0` from elaboration, where the `reg` of
 `t21_mix_vh_in_v` gets its `0` from an `initial` at time 0.
 The leaf's output port holds `U`, `0`, `1`, and `y` above it the same,
 without the `X` of `t49_mix_2port___`, because no Verilog expression
@@ -1605,7 +1605,7 @@ A function is a unit of kind `0x11` and a procedure one of kind
 entity words at 0, as a process.
 The scope is named after the subprogram: `tb.inc`, `tb.bump`.
 Each parameter and each variable is a declaration of kind `0x14`, a
-kind no other object has, and a parameter carries its mode in word 9
+kind no other object has, and a parameter holds its mode in word 9
 as a port does: `x` of `inc` is `port in`, `a` and `d` of `bump` are
 `port inout` and `port in`, and the variables `v` and `w` have no
 mode.
@@ -1868,7 +1868,7 @@ tb(memfile="external/+http_archive+serv/sw/hello_uart.hex")
 ```
 
 the parameter and its value spelled into the name, and the VCD's
-`$scope module` line carries the same name.
+`$scope module` line holds the same name.
 Every object path below starts with it, and `TestVCD` strips the
 parenthesis when it decides what the VCD may leave out.
 
@@ -2014,7 +2014,7 @@ A cast in an initializer leaves a hidden variable in the module scope:
 module's first declaration and first object, at `0x768` before `s` at
 `0x828`, and adds a second process unit and scope at the line of the
 declaration, `tb.Initial5_1`.
-The name carries the line of the cast, `ln6` in `t28_sv_enum_cast`,
+The name holds the line of the cast, `ln6` in `t28_sv_enum_cast`,
 whose hidden variable is a `state_t`, and the variable has the type
 of the cast, an unnamed 8 bit vector for `8'(0)` in `t28_sv_v8_szcast`.
 It is logged, holds one record at time 0 with the cast's value, and
@@ -2096,7 +2096,7 @@ Both point their four file and line words at the `interface` or
 `package` line, as a module does.
 A modport is a unit of kind `0x02`, named `bus_if.slave` after the
 interface and the modport, with one declaration per modport signal
-carrying the port mode: `modport slave(input d)` of `t15_sv_iface_mp`
+holding the port mode: `modport slave(input d)` of `t15_sv_iface_mp`
 declares `d` as `port in` at the `modport` line.
 Its two entity words are 0, as for a process.
 The kinds seen so far are:
@@ -2156,7 +2156,7 @@ That is the order `t11_v_port` and `t11_v_hier1` showed in part: in
 assignment, and in `t11_v_hier1` the child has the processes.
 The counter runs over elaborated instances and the name is fixed at
 the first: `t11_v_gen_for` has `tb.Initial14_4`, because each of the
-two child instances took two numbers, and both instances carry
+two child instances took two numbers, and both instances hold
 `Initial9_0` and `Initial7_1`.
 
 *Found by* `t12_v_proc_order` against `t11_v_port` and `t11_v_hier1`.
@@ -2313,7 +2313,7 @@ A generate loop does not get a scope of its own: `t11_v_gen_for` has
 `tb.g[0].dut` and `tb.g[1].dut` directly under `tb`, where
 `t7_gen_for` has `\g(0)\` scopes of kind `0x0c`.
 The `genvar` is not a declaration and not an object.
-The two instances share one unit, and their process scopes carry the
+The two instances share one unit, and their process scopes hold the
 same names, `Initial9_0` and `Initial7_1` under each.
 
 A variable declared in a generate block belongs to the module, under
