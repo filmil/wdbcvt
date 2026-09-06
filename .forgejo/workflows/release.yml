@@ -72,12 +72,85 @@ jobs:
           # which then waits on input forever and hangs the whole job.
           git --no-pager log --oneline -1
 
+      - name: Pick the tag
+        id: tag
+        env:
+          DATED: ${{ inputs.dated }}
+        run: |
+          set -euo pipefail
+          # Scheduled runs have no inputs, so DATED is empty there and
+          # the tag stays nightly.
+          if [ "${DATED}" = "true" ]; then
+            tag="$(date -u +%Y-%m-%d)"
+          else
+            tag="nightly"
+          fi
+          echo "picked tag ${tag}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Stop if the tag already names this commit
+        id: changed
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # Releasing a commit that is already released writes the same
+          # artifacts under the same tag, so the run stops here instead.
+          # Three endpoints are asked in turn, because a tag reaches the
+          # API by more than one name: the tag itself, the ref, and the
+          # release cut from it. The first that answers with a commit
+          # wins.
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+
+          get() {  # get PATH -> body in ${tmp}/body, status printed
+            curl -sS -o "${tmp}/body" -w '%{http_code}' \
+                -H "Authorization: token ${TOKEN}" \
+                "${SERVER_URL}/api/v1/repos/${REPOSITORY}$1" || true
+          }
+          sha_of() {  # sha_of JQ PATH -> a 40 hex sha, or nothing
+            local code
+            code="$(get "$2")"
+            [ "${code}" = "200" ] || return 0
+            jq -r "$1 // empty" "${tmp}/body" 2>/dev/null |
+                grep -Eo '^[0-9a-f]{40}$' || true
+          }
+
+          prev="$(sha_of '.commit.sha' "/tags/${TAG}")"
+          if [ -z "${prev}" ]; then
+            prev="$(sha_of '.object.sha' "/git/refs/tags/${TAG}")"
+          fi
+          if [ -z "${prev}" ]; then
+            prev="$(sha_of '.target_commitish' "/releases/tags/${TAG}")"
+          fi
+
+          # A tag nobody could read, and an API that would not answer,
+          # both release: a run that skips when it should not have is
+          # worse than one that repeats itself.
+          if [ "${prev}" = "${SHA}" ] && [ -n "${prev}" ]; then
+            echo "::notice::${TAG} already names ${SHA}; nothing to release"
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+          else
+            if [ -n "${prev}" ]; then
+              echo "${TAG} names ${prev}, and this run is ${SHA}"
+            else
+              echo "no commit was found for ${TAG}; releasing"
+            fi
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Build the release artifacts
+        if: steps.changed.outputs.changed == 'true'
         run: |
           bazelisk build -c opt \
               //hdl/counter:sim //docs/latex:report
 
       - name: Gather them
+        if: steps.changed.outputs.changed == 'true'
         run: |
           set -euo pipefail
           bin="$(bazelisk info -c opt bazel-bin)"
@@ -95,6 +168,7 @@ jobs:
           ls -l dist/release
 
       - name: Build the Go binary for every release platform
+        if: steps.changed.outputs.changed == 'true'
         run: |
           set -euo pipefail
           # Only //cmd/wdbcvt: Vivado exists solely for Linux amd64, so
@@ -112,23 +186,8 @@ jobs:
           done
           ls -l dist/release
 
-      - name: Pick the tag
-        id: tag
-        env:
-          DATED: ${{ inputs.dated }}
-        run: |
-          set -euo pipefail
-          # Scheduled runs have no inputs, so DATED is empty there and
-          # the tag stays nightly.
-          if [ "${DATED}" = "true" ]; then
-            tag="$(date -u +%Y-%m-%d)"
-          else
-            tag="nightly"
-          fi
-          echo "picked tag ${tag}"
-          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
-
       - name: Publish
+        if: steps.changed.outputs.changed == 'true'
         uses: ./.forgejo/actions/forgejo-release
         with:
           direction: upload
@@ -140,6 +199,7 @@ jobs:
           token: ${{ secrets.FORGEJO_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Publish to the GitHub mirror
+        if: steps.changed.outputs.changed == 'true'
         env:
           MIRROR: ${{ vars.GH_MIRROR_REPO }}
           TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
