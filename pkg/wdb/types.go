@@ -24,6 +24,7 @@ const (
 	KindFile     Kind = 0x0c // VHDL file type: an element type and two words
 	KindPhysical Kind = 0x0d // physical type with units: TIME
 	KindArray    Kind = 0x10 // array, constrained or not
+	KindEvent    Kind = 0x0b // SystemVerilog event
 	KindRecord   Kind = 0x11 // record with named fields
 	KindDynArray Kind = 0x13 // SystemVerilog dynamic array, seen under -debug all
 	KindQueue    Kind = 0x14 // SystemVerilog queue, seen under -debug all
@@ -78,6 +79,8 @@ func (k Kind) String() string {
 		return "physical"
 	case KindArray:
 		return "array"
+	case KindEvent:
+		return "event"
 	case KindRecord:
 		return "record"
 	case KindDynArray:
@@ -434,10 +437,21 @@ func readType(kind Kind, body []byte) (Type, error) {
 		t.Origin = c.origin()
 		t.Elem = int(c.u32())
 		n := int(c.u32())
-		c.expect(8, "values word 3")
+		// The word is the byte size of a value, 8 in every VHDL and
+		// small SystemVerilog enum. A Vivado 2026.1 UVM database has
+		// one entry with 16: uvm_reg's test bitmask, whose literals
+		// are 128 bits. Only the low 64 are kept; nothing above them
+		// was set in the file seen.
+		size := int(c.u32())
+		if size != 8 && size != 16 {
+			c.err = fmt.Errorf("values word 3: got %#x, want 8 or 16", size)
+		}
 		for i := 0; i < n && c.err == nil; i++ {
 			v := NamedValue{Name: c.str()}
 			v.Value = c.u64()
+			for j := 8; j < size; j += 8 {
+				c.u64()
+			}
 			t.Values = append(t.Values, v)
 		}
 		nr := int(c.u32())
@@ -513,6 +527,12 @@ func readType(kind Kind, body []byte) (Type, error) {
 		if kind == KindAssoc {
 			t.Index = int(c.u32())
 		}
+	case KindEvent:
+		// SystemVerilog `event`. The origin then a zero word. ONE
+		// instance seen, in a Vivado 2026.1 UVM database: name
+		// "event", body 05 00 00 00 00 00 00 00.
+		t.Origin = c.origin()
+		t.Words = append(t.Words, c.u32())
 	case KindString:
 		// Only the origin. Found by t60_dbg_str_____.
 		t.Origin = c.origin()
@@ -549,8 +569,18 @@ func readType(kind Kind, body []byte) (Type, error) {
 			}
 			t.Fields = append(t.Fields, f)
 		}
-		if v := c.i32(); c.err == nil && v != rangeEnd {
-			c.err = fmt.Errorf("record trailer: got %d, want %d", v, rangeEnd)
+		// A VHDL record ends with the -99 that terminates a run of
+		// constraint triples. A SystemVerilog struct ends with a
+		// number instead, as the class and queue kinds do. Seen on
+		// Vivado 2026.1: ten structs of origin 1, layout 2 and 3,
+		// whose trailers were 43, 68, 69, 260, 269, 580, 643 and 696.
+		// What the number names is not known.
+		if t.Origin == OriginVHDL || t.Origin == OriginVHDLTime {
+			if v := c.i32(); c.err == nil && v != rangeEnd {
+				c.err = fmt.Errorf("record trailer: got %d, want %d", v, rangeEnd)
+			}
+		} else {
+			t.Words = append(t.Words, c.u32())
 		}
 	default:
 		return t, fmt.Errorf("type %q has unknown kind %#x", t.Name, uint8(kind))
