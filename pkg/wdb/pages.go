@@ -11,6 +11,10 @@ import (
 	"sort"
 )
 
+// a bit nobody wrote. The stored form of a bit is an index into the
+// logic type's literals, "0" "1" "Z" "X", so x is 3.
+const bitUnknown = 3
+
 // Record is one value change inside a page.
 type Record struct {
 	// Time is the simulation time of the change in the file's time
@@ -197,6 +201,9 @@ type decoder struct {
 	wholeEnd uint64
 	cur      []byte
 	started  bool
+	// set when a first write covered only part of the object; the rest
+	// stays unknown
+	partial  bool
 }
 
 func (f *File) newDecoder(o Object) (*decoder, error) {
@@ -257,6 +264,11 @@ func (f *File) newDecoder(o Object) (*decoder, error) {
 	d.starts = chunkStarts(whole, wholeSize)
 	d.wholeEnd = whole + wholeSize
 	d.cur = make([]byte, d.size)
+	// a bit nobody has written is unknown, not zero. The stored form of a
+	// bit is an index into the logic type's literals, where x is 3.
+	for i := range d.cur {
+		d.cur[i] = bitUnknown
+	}
 	return d, nil
 }
 
@@ -397,7 +409,14 @@ func (d *decoder) group(group []rec, emit func(uint64, []byte)) error {
 				}
 			}
 			if lo > d.start || hi < d.end {
-				return fmt.Errorf("object handle %#x with %d bytes has a first write of %d bytes at %#x, which does not cover it", d.o.Handle, d.size, hi-lo, lo)
+				// xsim logs a CHANGE per element, so a packed array
+				// whose elements do not all change at time zero has a
+				// first write covering only part of it - seen on a
+				// generate-scoped `logic [18:0] [1:0]` under Vivado
+				// 2026.1. The bytes nobody wrote are unknown, which is
+				// what the buffer already holds, so carry on rather
+				// than refuse the file.
+				d.partial = true
 			}
 			d.started = true
 		}
