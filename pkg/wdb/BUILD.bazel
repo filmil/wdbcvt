@@ -1,5 +1,8 @@
 load("@rules_go//go:def.bzl", "go_library", "go_test")
 
+# contrib_test.go belongs to contrib_test alone; see that target.
+# gazelle:exclude contrib_test.go
+
 go_library(
     name = "wdb",
     srcs = [
@@ -43,4 +46,14 @@ go_test(
     ],
     embed = [":wdb"],
     deps = ["@com_github_filmil_go_vcd_parser//vcd"],
+)
+
+# The databases under //testdata/contrib need no Vivado, so this test
+# stays apart from wdb_test and runs on a machine without one.
+go_test(
+    name = "contrib_test",
+    size = "small",
+    srcs = ["contrib_test.go"],  # keep
+    data = ["//testdata/contrib:all_wdb"],
+    embed = [":wdb"],
 )

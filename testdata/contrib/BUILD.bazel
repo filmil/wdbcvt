@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# Every externally contributed database in one target:
+#
+#     bazel build //testdata/contrib:all_wdb
+#
+# These files were written by somebody else's Vivado, from somebody
+# else's design, so they have no truth.json. See README.md.
+filegroup(
+    name = "all_wdb",
+    srcs = glob(["*/*.wdb"]),
+    visibility = ["//visibility:public"],
+)
