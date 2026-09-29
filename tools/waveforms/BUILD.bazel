@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "waveforms",
+    srcs = ["waveforms.go"],
+    importpath = "git.hdlfactory.com/HDL/wdbcvt/tools/waveforms",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/fstout",
+        "//pkg/wdb",
+    ],
+)
+
+go_test(
+    name = "waveforms_test",
+    srcs = ["waveforms_test.go"],
+    data = ["//testdata/contrib:all_wdb"],
+    embed = [":waveforms"],
+)

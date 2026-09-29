@@ -24,3 +24,15 @@ filegroup(
     ]),
     visibility = ["//visibility:public"],
 )
+
+# An archive bundling all the discovered WDB spec documentation.
+genrule(
+    name = "archive",
+    srcs = [":markdown"],
+    outs = ["wdbcvt-docs.tar.gz"],
+    cmd = """
+        tar -h --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
+            -czf $@ $(locations :markdown)
+    """,
+    visibility = ["//visibility:public"],
+)

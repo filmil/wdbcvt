@@ -2,7 +2,8 @@
 #
 # Publishes a rolling `nightly` release, here and on the GitHub mirror,
 # holding the wdbcvt binaries for Linux amd64 and arm64 and for macOS,
-# a reference waveform database, the report on the format work, and an
+# a reference waveform database, the report on the format work, the
+# waveform and documentation archives, and an
 # archive of the source tree that built them. A manual run may instead
 # request a release tagged with the UTC build date, which then stays as
 # a fixed snapshot while `nightly` keeps rolling.
@@ -147,7 +148,11 @@ jobs:
         if: steps.changed.outputs.changed == 'true'
         run: |
           bazelisk build -c opt \
-              //hdl/counter:sim //docs/latex:report
+              //hdl:all_wdb \
+              //testdata/contrib:all_wdb \
+              //docs:archive \
+              //docs/latex:report \
+              //tools/waveforms/bundle
 
       - name: Gather them
         if: steps.changed.outputs.changed == 'true'
@@ -160,6 +165,14 @@ jobs:
           cp "${bin}/hdl/counter/sim.vcd" dist/release/counter-sim.vcd
           # The report on the whole effort, built from //docs/latex.
           cp "${bin}/docs/latex/report.pdf" dist/release/wdbcvt-report.pdf
+          # The documentation archive bundling all spec markdown under //docs.
+          cp "${bin}/docs/wdbcvt-docs.tar.gz" dist/release/wdbcvt-docs.tar.gz
+          # The waveform archive bundling all WDB files, converted FSTs, and HDL sources.
+          "${bin}/tools/waveforms/bundle/bundle_/bundle" \
+              -bin "${bin}" \
+              -src . \
+              -out dist/release/wdbcvt-waveforms.tar.gz \
+              -prefix wdbcvt-waveforms/
           chmod +w dist/release/*
           # The exact source that built the artifacts above. git archive
           # takes only tracked files, so dist/ itself stays out.

@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+
+package(default_visibility = ["//visibility:public"])
+
+# Every simulation database in the repository in one target:
+#
+#     bazel build //hdl:all_wdb
+filegroup(
+    name = "all_wdb",
+    srcs = [
+        "//hdl/corpus:all_wdb",
+        "//hdl/counter:sim",
+        "//hdl/ibex:sim",
+        "//hdl/neorv32:sim",
+        "//hdl/picorv32:sim",
+        "//hdl/potato:sim",
+        "//hdl/serv:sim",
+        "//hdl/uart:sim",
+    ],
+)
