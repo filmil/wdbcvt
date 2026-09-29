@@ -44,8 +44,8 @@ on:
         type: boolean
         default: false
   schedule:
-    # Monthly, on the first.
-    - cron: '0 3 1 * *'
+    # Daily, at 03:00 UTC.
+    - cron: '0 3 * * *'
 
 permissions:
   contents: write
