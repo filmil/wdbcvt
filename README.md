@@ -7,45 +7,46 @@
 
 Tools for reading the Vivado `xsim` waveform database (`.wdb`).
 
-Based on the fraction of understood data sematics, **it should
-support 95%+ of WDB features** as of this writing.
+By measured data semantics, **wdbcvt supports over 95% of WDB features**
+as of this writing.
 
-The WDB format is not publicly documented by AMD.
-This repository is an independent study of the WDB format, resulting in
-a program which is able to read a wide range of WDB files, and write
-FST files.
+AMD publishes no documentation for the WDB format.
+This repository studies the format independently.
+It provides tooling that parses `.wdb` files and converts them into FST and
+SQLite formats.
 
-See [docs/format.md](docs/format.md) for what has been measured so
-far and how the work proceeds.
+See [docs/format.md](docs/format.md) for what has been measured so far and how
+the work proceeds.
 
-That 95% counts one kind of file: behavioural VHDL, Verilog and
+That 95% metric applies to one class of files: behavioural VHDL, Verilog, and
 SystemVerilog, simulated by Vivado 2025.2.
-Not supported:
+What is not supported:
 
-* gate level netlists with SDF back annotation, untried
-* encrypted IP models, untried
-* UPF power intent, untried
-* more than one top in an elaboration, untried
-* any other Vivado version, untried
+* gate level netlists with SDF back annotation: untried
+* encrypted IP models: untried
+* UPF power intent: untried
+* more than one top in an elaboration: untried
+* any other Vivado version: untried
 * values of SystemVerilog strings, queues, dynamic arrays,
-  associative arrays and class handles: the file holds none
+  associative arrays, and class handles: the file holds none
 * `trireg` and `let`: `xsim` rejects both
 * writing a database: this tool only reads
 
 
 ## Where this lives
 
-Development is on [git.hdlfactory.com/HDL/wdbcvt][forge], and so is the
-CI: every corpus case is a Vivado simulation, and the runner that can
-do that answers to that forge.
+Development happens on [git.hdlfactory.com/HDL/wdbcvt][forge].
+Continuous integration runs on this forge as well: every corpus case requires a
+Vivado simulation, and the runner capable of executing Vivado answers to this
+forge.
 
-`main` is mirrored, read only, to
-[github.com/filmil/wdbcvt][mirror], so the work can be read and linked
-from a place people already look.
-Issues and pull requests belong on the forge; the mirror has its issue
-tracker turned off so that a report there cannot go unread.
-The push is made by a deploy key that can write to the mirror and
-nothing else.
+The `main` branch is mirrored read-only to
+[github.com/filmil/wdbcvt][mirror], so the repository can be read and linked
+from GitHub.
+Issues and pull requests belong on the forge.
+The GitHub mirror disables its issue tracker so that bug reports do not go
+unread.
+A dedicated deploy key with scoped write access pushes commits to the mirror.
 
 [forge]: https://git.hdlfactory.com/HDL/wdbcvt
 [mirror]: https://github.com/filmil/wdbcvt
@@ -54,30 +55,31 @@ nothing else.
 ## How this format knowledge was obtained
 
 **This is an AI-first exploration.**
-The format was worked out by an AI agent running experiments against
-`.wdb` files and reading the bytes that came out.
-It is not a port of AMD code, not a decompilation, and not a
+An AI agent derived the format layout by running experiments against `.wdb`
+files and reading the emitted bytes.
+The result is not a port of AMD code, not a decompilation, and not a
 specification.
 
-An agent that infers a format from examples produces measurements that
-reproduce and plausible stories about bytes, and the two look identical
-on the page.
-So nothing here rests on the derivation being trustworthy.
+An agent that infers a format from examples produces two kinds of output:
+measurements that reproduce, and plausible stories about bytes.
+The two look identical on the page.
+Nothing here rests on assuming the derivation is trustworthy.
 Every claim is guarded by software this project did not write, and by
-references whose content is known before a `.wdb` is opened:
+references whose content is known before a `.wdb` file is opened:
 
-* the `sim.vcd` that Vivado writes from the same simulation run, in the
-  IEEE 1800 text format,
-* `github.com/filmil/go-vcd-parser`, an existing parser with its own
-  tests, which reads that answer key,
-* a `truth.json` per corpus case, derived from the design rather than
-  from the database,
-* GHDL and nvc, simulators that share no code with Vivado,
-* `libfst`, the reference implementation, which writes the FST output
-  and reads it back for the check.
+* the `sim.vcd` file that Vivado writes from the same simulation run, in IEEE
+  1800 text format,
+* `github.com/filmil/go-vcd-parser`, an existing parser with independent
+  tests that reads the answer key,
+* a `truth.json` file per corpus case, derived directly from the design rather
+  than the database,
+* GHDL and nvc, open source simulators that share no code with Vivado,
+* `libfst`, the reference implementation that writes FST output and reads it
+  back for verification.
 
-Read [docs/provenance.md](docs/provenance.md) before relying on
-`dewdb` for anything. It states what the guards do and do not cover, and
+Read [docs/provenance.md](docs/provenance.md) before relying on `dewdb` or
+`wdbcvt` for anything.
+It states what the verification guards cover and what they do not, and explains
 where the tool should not be used.
 
 
@@ -87,77 +89,74 @@ where the tool should not be used.
   Simulating it produces the reference `sim.wdb`, and a `sim.vcd` from the
   same run that acts as the answer key.
 * `hdl/uart/` holds a larger VHDL design, a UART looped back into a
-  FIFO, that confirms the reader on a hierarchy not written to ask one
-  question.
-* `hdl/serv/` holds a Verilog bench around SERV, the bit serial RISC-V
-  core, running its `hello_uart` program: a design nobody wrote for
+  FIFO, that validates the reader on a hierarchy not tailored to a single test.
+* `hdl/serv/` holds a Verilog testbench around SERV, the bit-serial RISC-V
+  core, executing its `hello_uart` program: an external design not written for
   this repository.
-  `third_party/serv/` holds the build file and the patch for the
-  pinned SERV archive fetched in `MODULE.bazel`.
-* `hdl/potato/` holds the VHDL counterpart: Potato, a RV32I processor
-  in VHDL, under its own bench and a hand assembled program.
-  `third_party/potato/` holds the build file and the patch for the
-  pinned Potato archive.
-* `hdl/picorv32/` holds PicoRV32 under the project's own
-  `testbench_ez.v`, which holds the program it runs, so nothing but
-  the build file in `third_party/picorv32/` is written here.
-* `hdl/ibex/` holds Ibex under the `simple_system` example lowRISC
-  ships with it, a SystemVerilog core with a bus, a memory and a timer.
-  Only the bench and a hand assembled program are written here;
-  `third_party/ibex/` holds the build file and the patch for the
-  pinned archive.
-* `hdl/neorv32/` holds NEORV32, a dual core RISC-V processor in VHDL,
-  under the project's own testbench, booting the instruction memory
-  image of the release.
-  Only the wrapper that stops the run is written here;
+  `third_party/serv/` holds the build file and patch for the pinned SERV
+  archive fetched in `MODULE.bazel`.
+* `hdl/potato/` holds the VHDL counterpart: Potato, an RV32I processor in
+  VHDL, under its own testbench and a hand-assembled program.
+  `third_party/potato/` holds the build file and patch for the pinned Potato
+  archive.
+* `hdl/picorv32/` holds PicoRV32 under the project's own `testbench_ez.v`,
+  which provides the execution program, so only the build file in
+  `third_party/picorv32/` is written here.
+* `hdl/ibex/` holds Ibex under the `simple_system` example lowRISC ships with
+  it: a SystemVerilog core with a bus, memory, and timer.
+  Only the testbench and a hand-assembled test program are written here;
+  `third_party/ibex/` holds the build file and patch for the pinned archive.
+* `hdl/neorv32/` holds NEORV32, a dual-core RISC-V processor in VHDL, under
+  the project's own testbench, booting the upstream release instruction image.
+  Only the wrapper that terminates the simulation is written here;
   `third_party/neorv32/` holds the build file for the pinned archive.
-* `cmd/wdbcvt/` is the command line tool.
-  Today it probes a `.wdb` and reports measurements; it grows into a
-  converter as the format becomes known.
-  VCD comes first as a checking step, through
-  `github.com/filmil/go-vcd-parser`, but the deliverable is FST.
-  VCD cannot represent integers, reals, enumerations, records or arrays,
-  so a WDB to VCD converter drops most of a real design silently.
-  [docs/fst-output.md](docs/fst-output.md) records the measurement and
-  the plan.
+* `cmd/wdbcvt/` is the command line converter.
+  It reads a `.wdb` file, extracts signals and transitions, and writes FST or
+  SQLite output files.
+  VCD verification runs through `github.com/filmil/go-vcd-parser` as a check,
+  while FST is the primary output format.
+  Because VCD cannot represent integers, reals, enumerations, records, or
+  arrays, converting WDB to VCD drops most types in real designs silently.
+  [docs/fst-output.md](docs/fst-output.md) records the measurement and the
+  conversion plan.
 * `pkg/wdb/` holds the library the tool is built on.
-* `pkg/fst/` writes FST through libfst, the reader and writer GTKWave
-  uses, over cgo.
-  FST has no specification, so the library is the definition of the
-  format and this project does not keep a second writer.
+* `pkg/fst/` writes FST through `libfst`, the reader and writer GTKWave uses,
+  over cgo.
+  FST has no written specification, so the reference library defines the
+  format and this project does not maintain a separate writer.
   `third_party/libfst/` holds the build file for the pinned archive.
-* `pkg/fstout/` maps a decoded database onto FST variables: what a
-  record or an array flattens into, and how each value is spelled.
-  `wdbcvt -in <file>.wdb -fst <file>.fst` writes one.
-* `pkg/sqlout/` writes the same decoded database as an SQLite file, in
-  the schema `go-vcd-parser` writes from a VCD, so a query written
-  against one reads the other.
-  `wdbcvt -in <file>.wdb -sqlite <file>.db` writes one; see
+* `pkg/fstout/` maps a decoded database onto FST variables: what a record or
+  an array flattens into, and how each value is formatted.
+  Running `wdbcvt -in <file>.wdb -fst <file>.fst` writes one.
+* `pkg/sqlout/` writes the decoded database as an SQLite file using the schema
+  `go-vcd-parser` generates from VCD, so queries written against one format
+  read the other.
+  Running `wdbcvt -in <file>.wdb -sqlite <file>.db` writes one; see
   [docs/sqlite-output.md](docs/sqlite-output.md).
-  Every database in the repository has a `:convert` test that writes
-  both outputs, so a conversion that breaks names the design it broke
-  on.
-* `docs/latex/` holds the report on the whole effort, in the IEEEtran
-  class, built by `bazel build //docs/latex:report` and attached to
-  every release as `wdbcvt-report.pdf`.
-* `docs/` holds everything known about the format, written down as it is
-  discovered. [docs/README.md](docs/README.md) is the index;
+  Every database in the repository has a `:convert` test that writes both
+  outputs, so any conversion regression names the exact design that failed.
+* `docs/latex/` holds the report on the exploration in IEEEtran format,
+  built with `bazel build //docs/latex:report` and attached to every release as
+  `wdbcvt-report.pdf`.
+* `docs/` holds findings about the format, recorded as they are discovered.
+  [docs/README.md](docs/README.md) is the index;
   [docs/format.md](docs/format.md) is the findings table.
 
 
 ## Building
 
-Everything is built with Bazel.
-The pinned version is in `.bazelversion`, so `bazelisk` picks it up on its
-own.
+Bazel builds everything in this repository.
+The pinned version is recorded in `.bazelversion`, so `bazelisk` selects it
+automatically.
 
 ```sh
 bazel build //...
 bazel test //...
 ```
 
-Go is the hermetic toolchain: the SDK is fetched by `rules_go` from the
-version in `go.mod`, and nothing needs Go installed on the machine.
+Go is managed through a hermetic toolchain.
+The Go SDK is fetched by `rules_go` matching the version pinned in `go.mod`.
+Nothing requires Go installed on the host machine.
 Do not run `go` directly; run it through Bazel instead.
 
 ```sh
@@ -177,51 +176,53 @@ repository runs them in **hermetic** mode:
 build --@rules_vivado//:vivado_mode=hermetic
 ```
 
-Bazel installs Vivado itself, from the AMD unified installer archive named
+Bazel installs Vivado directly from the AMD unified installer archive named
 in `MODULE.bazel`.
 No Docker image and no host Vivado installation are involved.
 
-Two things make that practical rather than a multi-hour tax on every
+Two mechanisms make this setup practical rather than an expensive tax on every
 build:
 
-* The installation lands in the **shared install cache**
-  `/data/cache/vivado-install`, set through the `install_cache` attribute
-  of the `vivado.install` tag.
-  Every workspace and every user on the machine reuses the one
-  installation, and `bazel clean --expunge` does not remove it.
-  The install happens once per host, not once per checkout.
-* `/data/cache/ci.bazelrc`, pulled in by `try-import`, adds the shared
-  Bazel disk cache and repository cache, so build outputs are shared with
-  the CI runner as well.
-  On a machine without that file the `try-import` does nothing.
+* The installation populates the **shared install cache** at
+  `/data/cache/vivado-install`, configured through the `install_cache`
+  attribute of the `vivado.install` tag.
+  Every workspace and every user on the host reuses the single installation,
+  and `bazel clean --expunge` does not remove it.
+  The installation occurs once per host rather than once per checkout.
+* `/data/cache/ci.bazelrc`, imported by `try-import`, attaches the shared
+  Bazel disk cache and repository cache, sharing build outputs with the CI
+  runner.
+  On a host without that configuration file, the `try-import` does nothing.
 
 Bazel 9.2.0 or later is required, and `.bazelversion` pins it.
-Earlier versions crash on the `file://` URL that names the installer
-archive; see `AGENTS.md` for the detail.
+Earlier versions fail on the `file://` URL that references the installer
+archive; see `AGENTS.md` for details.
 
-Budget for a cold install. Measured once, on this machine, with the
-archive on the same disk as the output base:
+Budget for a cold installation.
+Measured once on this machine, with the archive located on the same disk as
+the output base:
 
 | Phase | Reached at |
 | :--- | ---: |
-| Copy the archive, write it to the shared repository cache, unpack it | 112 min |
+| Copy archive, write to shared repository cache, unpack | 112 min |
 | Batch install begins | 121 min |
 
-Peak disk during the fetch was about 290 GB, because the archive is
-moved three times: copied in, written to the repository cache, and
-unpacked. The archive is deleted once unpacking finishes, returning
-roughly 96 GB. This happens once per host, not once per workspace.
+Peak disk usage during the fetch reached roughly 290 GB because the archive is
+handled three times: copied into the workspace, written to the repository cache,
+and unpacked.
+The archive is deleted once unpacking completes, returning roughly 96 GB.
+This occurs once per host rather than once per workspace.
 
-A host that has never built this repository needs:
+A host that has never built this repository requires:
 
 * the installer archive at
   `/data/tools/archives/FPGAs_AdaptiveSoCs_Unified_SDI_2025.2_1114_2157_1.tar`
-  (adjust `urls` in `MODULE.bazel` if it lives elsewhere), and
-* enough transient disk space for the extraction, roughly 200 GB.
+  (adjust `urls` in `MODULE.bazel` if located elsewhere), and
+* sufficient transient disk space for extraction, roughly 200 GB.
 
 Only the `Artix-7` device family is installed.
-Simulation needs no device family at all, and one small family keeps the
-installation from ballooning.
+Simulation requires no device family at all, and one small family prevents the
+installation footprint from expanding needlessly.
 
 
 ## Simulating
@@ -235,8 +236,9 @@ bazel run //cmd/wdbcvt -- -in "$PWD/bazel-bin/hdl/counter/sim.wdb"
 
 ## CI
 
-Three workflows live in `.forgejo/workflows/`, and all of them use
-`runs-on: vivado`, because building anything here means running Vivado:
+Three workflows live in `.forgejo/workflows/`.
+All workflows specify `runs-on: vivado`, because building and testing in this
+repository requires Vivado:
 
 | Workflow | Trigger | What it does |
 | :--- | :--- | :--- |
@@ -244,32 +246,32 @@ Three workflows live in `.forgejo/workflows/`, and all of them use
 | `release.yml` | manual dispatch, daily | publishes the `wdbcvt` binaries for Linux amd64 and arm64 and for macOS, the report, the waveform and documentation archives, and a reference `.wdb` and `.vcd` to the rolling `nightly` release, here and on the GitHub mirror; a run stops early when the tag already names the commit |
 | `mirror.yml` | push to `main`, daily, on request | pushes `main` to the read-only GitHub mirror |
 
-The `vivado` runner must have `bazelisk` on its `PATH`, the installer
-archive at the path above, and write access to `/data/cache`.
+The `vivado` runner host requires `bazelisk` on its `PATH`, the installer
+archive at the path documented above, and write permissions for `/data/cache`.
 
-Two repository secrets, and each job runs without its own:
+Two repository secrets configure external integrations:
 
 | Secret | Used by | What it is |
 | :--- | :--- | :--- |
 | `GH_MIRROR_KEY` | `mirror.yml` | the private half of a deploy key the mirror accepts for writing |
 | `GH_RELEASE_TOKEN` | `release.yml` | a fine grained GitHub token with `Contents: read and write` on the mirror, for the release it copies there |
 
-A job whose secret is missing writes a warning and stops, rather than
-failing.
+A job whose secret is missing writes a warning and stops, rather than failing.
 
-That label runs jobs directly on the host, and the host has no `node`.
-No JavaScript action can run there, `actions/checkout` included.
-Every workflow here checks out with plain `git` for that reason.
-An action is safe only when every step of it, and of anything it
-`uses`, is bash.
-Upstream `forgejo-release` is not: it embeds a node cache action behind
-a guard that never skips, so the release workflow uses the vendored,
-bash only copy in `.forgejo/actions/forgejo-release`.
+The `runs-on: vivado` runner executes jobs directly on the host, which has no
+`node` installed.
+No JavaScript action can run there, including `actions/checkout`.
+Every workflow checks out code with plain `git` for that reason.
+An action is safe only when every step of it, and of anything it `uses`,
+is bash.
+Upstream `forgejo-release` is not: it embeds a node cache action behind a guard
+that never skips, so the release workflow uses the vendored, bash-only copy in
+`.forgejo/actions/forgejo-release`.
 
-The non amd64 release binaries are cross compiled through the zig based
-hermetic C toolchain.
-Vivado exists only for Linux amd64, so those platforms build the Go
-binary alone, and no tests run for them.
+The non-amd64 release binaries are cross-compiled using the zig-based hermetic
+C toolchain.
+Vivado exists only for Linux amd64, so non-amd64 targets compile the Go binary
+alone, and run no simulation tests.
 
 
 ## License
@@ -279,6 +281,10 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 ## Prior Art
 
-* https://github.com/Ross0907/Vivado-WDB-Waveform-Converter: direct inspiration to revive some prior work.
-* https://adaptivesupport.amd.com/s/question/0D52E00006hpSPUSA2/export-xsim-waveform-wdb-to-other-format: one of
-  many similar threads where people lament the lack of a converter tool
+* [Vivado-WDB-Waveform-Converter][ross0907]:
+  direct inspiration to revive earlier reverse-engineering efforts.
+* [AMD Support discussion][amd-thread]:
+  one of many community threads where users lament the lack of a converter tool.
+
+[ross0907]: https://github.com/Ross0907/Vivado-WDB-Waveform-Converter
+[amd-thread]: https://adaptivesupport.amd.com/s/question/0D52E00006hpSPUSA2/export-xsim-waveform-wdb-to-other-format
