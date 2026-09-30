@@ -18,9 +18,12 @@ SQLite formats.
 See [docs/format.md](docs/format.md) for what has been measured so far and how
 the work proceeds.
 
-That 95% metric applies to one class of files: behavioural VHDL, Verilog, and
+That 95% metric applies to these classes of files: behavioral VHDL, Verilog, and
 SystemVerilog, simulated by Vivado 2025.2.
-What is not supported:
+
+## Limitations 
+
+Not supported:
 
 * gate level netlists with SDF back annotation: untried
 * encrypted IP models: untried
