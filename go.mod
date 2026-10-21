@@ -1,6 +1,6 @@
 module git.hdlfactory.com/HDL/wdbcvt
 
-go 1.27.1
+go 1.27.3
 
 require (
 	github.com/filmil/go-vcd-parser v0.3.0
